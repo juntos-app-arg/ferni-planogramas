@@ -1,0 +1,3584 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8"/>
+<meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+<title>Planograma FERNI — Diseño de Sector</title>
+<style>
+*,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
+:root{
+  --navy:#1a2744;--red:#e8363b;--blue:#2a78d6;--green:#1baf7a;
+  --orange:#d68910;--purple:#8e44ad;
+  --bg:#f5f4f0;--surface:#fff;--s2:#f0eeea;--border:#e0ddd8;
+  --border2:#c8c5bf;--text:#1a1917;--text2:#5a5955;--text3:#9a9895;
+  --r:10px;
+}
+body{background:var(--bg);font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',system-ui,sans-serif;color:var(--text);min-height:100vh;overflow-x:hidden}
+
+/* HEADER */
+header{background:var(--navy);color:#fff;padding:.8rem 1.5rem;display:flex;align-items:center;justify-content:space-between}
+.hbadge{background:var(--red);font-size:11px;font-weight:700;padding:3px 10px;border-radius:20px;letter-spacing:.04em}
+header h1{font-size:15px;font-weight:600;margin-left:.6rem}
+header p{font-size:11px;color:rgba(255,255,255,.4);margin-top:2px}
+
+/* STEPS */
+.steps{background:var(--surface);border-bottom:1px solid var(--border);display:flex;padding:0 1.5rem;overflow-x:auto}
+.sbtn{display:flex;align-items:center;gap:.4rem;padding:.75rem 1rem;font-size:12px;font-weight:500;color:var(--text3);border:none;background:transparent;cursor:pointer;border-bottom:2.5px solid transparent;margin-bottom:-1px;white-space:nowrap;transition:all .15s}
+.sbtn:hover{color:var(--text)}
+.sbtn.active{color:var(--navy);border-bottom-color:var(--red)}
+.sbtn.done{color:var(--green)}
+.snum{width:20px;height:20px;border-radius:50%;background:var(--border);color:var(--text2);font-size:10px;font-weight:700;display:flex;align-items:center;justify-content:center;flex-shrink:0}
+.sbtn.active .snum{background:var(--red);color:#fff}
+.sbtn.done .snum{background:var(--green);color:#fff}
+
+/* PANELS */
+.panel{display:none;padding:1.25rem 1.5rem;max-width:1200px;margin:0 auto}
+.panel.active{display:block}
+
+/* CARD */
+.card{background:var(--surface);border:1px solid var(--border);border-radius:var(--r);padding:1rem 1.2rem;margin-bottom:1rem}
+.card-title{font-size:13px;font-weight:600;color:var(--navy);margin-bottom:.6rem}
+.card-sub{font-size:12px;color:var(--text3);margin-bottom:.6rem}
+
+/* FORM */
+.frow{display:grid;gap:.6rem;margin-bottom:.6rem}
+.frow.c2{grid-template-columns:1fr 1fr}
+.frow.c3{grid-template-columns:1fr 1fr 1fr}
+.frow.c4{grid-template-columns:repeat(4,1fr)}
+label{display:block;font-size:11px;font-weight:500;color:var(--text2);margin-bottom:3px}
+input[type=text],input[type=number],select{width:100%;padding:6px 9px;border:1px solid var(--border2);border-radius:7px;font-size:13px;color:var(--text);background:var(--surface);outline:none;transition:border-color .15s}
+input:focus,select:focus{border-color:var(--blue)}
+
+/* BTN */
+.btn{padding:7px 14px;border-radius:7px;font-size:12px;font-weight:500;cursor:pointer;border:1px solid;transition:all .12s}
+.btn-primary{background:var(--navy);color:#fff;border-color:var(--navy)}
+.btn-primary:hover{background:#253566}
+.btn-green{background:var(--green);color:#fff;border-color:var(--green)}
+.btn-red{background:var(--red);color:#fff;border-color:var(--red)}
+.btn-outline{background:transparent;color:var(--text2);border-color:var(--border2)}
+.btn-outline:hover{background:var(--s2)}
+.btn-sm{padding:4px 9px;font-size:11px;border-radius:6px}
+.btn-icon{padding:5px 8px;border-radius:6px;font-size:13px}
+
+/* CANVAS AREA */
+.canvas-wrap{display:grid;grid-template-columns:220px 1fr;gap:1rem;align-items:start}
+.sidebar{background:var(--surface);border:1px solid var(--border);border-radius:var(--r);padding:.9rem;position:sticky;top:1rem}
+.sidebar h3{font-size:11px;font-weight:600;color:var(--text2);text-transform:uppercase;letter-spacing:.05em;margin-bottom:.6rem}
+
+/* ISLA PALETTE */
+.isla-palette-item{background:var(--s2);border:1px solid var(--border);border-radius:7px;padding:7px 9px;margin-bottom:5px;cursor:grab;font-size:12px;display:flex;align-items:center;gap:6px;transition:all .12s}
+.isla-palette-item:hover{background:var(--border);border-color:var(--border2)}
+.isla-palette-item:active{cursor:grabbing}
+
+/* CANVAS */
+#floorCanvas{border:2px solid var(--border2);border-radius:var(--r);background:#fff;cursor:default;display:block;touch-action:none}
+.canvas-container{position:relative;overflow:auto;border-radius:var(--r)}
+.canvas-toolbar{display:flex;gap:6px;align-items:center;margin-bottom:.6rem;flex-wrap:wrap}
+
+/* ISLA DETAIL PANEL */
+.isla-detail{background:var(--surface);border:1px solid var(--blue);border-radius:var(--r);padding:.65rem .75rem;margin-top:.5rem;max-height:340px;overflow-y:auto}
+.isla-detail h4{font-size:11px;font-weight:600;color:var(--blue);margin-bottom:.4rem}
+.isla-detail::-webkit-scrollbar{width:3px}
+.isla-detail::-webkit-scrollbar-thumb{background:var(--border2);border-radius:3px}
+.cara-tabs{display:flex;gap:3px;margin-bottom:.4rem}
+.cara-tab{padding:2px 9px;border-radius:5px;font-size:11px;font-weight:600;border:1px solid var(--border2);background:transparent;cursor:pointer;color:var(--text2);transition:all .1s}
+.cara-tab.active{background:var(--blue);color:#fff;border-color:var(--blue)}
+.cara-panel{display:none}
+.cara-panel.active{display:block}
+.mod-row{display:flex;gap:4px;flex-wrap:wrap;margin-bottom:.3rem}
+.mod-chip{background:var(--s2);border:1px solid var(--border);border-radius:5px;padding:4px 5px;font-size:10px;min-width:70px;text-align:center}
+.mod-chip select,.mod-chip input{font-size:10px;padding:1px 3px;margin-top:1px;width:100%}
+.puntera-chip{background:#fff3cd;border-color:#d68910}
+
+/* CAT PANEL */
+.cat-list-pg{display:flex;flex-direction:column;gap:3px;max-height:320px;overflow-y:auto}
+.cat-item-pg{display:flex;align-items:center;gap:6px;padding:5px 7px;border-radius:6px;cursor:pointer;border:1.5px solid transparent;font-size:11px;font-weight:500;transition:all .12s}
+.cat-item-pg:hover{opacity:.85}
+.cat-item-pg.active{border-color:var(--text)!important;box-shadow:0 0 0 1px rgba(0,0,0,.1)}
+.cat-dot{width:11px;height:11px;border-radius:3px;flex-shrink:0}
+.cat-venta{font-size:10px;margin-left:auto;opacity:.65}
+.sec-lbl{font-size:10px;font-weight:600;color:var(--text3);text-transform:uppercase;letter-spacing:.05em;padding:5px 4px 2px;margin-top:3px;border-top:1px solid var(--border)}
+
+/* CAT TABLE */
+.cat-table{width:100%;border-collapse:collapse;font-size:12px}
+.cat-table th{text-align:left;padding:6px 7px;color:var(--text3);font-weight:500;border-bottom:1px solid var(--border);font-size:11px;white-space:nowrap}
+.cat-table td{padding:4px 6px;border-bottom:1px solid var(--border);vertical-align:middle}
+.cat-table tr:last-child td{border-bottom:none}
+.ccolor{width:26px;height:26px;border-radius:5px;border:2px solid rgba(0,0,0,.1);cursor:pointer}
+.cdel{background:none;border:none;cursor:pointer;color:var(--text3);font-size:15px;padding:2px 5px}
+.cdel:hover{color:var(--red)}
+
+/* METRICS */
+.metrics-row{display:grid;grid-template-columns:repeat(4,1fr);gap:8px;margin-top:.75rem}
+.metric{background:var(--s2);border-radius:8px;padding:.6rem .8rem;text-align:center}
+.metric-label{font-size:10px;color:var(--text3)}
+.metric-value{font-size:16px;font-weight:600;color:var(--text)}
+
+/* ALERTS */
+.alert-block{padding:.5rem .8rem;border-left:3px solid;font-size:12px;margin-bottom:6px;border-radius:0 6px 6px 0}
+.ar{border-color:#c0392b;background:#fdf2f2;color:#922b21}
+.ay{border-color:var(--orange);background:#fdf6e3;color:#9a6e07}
+.ag{border-color:var(--green);background:#eafaf1;color:#186a3b}
+.badge{display:inline-block;padding:2px 7px;border-radius:20px;font-size:10px;font-weight:600}
+.br{background:#fdf2f2;color:#c0392b}
+.by{background:#fdf6e3;color:#9a6e07}
+.bg2{background:#eafaf1;color:#186a3b}
+.bb{background:#eef3fb;color:var(--blue)}
+
+/* LEGEND */
+.legend{display:flex;flex-wrap:wrap;gap:6px;margin-top:.5rem}
+.leg-item{display:flex;align-items:center;gap:4px;font-size:11px;color:var(--text2)}
+.leg-dot{width:9px;height:9px;border-radius:2px;flex-shrink:0}
+
+.info-bar{background:var(--s2);border-radius:7px;padding:6px 10px;font-size:12px;color:var(--text2);margin-top:.5rem;min-height:30px}
+
+/* HINT */
+.hint{background:#eef3fb;border-radius:7px;padding:6px 9px;font-size:11px;color:var(--blue);min-height:28px;margin-top:.5rem}
+
+@media(max-width:760px){
+  .canvas-wrap{grid-template-columns:1fr}
+  .frow.c4{grid-template-columns:1fr 1fr}
+  .frow.c3{grid-template-columns:1fr 1fr}
+  .metrics-row{grid-template-columns:repeat(2,1fr)}
+}
+
+/* ═════════ NUBE: login, biblioteca, accesos, modales ═════════ */
+.pl-center{max-width:440px;margin:3rem auto;padding:0 1rem}
+.pl-card{background:var(--surface);border:1px solid var(--border);border-radius:14px;padding:1.4rem}
+.pl-title{font-size:20px;font-weight:700;color:var(--navy);margin-bottom:.25rem}
+.pl-sub{font-size:12px;color:var(--text3);margin-bottom:1rem;line-height:1.5}
+.pl-tabs{display:flex;gap:4px;margin-bottom:1rem;background:var(--s2);border-radius:8px;padding:3px}
+.pl-tab{flex:1;padding:7px 10px;border:none;background:transparent;border-radius:6px;font-size:12px;font-weight:600;color:var(--text2);cursor:pointer}
+.pl-tab.active{background:var(--surface);color:var(--navy);box-shadow:0 1px 2px rgba(0,0,0,.08)}
+.pl-field{margin-bottom:.7rem}
+.pl-err{background:#fdf2f2;border:1px solid #f5b7b1;color:#922b21;border-radius:7px;padding:7px 10px;font-size:12px;margin-bottom:.7rem;display:none}
+.pl-err.show{display:block}
+.pl-spin{width:26px;height:26px;border:3px solid var(--border);border-top-color:var(--red);border-radius:50%;animation:plspin .8s linear infinite;margin:0 auto .8rem}
+@keyframes plspin{to{transform:rotate(360deg)}}
+
+.pl-lib-head{display:flex;align-items:center;gap:.6rem;flex-wrap:wrap;margin-bottom:1rem}
+.pl-lib-head h2{font-size:17px;font-weight:700;color:var(--navy);margin-right:auto}
+.pl-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(260px,1fr));gap:12px}
+.pl-plan{background:var(--surface);border:1px solid var(--border);border-radius:12px;overflow:hidden;display:flex;flex-direction:column;transition:box-shadow .12s,border-color .12s}
+.pl-plan:hover{border-color:var(--border2);box-shadow:0 2px 10px rgba(26,39,68,.08)}
+.pl-plan.vigente{border-color:var(--green)}
+.pl-thumb{background:#f8f7f4;border-bottom:1px solid var(--border);height:140px;display:flex;align-items:center;justify-content:center;cursor:pointer}
+.pl-thumb canvas{max-width:100%;max-height:100%}
+.pl-thumb .pl-vacio{font-size:11px;color:var(--text3)}
+.pl-plan-body{padding:.7rem .85rem;display:flex;flex-direction:column;gap:5px;flex:1}
+.pl-plan-name{font-size:14px;font-weight:600;color:var(--navy);cursor:pointer;word-break:break-word}
+.pl-plan-meta{font-size:11px;color:var(--text3);line-height:1.5}
+.pl-chips{display:flex;gap:4px;flex-wrap:wrap}
+.pl-chip{display:inline-block;padding:2px 8px;border-radius:20px;font-size:10px;font-weight:600;background:var(--s2);color:var(--text2)}
+.pl-chip.green{background:#eafaf1;color:#186a3b}
+.pl-chip.blue{background:#eef3fb;color:var(--blue)}
+.pl-chip.amber{background:#fdf6e3;color:#9a6e07}
+.pl-chip.gray{background:var(--s2);color:var(--text2)}
+.pl-plan-actions{display:flex;gap:4px;flex-wrap:wrap;margin-top:auto;padding-top:6px}
+.pl-empty{background:var(--surface);border:1px dashed var(--border2);border-radius:12px;padding:2rem;text-align:center;color:var(--text3);font-size:13px}
+.pl-banner{background:#fdf6e3;border:1px solid #f0d58a;color:#7a5800;border-radius:9px;padding:9px 12px;font-size:12px;margin-bottom:.8rem;display:flex;gap:.6rem;align-items:center;flex-wrap:wrap}
+.pl-banner.red{background:#fdf2f2;border-color:#f5b7b1;color:#922b21}
+.pl-banner .grow{flex:1;min-width:200px}
+
+.pl-table{width:100%;border-collapse:collapse;font-size:12px}
+.pl-table th{text-align:left;padding:7px 8px;color:var(--text3);font-weight:500;border-bottom:1px solid var(--border);font-size:11px;white-space:nowrap}
+.pl-table td{padding:7px 8px;border-bottom:1px solid var(--border);vertical-align:middle}
+.pl-code{font-family:ui-monospace,SFMono-Regular,Menlo,monospace;font-size:12px;background:var(--s2);padding:2px 6px;border-radius:5px;user-select:all}
+
+.pl-overlay{position:fixed;inset:0;background:rgba(26,39,68,.45);display:flex;align-items:center;justify-content:center;z-index:50;padding:1rem}
+.pl-modal{background:var(--surface);border-radius:14px;max-width:520px;width:100%;max-height:88vh;overflow:auto;padding:1.2rem 1.3rem;box-shadow:0 10px 40px rgba(0,0,0,.25)}
+.pl-modal h3{font-size:15px;font-weight:700;color:var(--navy);margin-bottom:.8rem}
+.pl-modal .pl-actions{display:flex;gap:6px;justify-content:flex-end;margin-top:1rem}
+.pl-radio{display:flex;gap:8px;margin-bottom:.7rem}
+.pl-radio label{flex:1;border:1.5px solid var(--border);border-radius:9px;padding:8px 10px;cursor:pointer;font-size:12px;font-weight:600;color:var(--text2);margin:0}
+.pl-radio label.on{border-color:var(--blue);background:#eef3fb;color:var(--navy)}
+.pl-radio input{display:none}
+.pl-ver{display:flex;align-items:center;gap:8px;padding:7px 4px;border-bottom:1px solid var(--border);font-size:12px}
+.pl-ver .grow{flex:1}
+
+#plToast{position:fixed;left:50%;bottom:22px;transform:translateX(-50%);background:var(--navy);color:#fff;padding:9px 16px;border-radius:9px;font-size:12px;z-index:60;opacity:0;pointer-events:none;transition:opacity .2s;max-width:90vw}
+#plToast.show{opacity:1}
+#plConflicto{display:none;position:sticky;top:0;z-index:20;margin:0}
+#plConflicto.show{display:flex;border-radius:0}
+.hbtn{background:rgba(255,255,255,.15);border:none;color:#fff;font-size:10px;padding:3px 9px;border-radius:5px;cursor:pointer;white-space:nowrap}
+.hbtn:hover{background:rgba(255,255,255,.28)}
+#plHdrUser{display:none;align-items:center;gap:.5rem;font-size:11px;color:rgba(255,255,255,.75)}
+#plHdrUser strong{color:#fff;font-weight:600}
+</style>
+<script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-app-compat.js" integrity="sha384-yuGdyIzzYtOBlBG6JOWn+Ey9kpq7HocusNuxEGyyohr1eEyXpeEyehIIXC/hznw4" crossorigin="anonymous"></script>
+<script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-auth-compat.js" integrity="sha384-lI+CxEx/bCvWP1b0OK13j5HTrTZP7yf1xle8TVOFq2smz6KC1RChTarRV/RHP5PP" crossorigin="anonymous"></script>
+<script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore-compat.js" integrity="sha384-nwX2Qpkhc2sv6L0ZPkLefLGguao67toSowvePuQvGF6cG+8MUphGI2uI94Ls3JF7" crossorigin="anonymous"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
+</head>
+<body>
+<header>
+  <div style="display:flex;align-items:center">
+    <span class="hbadge">FERNI</span>
+    <div style="margin-left:.75rem">
+      <h1>Planograma — Diseño de Sector</h1>
+      <p id="modoLabel">Seleccioná un modo para comenzar</p>
+    </div>
+  </div>
+  <div style="display:flex;align-items:center;gap:.75rem">
+    <div style="font-size:11px;color:rgba(255,255,255,.4);text-align:right" id="fechaHdr"></div>
+    <div id="plHdrUser"></div>
+    <div id="saveBar" style="display:none;align-items:center;gap:.5rem;background:rgba(255,255,255,.08);border-radius:7px;padding:5px 10px;font-size:11px;color:rgba(255,255,255,.7)">
+      <span id="saveIcon" style="width:8px;height:8px;border-radius:50%;background:#9aa3b5;display:inline-block"></span>
+      <span id="saveLabel">Sin guardar</span>
+      <button class="hbtn" onclick="plVolverBiblioteca()">Mis planogramas</button>
+      <button class="hbtn" onclick="plAbrirVersiones()">Versiones</button>
+      <button class="hbtn" onclick="exportFerni()">Exportar resumen</button>
+      <button class="hbtn" onclick="guardarEstado()">Respaldo .ferni</button>
+      <label class="hbtn" style="cursor:pointer">Importar respaldo<input type="file" accept=".ferni,.json" style="display:none" onchange="importFerni(event)"/></label>
+    </div>
+  </div>
+</header>
+
+<div class="steps" id="stepsNav" style="display:none">
+  <button class="sbtn" onclick="plVolverBiblioteca()" id="sb0" style="color:var(--text3);font-size:11px">← Modo</button>
+  <button class="sbtn active" onclick="goStep(1,this)" id="sb1"><span class="snum">1</span>Configurar</button>
+  <button class="sbtn" onclick="goStep(2,this)" id="sb2"><span class="snum">2</span>Diseñar planta</button>
+  <button class="sbtn" onclick="goStep(3,this)" id="sb3"><span class="snum">3</span><span id="sb3label">Categorías</span></button>
+  <button class="sbtn" onclick="goStep(4,this)" id="sb4"><span class="snum">4</span><span id="sb4label">Asignar</span></button>
+  <button class="sbtn" onclick="goStep(5,this)" id="sb5"><span class="snum">5</span>Análisis</button>
+</div>
+
+<div id="plConflicto" class="pl-banner red"></div>
+<div id="plToast"></div>
+<div id="plModalRoot"></div>
+
+<!-- ═══════════════════════════════ NUBE: carga / login / biblioteca / accesos -->
+<div id="pLoad" class="panel active"><div class="pl-center"><div class="pl-card" style="text-align:center">
+  <div class="pl-spin"></div><div id="pLoadMsg" class="pl-sub" style="margin:0">Cargando…</div>
+  <button id="pLoadRetry" class="btn btn-outline btn-sm" style="display:none;margin-top:.8rem" onclick="location.reload()">Reintentar</button>
+</div></div></div>
+
+<div id="pLogin" class="panel"><div class="pl-center"><div class="pl-card">
+  <div class="pl-title">Planogramas FERNI</div>
+  <div class="pl-sub">Ingresá con el código de tu sucursal. Si no lo tenés, pedíselo al administrador.</div>
+  <div class="pl-tabs">
+    <button class="pl-tab active" id="plTabCodigo" onclick="plTabLogin('codigo')">Líder de sucursal</button>
+    <button class="pl-tab" id="plTabAdmin" onclick="plTabLogin('admin')">Administrador</button>
+  </div>
+  <form id="plFormCodigo" onsubmit="event.preventDefault();plIngresarCodigo()">
+    <div class="pl-err" id="plErrCodigo"></div>
+    <div class="pl-field"><label>Tu nombre</label><input id="plInNombre" maxlength="60" autocomplete="name" placeholder="Nombre y apellido"></div>
+    <div class="pl-field"><label>Código de sucursal</label><input id="plInCodigo" maxlength="20" autocomplete="off" placeholder="PLG-F3-XXXXXXXX" style="text-transform:uppercase"></div>
+    <button class="btn btn-primary" id="plBtnCodigo" type="submit" style="width:100%">Ingresar</button>
+  </form>
+  <form id="plFormAdmin" style="display:none" onsubmit="event.preventDefault();plIngresarAdmin()">
+    <div class="pl-err" id="plErrAdmin"></div>
+    <div class="pl-field"><label>Email</label><input id="plInEmail" type="email" autocomplete="username"></div>
+    <div class="pl-field"><label>Contraseña</label><input id="plInPass" type="password" autocomplete="current-password"></div>
+    <button class="btn btn-primary" id="plBtnAdmin" type="submit" style="width:100%">Ingresar</button>
+  </form>
+</div></div></div>
+
+<div id="pLib" class="panel"><div style="max-width:1100px;margin:0 auto;padding:1.2rem 1rem">
+  <div class="pl-lib-head">
+    <h2 id="plLibTitulo">Mis planogramas</h2>
+    <select id="plFiltroSuc" onchange="plRenderLista()" style="display:none;width:auto"></select>
+    <label style="display:flex;align-items:center;gap:5px;margin:0;font-size:12px"><input type="checkbox" id="plVerArchivados" onchange="plRenderLista()" style="width:auto"> Ver archivados</label>
+    <button class="btn btn-outline btn-sm" id="plBtnAccesos" style="display:none" onclick="plAbrirAccesos()">Accesos</button>
+    <button class="btn btn-primary btn-sm" onclick="plNuevoModal()">+ Nuevo planograma</button>
+  </div>
+  <div id="plAvisos"></div>
+  <div id="plLista" class="pl-grid"></div>
+</div></div>
+
+<div id="pAcc" class="panel"><div style="max-width:900px;margin:0 auto;padding:1.2rem 1rem">
+  <div class="pl-lib-head"><h2>Accesos por sucursal</h2>
+    <button class="btn btn-outline btn-sm" onclick="plCerrarAccesos()">Volver</button></div>
+  <div class="pl-card" id="plAccTabla"></div>
+</div></div>
+
+<!-- ═══════════════════════════════ SELECTOR DE MODO (sin uso directo: el modo se elige al crear el planograma) -->
+<div id="p0" class="panel" style="max-width:700px;margin:3rem auto;padding:1.5rem">
+  <div style="text-align:center;margin-bottom:2rem">
+    <div style="font-size:22px;font-weight:700;color:var(--navy);margin-bottom:.5rem">¿Qué querés diseñar?</div>
+    <div style="font-size:13px;color:var(--text3)">Elegí el modo según tu objetivo</div>
+  </div>
+  <div style="display:grid;grid-template-columns:1fr 1fr;gap:1rem">
+    <div onclick="setModo('general')" style="background:var(--surface);border:2px solid var(--border);border-radius:14px;padding:1.5rem;cursor:pointer;transition:all .15s" 
+      onmouseover="this.style.borderColor='var(--green)';this.style.transform='translateY(-2px)'" 
+      onmouseout="this.style.borderColor='var(--border)';this.style.transform=''">
+      <div style="font-size:28px;margin-bottom:.75rem">🏪</div>
+      <div style="font-size:15px;font-weight:700;color:var(--navy);margin-bottom:.4rem">Plano general</div>
+      <div style="font-size:12px;color:var(--text2);line-height:1.5">Diseñá toda la sucursal y asignale rubros a cada isla y pared. Analizá qué % de espacio ocupa cada rubro vs su participación en ventas.</div>
+      <div style="margin-top:1rem;display:inline-block;background:#eafaf1;color:var(--green);padding:3px 10px;border-radius:20px;font-size:11px;font-weight:600">Sucursal completa</div>
+    </div>
+    <div onclick="setModo('rubro')" style="background:var(--surface);border:2px solid var(--border);border-radius:14px;padding:1.5rem;cursor:pointer;transition:all .15s"
+      onmouseover="this.style.borderColor='var(--blue)';this.style.transform='translateY(-2px)'"
+      onmouseout="this.style.borderColor='var(--border)';this.style.transform=''">
+      <div style="font-size:28px;margin-bottom:.75rem">📐</div>
+      <div style="font-size:15px;font-weight:700;color:var(--navy);margin-bottom:.4rem">Plano de rubro</div>
+      <div style="font-size:12px;color:var(--text2);line-height:1.5">Diseñá el sector de un rubro específico y asignale categorías a cada módulo. Analizá eficiencia por categoría.</div>
+      <div style="margin-top:1rem;display:inline-block;background:#eef3fb;color:var(--blue);padding:3px 10px;border-radius:20px;font-size:11px;font-weight:600">Un rubro</div>
+    </div>
+  </div>
+</div>
+
+<!-- ═══════════════════════════════ PASO 1 -->
+<div id="p1" class="panel">
+  <div class="card">
+    <div class="card-title">Información del sector</div>
+    <div class="frow c4">
+      <div><label>Sucursal</label>
+<select id="cfg_suc" onchange="scheduleAutoSave()">
+  <option value="">— Seleccioná —</option>
+  <option value="F1" >F1 — Centro</option>
+  <option value="F2" >F2 — Barrio</option>
+  <option value="F3" >F3 — Centro</option>
+  <option value="F4" >F4 — Centro</option>
+  <option value="F5" >F5 — Barrio</option>
+  <option value="F6" >F6 — Barrio</option>
+  <option value="F7" >F7 — Centro</option>
+  <option value="F8" >F8 — Centro</option>
+  <option value="F9" >F9 — Barrio</option>
+  <option value="F10" selected>F10 — Nueva</option>
+</select></div>
+      <div id="cfg_rub_wrap"><label id="cfg_rub_label">Rubro</label><input type="text" id="cfg_rub" value="Juguetería"/></div>
+      <div><label>Largo del sector (m)</label><input type="number" id="cfg_largo" value="12" min="1" max="100" step="0.5"/></div>
+      <div><label>Ancho del sector (m)</label><input type="number" id="cfg_ancho" value="8" min="1" max="100" step="0.5"/></div>
+    </div>
+    <div class="frow c4">
+      <div><label>Pasillo entre islas (m)</label><input type="number" id="cfg_pis" value="1.20" min="0.5" max="4" step="0.05"/></div>
+      <div><label>Pasillo lateral (m)</label><input type="number" id="cfg_plat" value="1.20" min="0.5" max="4" step="0.05"/></div>
+      <div><label>Chapas por defecto</label><input type="number" id="cfg_chp" value="5" min="1" max="12"/></div>
+      <div><label>Altura góndola por defecto (m)</label><input type="number" id="cfg_alt" value="1.50" min="0.5" max="4" step="0.1"/></div>
+    </div>
+  </div>
+
+  <div class="card">
+    <div class="card-title">Tipos de módulo disponibles</div>
+    <div class="card-sub">Estos son los anchos estándar. En el diseño de planta podés configurar cada módulo individualmente.</div>
+    <div style="display:flex;gap:8px;flex-wrap:wrap">
+      <div style="background:#eef3fb;border:1px solid #b3d0f7;border-radius:7px;padding:8px 14px;font-size:12px;text-align:center"><div style="font-weight:600;color:var(--blue)">Normal</div><div style="color:var(--text2)">1.30 m</div></div>
+      <div style="background:#eef3fb;border:1px solid #b3d0f7;border-radius:7px;padding:8px 14px;font-size:12px;text-align:center"><div style="font-weight:600;color:var(--blue)">Mediano</div><div style="color:var(--text2)">1.20 m</div></div>
+      <div style="background:#eef3fb;border:1px solid #b3d0f7;border-radius:7px;padding:8px 14px;font-size:12px;text-align:center"><div style="font-weight:600;color:var(--blue)">Angosto</div><div style="color:var(--text2)">0.95 m</div></div>
+      <div style="background:#fff3cd;border:1px solid #d68910;border-radius:7px;padding:8px 14px;font-size:12px;text-align:center"><div style="font-weight:600;color:#9a6e07">Puntera</div><div style="color:#9a6e07">0.75 / 0.90 m</div></div>
+    </div>
+  </div>
+
+  <div style="display:flex;justify-content:flex-end">
+    <button class="btn btn-primary" onclick="initCanvas();goStep(2,document.getElementById('sb2'))">Siguiente → Diseñar planta</button>
+  </div>
+</div>
+
+<!-- ═══════════════════════════════ PASO 2 -->
+<div id="p2" class="panel">
+  <div class="canvas-wrap">
+
+    <!-- Sidebar -->
+    <div>
+      <div class="sidebar">
+        <h3>Agregar elementos</h3>
+        <div class="isla-palette-item" draggable="true" ondragstart="dragNewIsla(event,'isla')" onclick="addIslaClick('isla')">
+          <span>🔲</span> Isla de góndola
+        </div>
+        <div class="isla-palette-item" draggable="true" ondragstart="dragNewIsla(event,'pared')" onclick="addIslaClick('pared')">
+          <span>📐</span> Pared / Mural
+        </div>
+
+        <h3 style="margin-top:.9rem">Controles</h3>
+        <div style="display:flex;flex-direction:column;gap:5px">
+          <button class="btn btn-outline btn-sm" onclick="rotateSelected()">↻ Rotar seleccionada</button>
+          <button class="btn btn-outline btn-sm" onclick="duplicateSelected()">⊕ Duplicar</button>
+          <button class="btn btn-sm" style="background:#fdf2f2;border-color:#e24b4a;color:#c0392b" onclick="deleteSelected()">✕ Eliminar</button>
+        </div>
+
+        <h3 style="margin-top:.9rem">Zoom</h3>
+        <div style="display:flex;gap:5px">
+          <button class="btn btn-outline btn-sm" onclick="zoom(-0.1)">−</button>
+          <button class="btn btn-outline btn-sm" style="flex:1;text-align:center" id="zoomLbl">100%</button>
+          <button class="btn btn-outline btn-sm" onclick="zoom(+0.1)">+</button>
+        </div>
+        <button class="btn btn-outline btn-sm" style="width:100%;margin-top:4px" onclick="fitView()">Ajustar vista</button>
+
+        <div class="hint" id="canvasHint">Hacé clic en "Isla de góndola" para agregar, o arrastrá al canvas.</div>
+      </div>
+
+      <!-- Detalle isla seleccionada -->
+      <div class="isla-detail" id="islaDetail" style="display:none">
+        <h4 id="islaDetailTitle">Isla seleccionada</h4>
+        <div id="islaDetailContent"></div>
+      </div>
+    </div>
+
+    <!-- Canvas -->
+    <div>
+      <div class="canvas-toolbar">
+        <span style="font-size:12px;color:var(--text2)" id="canvasInfo">—</span>
+        <div style="margin-left:auto;display:flex;gap:6px">
+          <button class="btn btn-outline btn-sm" onclick="toggleGrid()">⊞ Grilla</button>
+          <button class="btn btn-outline btn-sm" onclick="clearCanvas()">✕ Limpiar todo</button>
+        </div>
+      </div>
+      <div class="canvas-container" id="canvasContainer">
+        <canvas id="floorCanvas" width="900" height="600"></canvas>
+      </div>
+      <div style="display:flex;justify-content:space-between;margin-top:.75rem">
+        <button class="btn btn-outline" onclick="goStep(1,document.getElementById('sb1'))">← Volver</button>
+        <button class="btn btn-primary" onclick="goStep(3,document.getElementById('sb3'))">Siguiente → Categorías</button>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- ═══════════════════════════════ PASO 3 -->
+<div id="p3" class="panel">
+  <div class="card">
+    <div class="card-title">Categorías del rubro</div>
+    <div style="margin-bottom:.6rem">
+      <span class="card-sub">Ingresá las categorías manualmente o importá desde Excel (formato NAPSE).</span>
+    </div>
+    <div id="excelMsg" style="display:none;padding:6px 10px;border-radius:7px;font-size:12px;margin-bottom:.5rem"></div>
+    <div style="overflow-x:auto">
+      <table class="cat-table">
+        <thead><tr>
+          <th>Color</th><th>Nombre</th><th>Venta ($) <span style="font-size:10px;color:var(--text3)">opcional</span></th><th>% rubro</th><th>Unidades</th><th>Stock góndola</th><th>Chapas</th><th>Altura (m)</th><th></th>
+        </tr></thead>
+        <tbody id="catBody"></tbody>
+      </table>
+    </div>
+    <div style="display:flex;gap:.5rem;margin-top:.6rem;flex-wrap:wrap;align-items:center">
+      <button class="btn btn-outline btn-sm" onclick="addCat()">+ Agregar categoría</button>
+      <label class="btn btn-outline btn-sm" style="cursor:pointer">
+        📥 Importar Excel
+        <input type="file" id="excelInput" accept=".xlsx,.xls,.csv" style="display:none" onchange="importExcel(event)"/>
+      </label>
+      <button class="btn btn-outline btn-sm" id="btnRubrosFERNI" style="display:none" onclick="cargarRubrosFERNI()">⚡ Cargar rubros FERNI</button>
+    </div>
+  </div>
+  <div style="display:flex;justify-content:space-between;margin-top:.5rem">
+    <button class="btn btn-outline" onclick="goStep(2,document.getElementById('sb2'))">← Volver</button>
+    <button class="btn btn-primary" onclick="goStep(4,document.getElementById('sb4'));buildAssignPanel()">Siguiente → Asignar</button>
+  </div>
+</div>
+
+<!-- ═══════════════════════════════ PASO 4 -->
+<div id="p4" class="panel">
+  <div class="canvas-wrap">
+    <div>
+      <div class="sidebar">
+        <h3>Categorías</h3>
+        <div class="cat-list-pg" id="catListPg"></div>
+        <div style="display:flex;gap:5px;margin-top:.5rem">
+          <button id="btnBorrarMod" style="flex:1;padding:5px;background:var(--s2);border:1px solid var(--border);border-radius:6px;font-size:11px;color:var(--text2);cursor:pointer;transition:all .12s" onclick="toggleBorrarModo()">🗑 Borrar módulo</button>
+          <button style="flex:1;padding:5px;background:var(--s2);border:1px solid var(--border);border-radius:6px;font-size:11px;color:var(--text2);cursor:pointer" onclick="clearActiveCat()">✕ Deseleccionar</button>
+        </div>
+        <div class="hint" id="assignHint">Seleccioná una categoría y tocá un módulo en el plano.</div>
+      </div>
+      <div class="metrics-row" style="margin-top:.75rem;grid-template-columns:1fr 1fr">
+        <div class="metric"><div class="metric-label">Metros asignados</div><div class="metric-value" id="mA2">0 m</div></div>
+        <div class="metric"><div class="metric-label">Módulos asignados</div><div class="metric-value" id="mM2">0</div></div>
+      </div>
+    </div>
+    <div>
+      <div class="card" style="padding:.75rem">
+        <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:.5rem">
+          <span style="font-size:13px;font-weight:600" id="assignTitle">Asignación de categorías</span>
+          <div style="display:flex;gap:5px">
+            <button class="btn btn-outline btn-sm" onclick="resetAssign()">Limpiar</button>
+            <button class="btn btn-outline btn-sm" onclick="zoom2(-0.1)">−</button>
+            <button class="btn btn-outline btn-sm" id="zoomLbl3" style="min-width:44px;text-align:center;pointer-events:none">100%</button>
+            <button class="btn btn-outline btn-sm" onclick="zoom2(+0.1)">+</button>
+            <button class="btn btn-outline btn-sm" onclick="fitView3()">Ajustar</button>
+          </div>
+        </div>
+        <div style="overflow:auto;border:1px solid var(--border);border-radius:8px;background:#fff;height:480px">
+        <canvas id="assignCanvas" style="display:block;cursor:pointer"></canvas>
+        </div>
+        <div class="info-bar" id="assignInfoBar">Seleccioná una categoría y tocá un módulo.</div>
+        <div class="legend" id="assignLegend"></div>
+      </div>
+      <div style="display:flex;justify-content:space-between;margin-top:.5rem">
+        <button class="btn btn-outline" onclick="goStep(3,document.getElementById('sb3'))">← Volver</button>
+        <button class="btn btn-primary" onclick="goStep(5,document.getElementById('sb5'));buildAnalisis()">Ver análisis →</button>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- ═══════════════════════════════ PASO 5 -->
+<div id="p5" class="panel">
+  <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:1rem">
+    <h2 style="font-size:16px;font-weight:600" id="analisisTitulo">Análisis del planograma</h2>
+    <button class="btn btn-outline btn-sm" onclick="goStep(4,document.getElementById('sb4'))">← Volver</button>
+  </div>
+  <div id="analisisOut"></div>
+</div>
+
+<script>
+// ════════════════════════════════════════════════════════════════════
+// ESTADO GLOBAL
+// ════════════════════════════════════════════════════════════════════
+document.getElementById('fechaHdr').textContent =
+  new Date().toLocaleDateString('es-AR',{weekday:'long',year:'numeric',month:'long',day:'numeric'});
+
+const PALETA=['2a78d6','1baf7a','e87ba4','9b59b6','d35400','e8363b','185fa5',
+  '1e8449','d68910','c0392b','8e44ad','5d6d7e','e056b2','27ae60','7f8c8d',
+  'f39c12','16a085','2ecc71','117a65','6c3483'];
+
+const MOD_TYPES={
+  n130:{label:'Normal',w:1.30},
+  n120:{label:'Mediano',w:1.20},
+  n095:{label:'Angosto',w:0.95},
+  p075:{label:'Puntera 75cm',w:0.75,puntera:true},
+  p090:{label:'Puntera 90cm',w:0.90,puntera:true},
+};
+
+// Elementos en canvas (islas/paredes)
+let elements=[]; // {id,type:'isla'|'pared',x,y,rotation:0|90,mods_a:[],mods_b:[],hasPared:false}
+let selectedEl=null;
+let cats=[];
+let catIdN=1;
+let activeCat=null;
+let modoBorrar=false;
+let _borrarModo=false;
+let assignMap={}; // {elId_side_modIdx: [catId, ...]} — máx 3 cats por módulo
+
+// Helpers assignMap
+const getModCats = (key) => { const v=assignMap[key]; if(!v) return []; return Array.isArray(v)?v:[v]; };
+const setModCat  = (key, catId) => {
+  const cur = getModCats(key);
+  if(cur.includes(catId)){ cfg('assignInfoBar').textContent='Esa categoría ya está en este módulo.'; return; }
+  if(cur.length>=3){ cfg('assignInfoBar').textContent='Máximo 3 categorías por módulo.'; return; }
+  assignMap[key] = [...cur, catId];
+  scheduleAutoSave();
+};
+const delModKey  = (key) => { delete assignMap[key]; };
+
+// Canvas 2D (diseño planta)
+let canvas2d, ctx2d;
+let scale=1; // px per meter
+let SCALE=60; // px per meter base
+let showGrid=true;
+let dragging=null;
+let dragOffX=0,dragOffY=0;
+let elIdN=1;
+let pan2X=0, pan2Y=0; // pan del canvas de diseño
+let isPan2=false, pan2SX=0, pan2SY=0, pan2SPX=0, pan2SPY=0;
+
+// Canvas asignación
+let canvas3, ctx3;
+let scale3=1;
+let panX=0, panY=0; // offset de pan en px
+let isPanning=false, panStartX=0, panStartY=0, panStartPanX=0, panStartPanY=0;
+
+// ════════════════════════════════════════════════════════════════════
+// MODO + NAVEGACIÓN
+// ════════════════════════════════════════════════════════════════════
+let modoActual = null; // 'general' | 'rubro'
+
+const RUBROS_FERNI = [
+  'Perfumería y Limpieza','Alimentos y Golosinas','Bazar y Deco',
+  'Librería','Textil','Juguetería','Electrónica','Deportes',
+  'Mascotas','Automotor','Ferretería','Juguetes de Jardín'
+];
+
+function setModo(modo){
+  modoActual = modo;
+  document.getElementById('stepsNav').style.display = 'flex';
+  document.getElementById('modoLabel').textContent =
+    modo==='general' ? 'Plano General de Sucursal' : 'Plano de Rubro';
+
+  // Adaptar labels según modo
+  if(modo==='general'){
+    document.getElementById('sb3label').textContent = 'Rubros';
+    document.getElementById('sb4label').textContent = 'Asignar rubros';
+    document.getElementById('cfg_rub_label').textContent = 'Nombre del plano';
+    document.getElementById('cfg_rub').value = 'Sucursal';
+    document.getElementById('cfg_rub').placeholder = 'Ej: Planta principal';
+    // Agregar selector de rubros predefinidos en paso 3
+    _updateCatLabels(modo);
+  } else {
+    document.getElementById('sb3label').textContent = 'Categorías';
+    document.getElementById('sb4label').textContent = 'Asignar';
+    document.getElementById('cfg_rub_label').textContent = 'Rubro';
+    document.getElementById('cfg_rub').placeholder = 'Ej: Juguetería';
+    _updateCatLabels(modo);
+  }
+
+  goStep(1, document.getElementById('sb1'));
+}
+
+function _updateCatLabels(modo){
+  const isGeneral = modo==='general';
+  // Paso 3
+  const cardTitle = document.querySelector('#p3 .card-title');
+  if(cardTitle) cardTitle.textContent = isGeneral ? 'Rubros de la sucursal' : 'Categorías del rubro';
+  const cardSub = document.querySelector('#p3 .card-sub');
+  if(cardSub) cardSub.textContent = isGeneral
+    ? 'Ingresá cada rubro con su venta o % de participación.'
+    : 'Ingresá las categorías manualmente o importá desde Excel.';
+  const addBtn = document.querySelector('#p3 .btn-outline.btn-sm');
+  if(addBtn) addBtn.textContent = isGeneral ? '+ Agregar rubro' : '+ Agregar categoría';
+  // Paso 4
+  const h3Cat = document.querySelector('#p4 .sidebar h3');
+  if(h3Cat) h3Cat.textContent = isGeneral ? 'Rubros' : 'Categorías';
+  const hintEl = document.getElementById('assignHint');
+  if(hintEl) hintEl.textContent = isGeneral
+    ? 'Seleccioná un rubro y tocá un módulo en el plano.'
+    : 'Seleccioná una categoría y tocá un módulo en el plano.';
+  const assignTitleEl = document.getElementById('assignTitle');
+  if(assignTitleEl) assignTitleEl.textContent = isGeneral ? 'Asignación de rubros' : 'Asignación de categorías';
+  // Botón carga rápida
+  const btnRubros = document.getElementById('btnRubrosFERNI');
+  if(btnRubros) btnRubros.style.display = isGeneral ? 'inline-flex' : 'none';
+}
+
+function goStep(n,btn){
+  document.querySelectorAll('.panel').forEach(p=>p.classList.remove('active'));
+  document.querySelectorAll('.sbtn').forEach(b=>b.classList.remove('active'));
+  document.getElementById('p'+n).classList.add('active');
+  if(btn) btn.classList.add('active');
+  if(n===0){
+    document.getElementById('stepsNav').style.display='none';
+    document.getElementById('modoLabel').textContent='Seleccioná un modo para comenzar';
+  }
+  if(n===2){ drawFloor(); }
+  if(n===4){ buildAssignPanel(); }
+  if(n===5){ buildAnalisis(); }
+}
+
+// ════════════════════════════════════════════════════════════════════
+// PASO 2 — CANVAS 2D PLANTA
+// ════════════════════════════════════════════════════════════════════
+function cfg(id){return document.getElementById(id)}
+
+function initCanvas(){
+  canvas2d=document.getElementById('floorCanvas');
+  ctx2d=canvas2d.getContext('2d');
+  const largo=+cfg('cfg_largo').value||12;
+  const ancho=+cfg('cfg_ancho').value||8;
+  // escala para que quepa bien
+  const maxW=880, maxH=580;
+  SCALE=Math.min(maxW/largo, maxH/ancho, 80);
+  canvas2d.width=Math.round(largo*SCALE)+60;
+  canvas2d.height=Math.round(ancho*SCALE)+60;
+  setupCanvasEvents();
+  drawFloor();
+}
+
+function drawFloor(){
+  if(!canvas2d) return;
+  const largo=+cfg('cfg_largo').value||12;
+  const ancho=+cfg('cfg_ancho').value||8;
+  const W=canvas2d.width, H=canvas2d.height;
+  const MARG=30;
+  const S=SCALE*scale;
+
+  ctx2d.clearRect(0,0,W,H);
+  ctx2d.save();
+  ctx2d.translate(pan2X, pan2Y);
+
+  // Fondo sala
+  ctx2d.fillStyle='#f8f7f4';
+  ctx2d.strokeStyle='#c8c5bf';
+  ctx2d.lineWidth=2;
+  ctx2d.beginPath();
+  ctx2d.roundRect(MARG,MARG,largo*S,ancho*S,4);
+  ctx2d.fill();
+  ctx2d.stroke();
+
+  // Grilla
+  if(showGrid){
+    ctx2d.strokeStyle='#e8e6e0';
+    ctx2d.lineWidth=0.5;
+    for(let x=0;x<=largo;x++){
+      ctx2d.beginPath();
+      ctx2d.moveTo(MARG+x*S,MARG);
+      ctx2d.lineTo(MARG+x*S,MARG+ancho*S);
+      ctx2d.stroke();
+    }
+    for(let y=0;y<=ancho;y++){
+      ctx2d.beginPath();
+      ctx2d.moveTo(MARG,MARG+y*S);
+      ctx2d.lineTo(MARG+largo*S,MARG+y*S);
+      ctx2d.stroke();
+    }
+    // Labels metros
+    ctx2d.fillStyle='#b4b2ac';
+    ctx2d.font=`${Math.max(9,S*0.13)}px system-ui`;
+    ctx2d.textAlign='center';
+    for(let x=0;x<=largo;x+=Math.ceil(largo/10)){
+      ctx2d.fillText(x+'m',MARG+x*S,MARG-8);
+    }
+    ctx2d.textAlign='right';
+    for(let y=0;y<=ancho;y+=Math.ceil(ancho/8)){
+      ctx2d.fillText(y+'m',MARG-6,MARG+y*S+3);
+    }
+  }
+
+  // Dibujar elementos
+  elements.forEach(el=>{
+    drawElement(el, el===selectedEl);
+  });
+  // Snap lines
+  if(dragging && (snapLines.h.length||snapLines.v.length)){
+    const S2=SCALE*scale;
+    ctx2d.save();
+    ctx2d.strokeStyle='#e8363b';
+    ctx2d.lineWidth=1;
+    ctx2d.setLineDash([4,3]);
+    // Deduplicar snap lines antes de dibujar
+    [...new Set(snapLines.h)].forEach(yM=>{
+      ctx2d.beginPath();
+      ctx2d.moveTo(MARG,MARG+yM*S2);
+      ctx2d.lineTo(MARG+(+cfg('cfg_largo').value||12)*S2,MARG+yM*S2);
+      ctx2d.stroke();
+    });
+    [...new Set(snapLines.v)].forEach(xM=>{
+      ctx2d.beginPath();
+      ctx2d.moveTo(MARG+xM*S2,MARG);
+      ctx2d.lineTo(MARG+xM*S2,MARG+(+cfg('cfg_ancho').value||8)*S2);
+      ctx2d.stroke();
+    });
+    ctx2d.setLineDash([]);
+    ctx2d.restore();
+  }
+  // Cotas: distancia libre desde los 4 lados de la góndola que se arrastra
+  if(dragging && dragGaps){
+    const S2=SCALE*scale, B=dragGaps.B;
+    const X=m=>MARG+m*S2, Y=m=>MARG+m*S2;
+    ctx2d.save();
+    // Contorno rojo si se superpone con otra góndola
+    if(dragGaps.collisions.length){
+      ctx2d.strokeStyle='#e8363b'; ctx2d.lineWidth=2; ctx2d.setLineDash([5,3]);
+      ctx2d.strokeRect(X(B.x1)-2,Y(B.y1)-2,(B.x2-B.x1)*S2+4,(B.y2-B.y1)*S2+4);
+      ctx2d.setLineDash([]);
+    }
+    const drawCota=(s,horizontal,x1,y1,x2,y2)=>{
+      const color=s.ok===null?'#2a78d6':(s.ok?'#1baf7a':'#e8363b');
+      ctx2d.strokeStyle=color; ctx2d.fillStyle=color; ctx2d.lineWidth=1.5; ctx2d.setLineDash([]);
+      ctx2d.beginPath(); ctx2d.moveTo(x1,y1); ctx2d.lineTo(x2,y2);
+      // topes en los extremos
+      if(horizontal){ ctx2d.moveTo(x1,y1-5); ctx2d.lineTo(x1,y1+5); ctx2d.moveTo(x2,y2-5); ctx2d.lineTo(x2,y2+5); }
+      else { ctx2d.moveTo(x1-5,y1); ctx2d.lineTo(x1+5,y1); ctx2d.moveTo(x2-5,y2); ctx2d.lineTo(x2+5,y2); }
+      ctx2d.stroke();
+      const txt=s.d.toFixed(2)+' m';
+      ctx2d.font='bold 11px system-ui';
+      const tw=ctx2d.measureText(txt).width;
+      const cx=(x1+x2)/2, cy=(y1+y2)/2;
+      const lx=horizontal?cx:cx+8+tw/2, ly=horizontal?cy-11:cy;
+      ctx2d.fillStyle='rgba(255,255,255,0.92)';
+      ctx2d.fillRect(lx-tw/2-3,ly-8,tw+6,16);
+      ctx2d.strokeStyle=color; ctx2d.lineWidth=1; ctx2d.strokeRect(lx-tw/2-3,ly-8,tw+6,16);
+      ctx2d.fillStyle=color; ctx2d.textAlign='center'; ctx2d.textBaseline='middle';
+      ctx2d.fillText(txt,lx,ly);
+    };
+    const L=dragGaps.left, R=dragGaps.right, U=dragGaps.up, D=dragGaps.down;
+    drawCota(L,true, X(B.x1-L.d),Y(L.mid), X(B.x1),Y(L.mid));
+    drawCota(R,true, X(B.x2),Y(R.mid),     X(B.x2+R.d),Y(R.mid));
+    drawCota(U,false,X(U.mid),Y(B.y1-U.d), X(U.mid),Y(B.y1));
+    drawCota(D,false,X(D.mid),Y(B.y2),     X(D.mid),Y(B.y2+D.d));
+    ctx2d.restore();
+  }
+  // Marcador posición sugerida
+  if(suggestedPos && Date.now()-suggestedPos.timer<3000){
+    const S2=SCALE*scale;
+    ctx2d.save();
+    ctx2d.strokeStyle='#1baf7a';
+    ctx2d.lineWidth=2;
+    ctx2d.setLineDash([6,4]);
+    ctx2d.strokeRect(MARG+suggestedPos.x*S2-3,MARG+suggestedPos.y*S2-3,suggestedPos.dims.w*S2+6,suggestedPos.dims.h*S2+6);
+    ctx2d.setLineDash([]);
+    ctx2d.fillStyle='#1baf7a';
+    ctx2d.font='bold 11px system-ui';
+    ctx2d.textAlign='center';
+    ctx2d.fillText('Posición sugerida',MARG+(suggestedPos.x+suggestedPos.dims.w/2)*S2,MARG+suggestedPos.y*S2-10);
+    ctx2d.restore();
+  }
+
+  ctx2d.restore();
+  // Info canvas
+  cfg('canvasInfo').textContent=`${largo}m × ${ancho}m · ${elements.length} elemento(s) · Escala ${Math.round(SCALE*scale)} px/m`;
+}
+
+function drawElement(el, selected){
+  const S=SCALE*scale;
+  const MARG=30;
+  const cx=MARG+el.x*S;
+  const cy=MARG+el.y*S;
+  const rot=el.rotation||0;
+  const isPared=el.type==='pared';
+
+  ctx2d.save();
+  ctx2d.translate(cx, cy);
+  ctx2d.rotate(rot*Math.PI/180);
+
+  // Calcular dimensiones del elemento
+  const dims=getElDims(el);
+  const W=dims.w*S, H=dims.h*S;
+
+  // Sombra si seleccionado
+  if(selected){
+    ctx2d.shadowColor='rgba(42,120,214,0.35)';
+    ctx2d.shadowBlur=12;
+  }
+
+  if(isPared){
+    // Pared = góndola cara única — módulos idénticos a isla
+    const GAP=4;
+    // Fondo base
+    ctx2d.fillStyle='#ede9e0';
+    ctx2d.strokeStyle=selected?'#2a78d6':'#888780';
+    ctx2d.lineWidth=selected?2.5:1.5;
+    ctx2d.beginPath(); ctx2d.roundRect(0,0,W,H,5); ctx2d.fill(); ctx2d.stroke();
+    // Label "cara única" arriba izquierda
+    ctx2d.fillStyle=selected?'#2a78d6':'#888780';
+    ctx2d.font=`${Math.max(7,Math.min(9,H*0.14))}px system-ui`;
+    ctx2d.textAlign='left'; ctx2d.textBaseline='top';
+    ctx2d.fillText('cara única', 5, 3);
+    // Módulos pared — con multi-cat verticales
+    let curX=0;
+    (el.mods||[]).forEach((m,i)=>{
+      const mw=Math.round(m.w*S);
+      const modCats=getModCats(`${el.id}_u_${i}`).map(id=>cats.find(cc=>cc.id===id)).filter(Boolean);
+      const rx=curX+GAP/2, rw=mw-GAP, ry=2, rh=H-4;
+      if(modCats.length===0){
+        ctx2d.fillStyle='#f0eeea'; ctx2d.strokeStyle='#c8c5bf'; ctx2d.lineWidth=1;
+        ctx2d.beginPath(); ctx2d.roundRect(rx,ry,rw,rh,5); ctx2d.fill(); ctx2d.stroke();
+        if(rw>18&&rh>14){
+          ctx2d.fillStyle='#9a9895'; ctx2d.font=`${Math.max(7,Math.min(10,rw*0.1))}px system-ui`;
+          ctx2d.textAlign='center'; ctx2d.textBaseline='middle';
+          ctx2d.fillText(m.w.toFixed(2)+' m',rx+rw/2,ry+rh/2);
+        }
+      } else {
+        const sliceH=rh/modCats.length;
+        modCats.forEach((cat,ci)=>{
+          const sy=ry+ci*sliceH;
+          const sh=ci===modCats.length-1?rh-ci*sliceH:sliceH;
+          ctx2d.fillStyle='#'+cat.color;
+          ctx2d.strokeStyle='rgba(0,0,0,0.12)'; ctx2d.lineWidth=1;
+          ctx2d.beginPath();
+          if(ci===0&&modCats.length===1) ctx2d.roundRect(rx,sy,rw,sh,5);
+          else if(ci===0) ctx2d.roundRect(rx,sy,rw,sh,[5,5,0,0]);
+          else if(ci===modCats.length-1) ctx2d.roundRect(rx,sy,rw,sh,[0,0,5,5]);
+          else ctx2d.rect(rx,sy,rw,sh);
+          ctx2d.fill(); ctx2d.stroke();
+          if(!( ci===modCats.length-1)){
+            ctx2d.strokeStyle='rgba(255,255,255,0.4)'; ctx2d.lineWidth=1;
+            ctx2d.beginPath(); ctx2d.moveTo(rx,sy+sh); ctx2d.lineTo(rx+rw,sy+sh); ctx2d.stroke();
+          }
+          if(rw>18&&sh>10){
+            ctx2d.fillStyle='rgba(255,255,255,0.92)';
+            ctx2d.font=`bold ${Math.max(6,Math.min(9,rw*0.09))}px system-ui`;
+            ctx2d.textAlign='center'; ctx2d.textBaseline='middle';
+            const nm=cat.name.length>10?cat.name.slice(0,9)+'…':cat.name;
+            ctx2d.fillText(nm,rx+rw/2,sy+sh/2);
+          }
+        });
+        ctx2d.strokeStyle='rgba(0,0,0,0.18)'; ctx2d.lineWidth=1.5;
+        ctx2d.beginPath(); ctx2d.roundRect(rx,ry,rw,rh,5); ctx2d.stroke();
+      }
+      curX+=mw;
+    });
+    // Nombre pared abajo centrado
+    ctx2d.fillStyle='rgba(26,39,68,0.7)';
+    ctx2d.font=`bold ${Math.max(8,Math.min(11,H*0.18))}px system-ui`;
+    ctx2d.textAlign='center'; ctx2d.textBaseline='bottom';
+    ctx2d.fillText(el.label||'Pared',W/2,H-3);
+    if(selected){
+      ctx2d.strokeStyle='#2a78d6'; ctx2d.lineWidth=2.5; ctx2d.setLineDash([5,3]);
+      ctx2d.beginPath(); ctx2d.roundRect(-4,-4,W+8,H+8,7); ctx2d.stroke();
+      ctx2d.setLineDash([]);
+    }
+  } else {
+    // Isla — dibujar módulos
+    let curX=0;
+    // Puntera inicio
+    const pt=el.puntera_w||0.75;
+    const ptW=pt*S;
+    ctx2d.fillStyle='#fff3cd';
+    ctx2d.strokeStyle=selected?'#2a78d6':'#d68910';
+    ctx2d.lineWidth=selected?2:1;
+    ctx2d.beginPath(); ctx2d.roundRect(curX,0,ptW,H,3); ctx2d.fill(); ctx2d.stroke();
+    ctx2d.fillStyle='#9a6e07';
+    ctx2d.font=`${Math.max(7,S*0.1)}px system-ui`;
+    ctx2d.textAlign='center'; ctx2d.textBaseline='middle';
+    ctx2d.fillText('P',curX+ptW/2,H/2);
+    curX+=ptW;
+
+    // Módulos cara A+B con multi-cat verticales
+    const drawFace2d=(faceY, faceH, keyFn)=>{
+      let fcx=curX;
+      el.mods_a.forEach((m,i)=>{
+        const mw=m.w*S;
+        const modCats=getModCats(keyFn(i)).map(id=>cats.find(cc=>cc.id===id)).filter(Boolean);
+        if(modCats.length===0){
+          ctx2d.fillStyle='#e8e7e2';
+          ctx2d.strokeStyle=selected?'#2a78d6':'#c8c5bf'; ctx2d.lineWidth=0.8;
+          ctx2d.fillRect(fcx,faceY,mw,faceH); ctx2d.strokeRect(fcx,faceY,mw,faceH);
+        } else {
+          const sliceH=faceH/modCats.length;
+          modCats.forEach((cat,ci)=>{
+            const sy=faceY+ci*sliceH;
+            const sh=ci===modCats.length-1?faceH-ci*sliceH:sliceH;
+            ctx2d.fillStyle='#'+cat.color;
+            ctx2d.strokeStyle='rgba(0,0,0,0.07)'; ctx2d.lineWidth=0.5;
+            ctx2d.fillRect(fcx,sy,mw,sh); ctx2d.strokeRect(fcx,sy,mw,sh);
+            if(ci<modCats.length-1){
+              ctx2d.strokeStyle='rgba(255,255,255,0.4)'; ctx2d.lineWidth=0.8;
+              ctx2d.beginPath(); ctx2d.moveTo(fcx,sy+sh); ctx2d.lineTo(fcx+mw,sy+sh); ctx2d.stroke();
+            }
+            if(mw>16&&sh>8){
+              ctx2d.fillStyle='rgba(255,255,255,0.85)';
+              ctx2d.font=`${Math.max(6,Math.min(8,mw*0.08))}px system-ui`;
+              ctx2d.textAlign='center'; ctx2d.textBaseline='middle';
+              const nm=cat.name.length>7?cat.name.slice(0,6)+'…':cat.name;
+              ctx2d.fillText(nm,fcx+mw/2,sy+sh/2);
+            }
+          });
+        }
+        fcx+=mw;
+      });
+    };
+    drawFace2d(0, H/2, i=>`${el.id}_a_${i}`);
+    drawFace2d(H/2, H/2, i=>`${el.id}_b_${i}`);
+
+    // Espalda góndola
+    const totalModW2d=el.mods_a.reduce((a,m)=>a+m.w*S,0);
+    ctx2d.strokeStyle='#888780'; ctx2d.lineWidth=1.5; ctx2d.setLineDash([3,2]);
+    ctx2d.beginPath(); ctx2d.moveTo(curX,H/2); ctx2d.lineTo(curX+totalModW2d,H/2); ctx2d.stroke();
+    ctx2d.setLineDash([]);
+    curX=ptW+totalModW2d;
+
+    // Puntera fin
+    ctx2d.fillStyle='#fff3cd';
+    ctx2d.strokeStyle=selected?'#2a78d6':'#d68910';
+    ctx2d.lineWidth=selected?2:1;
+    ctx2d.setLineDash([]);
+    ctx2d.beginPath(); ctx2d.roundRect(curX,0,ptW,H,3); ctx2d.fill(); ctx2d.stroke();
+    ctx2d.fillStyle='#9a6e07';
+    ctx2d.font=`${Math.max(7,S*0.1)}px system-ui`;
+    ctx2d.textAlign='center'; ctx2d.textBaseline='middle';
+    ctx2d.fillText('P',curX+ptW/2,H/2);
+
+    // Borde isla
+    ctx2d.strokeStyle=selected?'#2a78d6':'#888780';
+    ctx2d.lineWidth=selected?2.5:1;
+    ctx2d.setLineDash([]);
+    ctx2d.beginPath(); ctx2d.roundRect(0,0,W,H,4); ctx2d.stroke();
+
+    // Etiqueta con fondo para legibilidad
+    const lbl=el.label||`Isla ${el.id}`;
+    ctx2d.font=`bold ${Math.max(8,S*0.12)}px system-ui`;
+    ctx2d.textAlign='center'; ctx2d.textBaseline='middle';
+    const tw2=ctx2d.measureText(lbl).width;
+    ctx2d.fillStyle='rgba(255,255,255,0.82)';
+    ctx2d.fillRect(W/2-tw2/2-4,H/2-8,tw2+8,16);
+    ctx2d.fillStyle='#1a2744';
+    ctx2d.fillText(lbl,W/2,H/2);
+  }
+
+  // Borde selección
+  if(selected){
+    ctx2d.shadowColor='transparent'; ctx2d.shadowBlur=0;
+    ctx2d.strokeStyle='#2a78d6';
+    ctx2d.lineWidth=2.5;
+    ctx2d.setLineDash([5,3]);
+    ctx2d.beginPath(); ctx2d.roundRect(-4,-4,W+8,H+8,6); ctx2d.stroke();
+    ctx2d.setLineDash([]);
+  }
+
+  ctx2d.restore();
+}
+
+function getElDims(el){
+  if(el.type==='pared'){
+    const w=(el.mods||[]).reduce((a,m)=>a+m.w,0)||3;
+    const h=el.depth||0.40;
+    return {w,h};
+  }
+  const pt=el.puntera_w||0.75;
+  const modW=el.mods_a.reduce((a,m)=>a+m.w,0);
+  const w=pt*2+modW;
+  const h=(el.depth||0.6); // profundidad visual isla en metros
+  return {w,h};
+}
+
+// Agregar isla
+function makeDefaultIsla(type){
+  const id=elIdN++;
+  if(type==='pared'){
+    return {id,type:'pared',x:0.5,y:0.5,rotation:0,
+      label:'Pared',depth:0.80,
+      mods:[
+        {tipo:'n130',w:1.30,h:+cfg('cfg_alt').value||2.00,chapas:+cfg('cfg_chp').value||7},
+        {tipo:'n130',w:1.30,h:+cfg('cfg_alt').value||2.00,chapas:+cfg('cfg_chp').value||7},
+        {tipo:'n130',w:1.30,h:+cfg('cfg_alt').value||2.00,chapas:+cfg('cfg_chp').value||7},
+      ]};
+  }
+  return {
+    id,type:'isla',x:1,y:1,rotation:0,
+    puntera_w:0.30,puntera_d:0.30,depth:0.60,
+    label:`Isla ${id}`,
+    mods_a:[
+      {tipo:'n130',w:1.30,h:+cfg('cfg_alt').value||1.50,chapas:+cfg('cfg_chp').value||5},
+      {tipo:'n130',w:1.30,h:+cfg('cfg_alt').value||1.50,chapas:+cfg('cfg_chp').value||5},
+      {tipo:'n130',w:1.30,h:+cfg('cfg_alt').value||1.50,chapas:+cfg('cfg_chp').value||5},
+      {tipo:'n130',w:1.30,h:+cfg('cfg_alt').value||1.50,chapas:+cfg('cfg_chp').value||5},
+    ],
+    mods_b:[
+      {tipo:'n130',w:1.30,h:+cfg('cfg_alt').value||1.50,chapas:+cfg('cfg_chp').value||5},
+      {tipo:'n130',w:1.30,h:+cfg('cfg_alt').value||1.50,chapas:+cfg('cfg_chp').value||5},
+      {tipo:'n130',w:1.30,h:+cfg('cfg_alt').value||1.50,chapas:+cfg('cfg_chp').value||5},
+      {tipo:'n130',w:1.30,h:+cfg('cfg_alt').value||1.50,chapas:+cfg('cfg_chp').value||5},
+    ],
+  };
+}
+
+function addIslaClick(type){
+  const el=makeDefaultIsla(type);
+  // Posicionar en el centro aproximado
+  const largo=+cfg('cfg_largo').value||12;
+  const ancho=+cfg('cfg_ancho').value||8;
+  el.x=largo/2-getElDims(el).w/2;
+  el.y=ancho/2-getElDims(el).h/2;
+  elements.push(el);
+  selectedEl=el;
+  drawFloor();
+  showIslaDetail(el);
+  cfg('canvasHint').textContent=`${type==='isla'?'Isla':'Pared'} agregada. Arrastrá para posicionar, o usá los controles del panel.`;
+}
+
+function dragNewIsla(e,type){ e.dataTransfer.setData('eltype',type); }
+
+// Canvas events
+function setupCanvasEvents(){
+  if(canvas2d._evtOk) return; canvas2d._evtOk=true;
+  canvas2d.addEventListener('mousedown', onMouseDown);
+  canvas2d.addEventListener('mousemove', onMouseMove);
+  canvas2d.addEventListener('mouseup',   onMouseUp);
+  canvas2d.addEventListener('dblclick',  onDblClick);
+  canvas2d.addEventListener('dragover',  e=>e.preventDefault());
+  canvas2d.addEventListener('drop', e=>{
+    e.preventDefault();
+    const type=e.dataTransfer.getData('eltype');
+    const rect=canvas2d.getBoundingClientRect();
+    const MARG=30, S=SCALE*scale;
+    const el=makeDefaultIsla(type);
+    el.x=(e.clientX-rect.left-MARG-pan2X)/S;
+    el.y=(e.clientY-rect.top-MARG-pan2Y)/S;
+    elements.push(el);
+    selectedEl=el;
+    drawFloor();
+    showIslaDetail(el);
+  });
+}
+
+function getCanvasPos(e){
+  const rect=canvas2d.getBoundingClientRect();
+  const MARG=30, S=SCALE*scale;
+  return {x:(e.clientX-rect.left-MARG-pan2X)/S, y:(e.clientY-rect.top-MARG-pan2Y)/S};
+}
+
+function hitTest(el, mx, my){
+  const dims=getElDims(el);
+  const rot=el.rotation||0;
+  // Rotate point around el origin
+  const dx=mx-el.x, dy=my-el.y;
+  const rad=-rot*Math.PI/180;
+  const rx=dx*Math.cos(rad)-dy*Math.sin(rad);
+  const ry=dx*Math.sin(rad)+dy*Math.cos(rad);
+  return rx>=-0.05 && rx<=dims.w+0.05 && ry>=-0.05 && ry<=dims.h+0.05;
+}
+
+function onMouseDown(e){
+  const {x,y}=getCanvasPos(e);
+  // Hit test reverse order (top elements first)
+  let found=null;
+  for(let i=elements.length-1;i>=0;i--){
+    if(hitTest(elements[i],x,y)){ found=elements[i]; break; }
+  }
+  if(found){
+    selectedEl=found;
+    dragging=found;
+    dragOffX=x-found.x;
+    dragOffY=y-found.y;
+    showIslaDetail(found);
+    drawFloor();
+  } else {
+    // Sin elemento — iniciar pan
+    selectedEl=null;
+    cfg('islaDetail').style.display='none';
+    isPan2=true;
+    pan2SX=e.clientX; pan2SY=e.clientY;
+    pan2SPX=pan2X; pan2SPY=pan2Y;
+    canvas2d.style.cursor='grabbing';
+    drawFloor();
+  }
+}
+
+// ── Geometría real de un elemento en coordenadas de sala (m), con rotación ──
+// El canvas rota alrededor del origen (el.x, el.y), así que el rectángulo
+// ocupado cambia de lado según la rotación. Devuelve la caja alineada a ejes.
+function getElBounds(el, x, y){
+  if(x===undefined) x=el.x;
+  if(y===undefined) y=el.y;
+  const d=getElDims(el);
+  const rot=(((el.rotation||0)%360)+360)%360;
+  if(rot===90)  return {x1:x-d.h, y1:y,     x2:x,     y2:y+d.w};
+  if(rot===180) return {x1:x-d.w, y1:y-d.h, x2:x,     y2:y};
+  if(rot===270) return {x1:x,     y1:y-d.w, x2:x+d.h, y2:y};
+  return {x1:x, y1:y, x2:x+d.w, y2:y+d.h};
+}
+
+function elName(el){ return el.label||(el.type==='pared'?'Pared':'Isla '+el.id); }
+function escHtml(s){ return String(s).replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c])); }
+
+// Distancia libre desde cada uno de los 4 lados del elemento hasta lo más cercano
+// que tenga enfrente (otra góndola/pared del plano o la pared del local).
+function computeGaps(el){
+  const largo=+cfg('cfg_largo').value||12;
+  const ancho=+cfg('cfg_ancho').value||8;
+  const pis=+cfg('cfg_pis').value||1.20;   // pasillo entre góndolas
+  const plat=+cfg('cfg_plat').value||1.20; // pasillo contra pared del local
+  const EPS=0.001;
+  const B=getElBounds(el);
+  const others=elements.filter(o=>o!==el).map(o=>({o,b:getElBounds(o)}));
+  const isPared=el.type==='pared';
+
+  const pick=(sideTest, gapFn, overlapAxis, wallGap)=>{
+    let best=null;
+    others.forEach(({o,b})=>{
+      const lo=overlapAxis==='y'?Math.max(B.y1,b.y1):Math.max(B.x1,b.x1);
+      const hi=overlapAxis==='y'?Math.min(B.y2,b.y2):Math.min(B.x2,b.x2);
+      if(hi-lo<=EPS) return;            // no se enfrentan
+      if(!sideTest(b)) return;          // está del otro lado
+      const d=gapFn(b);
+      if(!best||d<best.d) best={d,ref:o,mid:(lo+hi)/2};
+    });
+    if(!best){
+      best={d:wallGap, ref:null,
+        mid:overlapAxis==='y'?(B.y1+B.y2)/2:(B.x1+B.x2)/2};
+    }
+    best.req=isPared?null:(best.ref?pis:plat);
+    best.ok=best.req===null?null:(best.d>=best.req-0.005);
+    best.refName=best.ref?elName(best.ref):'pared del local';
+    return best;
+  };
+
+  const left =pick(b=>b.x2<=B.x1+EPS, b=>B.x1-b.x2, 'y', B.x1);
+  const right=pick(b=>b.x1>=B.x2-EPS, b=>b.x1-B.x2, 'y', largo-B.x2);
+  const up   =pick(b=>b.y2<=B.y1+EPS, b=>B.y1-b.y2, 'x', B.y1);
+  const down =pick(b=>b.y1>=B.y2-EPS, b=>b.y1-B.y2, 'x', ancho-B.y2);
+
+  const collisions=others.filter(({b})=>
+    Math.min(B.x2,b.x2)-Math.max(B.x1,b.x1)>EPS &&
+    Math.min(B.y2,b.y2)-Math.max(B.y1,b.y1)>EPS).map(({o})=>o);
+
+  return {B,left,right,up,down,collisions,pis,plat};
+}
+
+function gapsHintHtml(el,g){
+  const w=g.B.x2-g.B.x1, h=g.B.y2-g.B.y1;
+  const col=s=>s.ok===null?'#2a78d6':(s.ok?'#186a3b':'#c0392b');
+  const row=(lbl,s)=>`<div style="display:flex;justify-content:space-between;gap:6px"><span>${lbl} <span style="opacity:.7">(${escHtml(s.refName)})</span></span><strong style="color:${col(s)};white-space:nowrap">${s.d.toFixed(2)} m</strong></div>`;
+  let html=`<div style="font-weight:600;margin-bottom:2px">${escHtml(elName(el))} · ${w.toFixed(2)} × ${h.toFixed(2)} m</div>`;
+  html+=row('Izquierda',g.left)+row('Derecha',g.right)+row('Arriba',g.up)+row('Abajo',g.down);
+  if(g.collisions.length){
+    html+=`<div style="color:#c0392b;font-weight:600;margin-top:2px">Se superpone con ${g.collisions.map(o=>escHtml(elName(o))).join(', ')}</div>`;
+  }
+  html+=`<div style="opacity:.7;margin-top:2px">Pasillo mín.: ${g.pis.toFixed(2)} m entre góndolas, ${g.plat.toFixed(2)} m a la pared</div>`;
+  return html;
+}
+
+function onMouseMove(e){
+  if(isPan2 && !dragging){
+    pan2X=pan2SPX+(e.clientX-pan2SX);
+    pan2Y=pan2SPY+(e.clientY-pan2SY);
+    drawFloor();
+    cfg('canvasHint').textContent=`Pan: (${pan2X.toFixed(0)}px, ${pan2Y.toFixed(0)}px)`;
+    return;
+  }
+  if(!dragging) return;
+  const {x,y}=getCanvasPos(e);
+  const largo=+cfg('cfg_largo').value||12;
+  const ancho=+cfg('cfg_ancho').value||8;
+
+  // Trabajamos con la caja real ocupada (ya rotada), no con el origen de dibujo
+  const b0=getElBounds(dragging,0,0);           // desplazamiento origen -> caja
+  const bw=b0.x2-b0.x1, bh=b0.y2-b0.y1;         // ancho/alto reales en sala
+  const clampX=v=>Math.max(0,Math.min(largo-bw,v));
+  const clampY=v=>Math.max(0,Math.min(ancho-bh,v));
+  let nx=clampX(x-dragOffX+b0.x1);
+  let ny=clampY(y-dragOffY+b0.y1);
+
+  // Snap lines — aplicar una sola vez sin acumular
+  const SNAP_THRESH=0.12;
+  snapLines={h:[],v:[]};
+  let snapDX=null, snapDY=null;
+
+  elements.filter(el=>el!==dragging).forEach(el=>{
+    const eb=getElBounds(el);
+    const refV=[eb.x1, eb.x2, (eb.x1+eb.x2)/2];
+    const refH=[eb.y1, eb.y2, (eb.y1+eb.y2)/2];
+    const checkV=[nx, nx+bw, nx+bw/2];
+    const checkH=[ny, ny+bh, ny+bh/2];
+
+    checkV.forEach(cv=>{
+      refV.forEach(rv=>{
+        const d=rv-cv;
+        if(Math.abs(d)<SNAP_THRESH){
+          if(snapDX===null||Math.abs(d)<Math.abs(snapDX)) snapDX=d;
+          snapLines.v.push(rv);
+        }
+      });
+    });
+    checkH.forEach(ch=>{
+      refH.forEach(rh=>{
+        const d=rh-ch;
+        if(Math.abs(d)<SNAP_THRESH){
+          if(snapDY===null||Math.abs(d)<Math.abs(snapDY)) snapDY=d;
+          snapLines.h.push(rh);
+        }
+      });
+    });
+  });
+
+  // Aplicar el snap más cercano una sola vez
+  if(snapDX!==null) nx+=snapDX;
+  else nx=Math.round(nx*20)/20;
+  if(snapDY!==null) ny+=snapDY;
+  else ny=Math.round(ny*20)/20;
+  nx=clampX(nx); ny=clampY(ny);
+
+  dragging.x=nx-b0.x1;
+  dragging.y=ny-b0.y1;
+  dragGaps=computeGaps(dragging);
+  drawFloor();
+  cfg('canvasHint').innerHTML=gapsHintHtml(dragging,dragGaps);
+}
+
+function onMouseUp(){
+  if(dragging) scheduleAutoSave();
+  dragging=null;
+  dragGaps=null;
+  snapLines={h:[],v:[]};
+  if(isPan2){ canvas2d.style.cursor='default'; isPan2=false; }
+  drawFloor();
+}
+
+function onDblClick(e){
+  const {x,y}=getCanvasPos(e);
+  for(let i=elements.length-1;i>=0;i--){
+    if(hitTest(elements[i],x,y)){
+      selectedEl=elements[i];
+      showIslaDetail(elements[i]);
+      return;
+    }
+  }
+}
+
+// Controles canvas
+function rotateSelected(){
+  if(!selectedEl) return;
+  selectedEl.rotation=((selectedEl.rotation||0)+90)%360;
+  // Swap w/h by adjusting x,y
+  drawFloor();
+}
+function duplicateSelected(){
+  if(!selectedEl) return;
+  const src=selectedEl;
+  const clone=JSON.parse(JSON.stringify(src));
+  clone.id=elIdN++;
+  // Nombre sin acumular "(copia)" — usa número incremental
+  const baseName=(src.label||'Isla').replace(/\s*\(\d+\)$/, '');
+  const existingNums=elements.map(el=>{
+    const m=el.label?.match(new RegExp('^'+baseName.replace(/[.*+?^${}()|[\]\\]/g,'\\$&')+'\\s*\\((\\d+)\\)$'));
+    return m?+m[1]:null;
+  }).filter(n=>n!==null);
+  const nextNum=existingNums.length?Math.max(...existingNums)+1:2;
+  clone.label=`${baseName} (${nextNum})`;
+  // Sugerencia inteligente de posición — usa la caja real ocupada (ya rotada)
+  const pasillo=+cfg('cfg_pis').value||1.20;
+  const largo=+cfg('cfg_largo').value||12;
+  const ancho=+cfg('cfg_ancho').value||8;
+  const sb=getElBounds(src);
+  const cb0=getElBounds(clone,0,0);          // desplazamiento origen -> caja de la copia
+  const cw=cb0.x2-cb0.x1, ch=cb0.y2-cb0.y1;  // ancho/alto reales de la copia en sala
+  const srcW=sb.x2-sb.x1, srcH=sb.y2-sb.y1;
+  let bx,by,gap,eje;
+  if(srcW>=srcH){
+    // Isla que se extiende en horizontal: la copia va abajo, alineada a su borde izquierdo
+    bx=Math.max(0,Math.min(sb.x1,largo-cw));
+    by=Math.max(0,Math.min(sb.y2+pasillo,ancho-ch));
+    gap=by-sb.y2; eje='abajo';
+  } else {
+    // Isla que se extiende en vertical: la copia va a la derecha, alineada a su borde superior
+    bx=Math.max(0,Math.min(sb.x2+pasillo,largo-cw));
+    by=Math.max(0,Math.min(sb.y1,ancho-ch));
+    gap=bx-sb.x2; eje='a la derecha';
+  }
+  clone.x=bx-cb0.x1;
+  clone.y=by-cb0.y1;
+  const noEntra=gap<pasillo-0.005;
+  cfg('canvasHint').textContent=`Copia ubicada ${eje}, a ${gap.toFixed(2)} m de la original (pasillo configurado: ${pasillo.toFixed(2)} m).`+
+    (noEntra?' No entra con el pasillo completo dentro del local: revisá el espacio.':' Arrastrá si necesitás ajustar.');
+  elements.push(clone);
+  selectedEl=clone;
+  // Marcar posición sugerida visualmente por 2 segundos
+  suggestedPos={x:bx,y:by,dims:{w:cw,h:ch},timer:Date.now()};
+  drawFloor();
+  setTimeout(()=>{suggestedPos=null;drawFloor();},3000);
+}
+let suggestedPos=null;
+let snapLines={h:[],v:[]}; // líneas de snap activas durante drag
+let dragGaps=null; // distancias a los 4 lados de la isla mientras se arrastra
+function deleteSelected(){
+  if(!selectedEl) return;
+  elements=elements.filter(e=>e!==selectedEl);
+  // Limpiar asignaciones
+  Object.keys(assignMap).forEach(k=>{ if(k.startsWith(selectedEl.id+'_')) delete assignMap[k]; });
+  selectedEl=null;
+  cfg('islaDetail').style.display='none';
+  drawFloor();
+}
+function clearCanvas(){
+  if(!confirm('¿Limpiar todos los elementos del plano?')) return;
+  elements=[]; selectedEl=null; assignMap={};
+  cfg('islaDetail').style.display='none';
+  drawFloor();
+}
+function zoom(d){ scale=Math.max(0.3,Math.min(3,scale+d)); cfg('zoomLbl').textContent=Math.round(scale*100)+'%'; drawFloor(); }
+function fitView(){
+  const largo=+cfg('cfg_largo').value||12;
+  const ancho=+cfg('cfg_ancho').value||8;
+  const maxW=canvas2d.parentElement.clientWidth-40||840;
+  scale=Math.min(maxW/((largo+2)*SCALE),1);
+  pan2X=0; pan2Y=0; // resetear pan al ajustar
+  cfg('zoomLbl').textContent=Math.round(scale*100)+'%';
+  drawFloor();
+}
+function toggleGrid(){ showGrid=!showGrid; drawFloor(); }
+
+// Panel detalle isla
+function showIslaDetail(el){
+  const panel=cfg('islaDetail');
+  panel.style.display='block';
+  cfg('islaDetailTitle').textContent=el.type==='pared'?'Pared seleccionada':`${el.label||'Isla'} — configuración`;
+  renderIslaDetail(el);
+}
+
+function renderIslaDetail(el){
+  const c=cfg('islaDetailContent');
+  if(el.type==='pared'){
+    const buildParedMods=()=>{
+      let html=`<div class="mod-row">`;
+      (el.mods||[]).forEach((m,i)=>{
+        html+=`<div class="mod-chip">
+          <div style="font-weight:600;color:var(--text2);margin-bottom:1px">M${i+1}</div>
+          <select onchange="updParedMod(${i},'tipo',this.value)">
+            ${Object.entries(MOD_TYPES).map(([k,v])=>`<option value="${k}"${m.tipo===k?' selected':''}>${v.label}</option>`).join('')}
+          </select>
+          <div style="display:grid;grid-template-columns:1fr 1fr;gap:2px;margin-top:2px">
+            <div><div style="font-size:9px;color:var(--text3)">Alt(m)</div>
+              <input type="number" value="${m.h||2.00}" min="0.5" max="4" step="0.1" onchange="updParedMod(${i},'h',+this.value)"/></div>
+            <div><div style="font-size:9px;color:var(--text3)">Chapas</div>
+              <input type="number" value="${m.chapas||7}" min="1" max="14" onchange="updParedMod(${i},'chapas',+this.value)"/></div>
+          </div>
+          ${(el.mods||[]).length>1?`<button onclick="remParedMod(${i})" style="font-size:9px;color:var(--text3);background:none;border:none;cursor:pointer;margin-top:2px;display:block;width:100%">✕</button>`:''}
+        </div>`;
+      });
+      html+=`<button onclick="addParedMod()" style="background:var(--s2);border:1px solid var(--border);border-radius:5px;padding:3px 6px;font-size:10px;cursor:pointer;align-self:center">+</button>`;
+      html+='</div>';
+      return html;
+    };
+    c.innerHTML=`
+      <div style="display:grid;grid-template-columns:1fr 1fr;gap:5px;margin-bottom:.4rem">
+        <div><label style="font-size:10px">Etiqueta</label><input type="text" value="${el.label||'Pared'}" style="font-size:11px;padding:4px 6px" onchange="el_update(event,'label')"/></div>
+        <div><label style="font-size:10px">Profundidad (m)</label><input type="number" value="${el.depth||0.40}" min="0.10" max="1" step="0.05" style="font-size:11px;padding:4px 6px" onchange="el_update(event,'depth',true)"/></div>
+      </div>
+      <div style="font-size:10px;font-weight:600;color:var(--text3);margin-bottom:3px">Módulos (cara única)</div>
+      ${buildParedMods()}`;
+  } else {
+    const buildCaraHtml=(side)=>{
+      const mods=side==='a'?el.mods_a:el.mods_b;
+      let html=`<div class="mod-row">`;
+      mods.forEach((m,i)=>{
+        html+=`<div class="mod-chip ${m.tipo?.startsWith('p')?'puntera-chip':''}">
+          <div style="font-weight:600;color:var(--text2);margin-bottom:1px">M${i+1}</div>
+          <select onchange="updMod('${side}',${i},'tipo',this.value)">
+            ${Object.entries(MOD_TYPES).map(([k,v])=>`<option value="${k}"${m.tipo===k?' selected':''}>${v.label}</option>`).join('')}
+          </select>
+          <div style="display:grid;grid-template-columns:1fr 1fr;gap:2px;margin-top:2px">
+            <div><div style="font-size:9px;color:var(--text3)">Alt(m)</div>
+              <input type="number" value="${m.h||1.50}" min="0.5" max="4" step="0.1" onchange="updMod('${side}',${i},'h',+this.value)"/></div>
+            <div><div style="font-size:9px;color:var(--text3)">Chapas</div>
+              <input type="number" value="${m.chapas||5}" min="1" max="12" onchange="updMod('${side}',${i},'chapas',+this.value)"/></div>
+          </div>
+          ${mods.length>1?`<button onclick="remMod('${side}',${i})" style="font-size:9px;color:var(--text3);background:none;border:none;cursor:pointer;margin-top:2px;display:block;width:100%">✕</button>`:''}
+        </div>`;
+      });
+      html+=`<button onclick="addMod('${side}')" style="background:var(--s2);border:1px solid var(--border);border-radius:5px;padding:3px 6px;font-size:10px;cursor:pointer;align-self:center;white-space:nowrap">+</button>`;
+      html+='</div>';
+      return html;
+    };
+
+    c.innerHTML=`
+      <div style="display:grid;grid-template-columns:1fr 1fr 1fr;gap:5px;margin-bottom:.4rem">
+        <div><label style="font-size:10px">Etiqueta</label><input type="text" value="${el.label||''}" style="font-size:11px;padding:4px 6px" onchange="el_update(event,'label')"/></div>
+        <div><label style="font-size:10px">Puntera (ancho)</label>
+          <select style="font-size:11px;padding:4px 6px" onchange="el_update(event,'puntera_w',true)">
+            <option value="0.30"${(el.puntera_w||0.30)===0.30?' selected':''}>30 cm</option>
+            <option value="0.75"${(el.puntera_w||0.30)===0.75?' selected':''}>75 cm</option>
+            <option value="0.90"${(el.puntera_w||0.30)===0.90?' selected':''}>90 cm</option>
+          </select></div>
+        <div><label style="font-size:10px">Prof. isla (m)</label><input type="number" value="${el.depth||0.60}" min="0.30" max="2" step="0.05" style="font-size:11px;padding:4px 6px" onchange="el_update(event,'depth',true)"/></div>
+      </div>
+      <div class="cara-tabs">
+        <button class="cara-tab active" onclick="switchCaraTab(this,'caraA_${el.id}','caraB_${el.id}')">Cara A</button>
+        <button class="cara-tab" onclick="switchCaraTab(this,'caraB_${el.id}','caraA_${el.id}')">Cara B</button>
+      </div>
+      <div id="caraA_${el.id}" class="cara-panel active">${buildCaraHtml('a')}</div>
+      <div id="caraB_${el.id}" class="cara-panel">${buildCaraHtml('b')}</div>`;
+  }
+}
+
+function switchCaraTab(btn,showId,hideId){
+  document.querySelectorAll('.cara-tab').forEach(t=>t.classList.remove('active'));
+  btn.classList.add('active');
+  const sp=document.getElementById(showId), hp=document.getElementById(hideId);
+  if(sp) sp.classList.add('active');
+  if(hp) hp.classList.remove('active');
+}
+
+function updParedMod(i,field,val){
+  if(!selectedEl||selectedEl.type!=='pared') return;
+  if(field==='tipo'){selectedEl.mods[i].tipo=val;selectedEl.mods[i].w=MOD_TYPES[val]?.w||1.30;}
+  else selectedEl.mods[i][field]=val;
+  renderIslaDetail(selectedEl); drawFloor();
+}
+// Al quitar el módulo i de un elemento, las asignaciones de los módulos siguientes
+// deben correrse un lugar (las claves son `${id}_${cara}_${índice}`).
+function shiftAssignAfterRemove(elId, sides, i){
+  sides.forEach(side=>{
+    const prefix=`${elId}_${side}_`;
+    const moves=[];
+    Object.keys(assignMap).forEach(k=>{
+      if(!k.startsWith(prefix)) return;
+      const j=Number(k.slice(prefix.length));
+      if(!Number.isInteger(j)) return;
+      if(j===i) moves.push([k,null,null]);
+      else if(j>i) moves.push([k,prefix+(j-1),assignMap[k]]);
+    });
+    moves.forEach(([k])=>{ delete assignMap[k]; });
+    moves.forEach(([,nk,v])=>{ if(nk) assignMap[nk]=v; });
+  });
+}
+function addParedMod(){
+  if(!selectedEl||selectedEl.type!=='pared') return;
+  selectedEl.mods.push({tipo:'n130',w:1.30,h:selectedEl.mods[0]?.h||2.00,chapas:selectedEl.mods[0]?.chapas||7});
+  renderIslaDetail(selectedEl); drawFloor();
+}
+function remParedMod(i){
+  if(!selectedEl||selectedEl.type!=='pared'||selectedEl.mods.length<=1) return;
+  selectedEl.mods.splice(i,1);
+  shiftAssignAfterRemove(selectedEl.id,['u'],i);
+  renderIslaDetail(selectedEl); drawFloor(); scheduleAutoSave();
+}
+function el_update(e,field,num=false){
+  if(!selectedEl) return;
+  selectedEl[field]=num?+e.target.value:e.target.value;
+  drawFloor();
+}
+function updMod(side,i,field,val,selEl){
+  if(!selectedEl) return;
+  const mods=side==='a'?selectedEl.mods_a:selectedEl.mods_b;
+  if(field==='tipo'){ mods[i].tipo=val; mods[i].w=MOD_TYPES[val]?.w||1.30; }
+  else { mods[i][field]=val; }
+  // Sync cara A → B si es tipo (opcional: mantener independientes)
+  renderIslaDetail(selectedEl);
+  drawFloor();
+}
+// Las dos caras de una isla comparten la misma estructura de módulos (el dibujo, el
+// clic de asignación y el análisis recorren mods_a para ambas), así que agregar o quitar
+// un módulo se aplica a las dos caras para que sigan alineadas.
+function addMod(side){
+  if(!selectedEl) return;
+  const m={tipo:'n130',w:1.30,h:selectedEl.mods_a[0]?.h||1.50,chapas:selectedEl.mods_a[0]?.chapas||5};
+  selectedEl.mods_a.push(JSON.parse(JSON.stringify(m)));
+  selectedEl.mods_b.push(JSON.parse(JSON.stringify(m)));
+  renderIslaDetail(selectedEl); drawFloor(); scheduleAutoSave();
+}
+function remMod(side,i){
+  if(!selectedEl) return;
+  if(selectedEl.mods_a.length<=1 || i<0 || i>=selectedEl.mods_a.length) return;
+  selectedEl.mods_a.splice(i,1);
+  if(i<selectedEl.mods_b.length) selectedEl.mods_b.splice(i,1);
+  // Quitar la asignación del módulo y correr las de los siguientes (en ambas caras)
+  shiftAssignAfterRemove(selectedEl.id,['a','b'],i);
+  renderIslaDetail(selectedEl); drawFloor(); scheduleAutoSave();
+}
+
+// ════════════════════════════════════════════════════════════════════
+// PASO 3 — CATEGORÍAS
+// ════════════════════════════════════════════════════════════════════
+function addCat(name='',venta=0,units=0,stock=0,chapas=5,h=1.50,pctManual=null){
+  const id='c'+(catIdN++);
+  const color=PALETA[(cats.length)%PALETA.length];
+  // pctManual: si no null, el usuario ingresó % directamente y no hay venta $
+  cats.push({id,name,color,venta,units,stock,chapas,h,pctManual});
+  renderCats();
+}
+function remCat(id){
+  cats=cats.filter(c=>c.id!==id);
+  Object.keys(assignMap).forEach(k=>{
+    const cur=getModCats(k).filter(cid=>cid!==id);
+    if(cur.length===0) delete assignMap[k];
+    else assignMap[k]=cur;
+  });
+  renderCats();
+}
+function updCat(id,field,val){
+  const c=cats.find(cc=>cc.id===id);
+  if(!c) return;
+  if(['name','color'].includes(field)) c[field]=val;
+  else c[field]=+val;
+  // Si cambia venta, limpiar pctManual; si cambia pctManual, limpiar venta
+  if(field==='venta'){ c.pctManual=null; }
+  if(field==='pctManual'){ c.venta=0; }
+}
+
+function getCatPct(c){
+  // Retorna el % de participación: manual si existe, calculado si hay venta
+  if(c.pctManual!==null && c.pctManual!==undefined && c.pctManual>0) return +c.pctManual;
+  const totalV=cats.reduce((a,cc)=>a+(+cc.venta||0),0);
+  if(totalV>0 && +c.venta>0) return (+c.venta/totalV)*100;
+  return 0;
+}
+function renderCats(){
+  const tbody=cfg('catBody'); tbody.innerHTML='';
+  cats.forEach(c=>{
+    const tr=document.createElement('tr');
+    const hasVenta=(+c.venta||0)>0;
+    const hasPct=!hasVenta && c.pctManual!==null && c.pctManual!==undefined;
+    const pctCalc=hasVenta?getCatPct(c).toFixed(1):'';
+    tr.innerHTML=`
+      <td><input type="color" value="#${c.color}" class="ccolor"
+        onchange="updCat('${c.id}','color',this.value.replace('#',''));renderCats();renderCatListPg()"/></td>
+      <td><input type="text" value="${c.name}" placeholder="Nombre" style="min-width:120px"
+        onchange="updCat('${c.id}','name',this.value)"/></td>
+      <td><input type="number" value="${hasVenta?c.venta:''}" min="0" placeholder="Opcional"
+        style="min-width:85px;${hasPct?'opacity:.35;':''}"
+        ${hasPct?'disabled':''}
+        onchange="updCat('${c.id}','venta',this.value);renderCats();renderCatListPg()"/></td>
+      <td style="text-align:center;min-width:80px">
+        ${hasVenta
+          ? `<span style="font-weight:600;color:var(--blue);font-size:12px">${pctCalc}%</span>`
+          : `<div style="display:flex;align-items:center;gap:2px">
+               <input type="number" value="${c.pctManual||''}" min="0" max="100" step="0.1"
+                 placeholder="0.0" style="width:52px;text-align:center;font-size:12px"
+                 onchange="updCat('${c.id}','pctManual',this.value);renderCats();renderCatListPg()"/>
+               <span style="font-size:11px;color:var(--text3)">%</span>
+             </div>`
+        }
+      </td>
+      <td><input type="number" value="${c.units||''}" min="0" placeholder="—"
+        onchange="updCat('${c.id}','units',this.value)"/></td>
+      <td><input type="number" value="${c.stock||''}" min="0" placeholder="—"
+        onchange="updCat('${c.id}','stock',this.value)"/></td>
+      <td><input type="number" value="${c.chapas||5}" min="1" max="12"
+        onchange="updCat('${c.id}','chapas',this.value)"/></td>
+      <td><input type="number" value="${c.h||1.50}" min="0.5" max="4" step="0.1"
+        onchange="updCat('${c.id}','h',this.value)"/></td>
+      <td><button class="cdel" onclick="remCat('${c.id}')">✕</button></td>`;
+    tbody.appendChild(tr);
+  });
+}
+
+// Sin categorías predeterminadas — el líder carga las suyas o importa desde Excel
+
+// ════════════════════════════════════════════════════════════════════
+// PASO 4 — ASIGNACIÓN
+// ════════════════════════════════════════════════════════════════════
+function buildAssignPanel(){
+  renderCatListPg();
+  cfg('assignTitle').textContent=`${cfg('cfg_suc').value||'Sucursal'} — ${cfg('cfg_rub').value||'Rubro'}`;
+  // Igual que initCanvas paso 2: dimensionar canvas UNA sola vez, zoom solo redibuja
+  canvas3=cfg('assignCanvas');
+  ctx3=canvas3.getContext('2d');
+  const largo=+cfg('cfg_largo').value||12;
+  const ancho=+cfg('cfg_ancho').value||8;
+  const cont=canvas3.parentElement;
+  const maxW=cont?cont.clientWidth-4:900;
+  const maxH=480;
+  // Escala inicial para que entre todo
+  scale3=Math.min(maxW/((largo+2)*SCALE), maxH/((ancho+2)*SCALE), 1.2);
+  // Canvas fijo — NO cambia al hacer zoom (igual que paso 2)
+  canvas3.width=maxW;
+  canvas3.height=maxH;
+  canvas3.style.width=maxW+'px';
+  canvas3.style.height=maxH+'px';
+  canvas3.onclick=onAssignClick;
+  // Pan: middle button o space+drag, o simplemente drag cuando no hay cat activa
+  canvas3.addEventListener('mousedown', onAssignMouseDown, {once:false});
+  drawAssignCanvas();
+  updateAssignMetrics();
+  const lbl=document.getElementById('zoomLbl3');
+  if(lbl) lbl.textContent=Math.round(scale3*100)+'%';
+}
+
+function renderCatListPg(){
+  const el=cfg('catListPg'); el.innerHTML='';
+  const cv=cats.filter(c=>c.venta>0), sv=cats.filter(c=>c.venta===0);
+  const addSec=(lbl,list)=>{
+    if(!list.length) return;
+    const s=document.createElement('div'); s.className='sec-lbl'; s.textContent=lbl; el.appendChild(s);
+    list.forEach(c=>{
+      const d=document.createElement('div');
+      d.className='cat-item-pg'+(activeCat===c.id?' active':'');
+      d.style.background=activeCat===c.id?'#'+c.color+'22':'';
+      d.style.borderColor=activeCat===c.id?'#'+c.color:'transparent';
+      const _pct=getCatPct(c);
+      const v=_pct>0?_pct.toFixed(1)+'%':'sin datos';
+      d.innerHTML=`<span class="cat-dot" style="background:#${c.color}"></span><span>${c.name}</span><span class="cat-venta">${v}</span>`;
+      d.onclick=()=>{ activeCat=activeCat===c.id?null:c.id; renderCatListPg(); cfg('assignHint').textContent=activeCat?`Asignando: ${cats.find(c2=>c2.id===activeCat)?.name}. Tocá un módulo.`:'Seleccioná una categoría.'; };
+      el.appendChild(d);
+    });
+  };
+  addSec('Con venta',cv); addSec('Sin venta',sv);
+}
+function clearActiveCat(){
+  activeCat=null;
+  if(modoBorrar) toggleBorrarModo(); // desactivar borrar al deseleccionar
+  renderCatListPg();
+  cfg('assignHint').textContent='Seleccioná una categoría.';
+}
+
+function toggleBorrarModo(){
+  modoBorrar=!modoBorrar;
+  const btn=cfg('btnBorrarMod');
+  if(modoBorrar){
+    activeCat=null; // deseleccionar categoría activa
+    renderCatListPg();
+    btn.style.background='#fdf2f2';
+    btn.style.borderColor='#e24b4a';
+    btn.style.color='#c0392b';
+    btn.style.fontWeight='600';
+    cfg('assignHint').textContent='Modo borrar activo. Tocá un módulo para vaciarlo.';
+    cfg('assignCanvas').style.cursor='cell';
+  } else {
+    btn.style.background='';
+    btn.style.borderColor='';
+    btn.style.color='';
+    btn.style.fontWeight='';
+    cfg('assignHint').textContent='Seleccioná una categoría y tocá un módulo en el plano.';
+    cfg('assignCanvas').style.cursor='pointer';
+  }
+}
+
+// Canvas asignación — el tamaño es fijo (se setea en buildAssignPanel)
+// zoom2 solo cambia scale3 y redibuja, igual que zoom() en paso 2
+function buildAssignCanvas(){
+  if(!ctx3){ buildAssignPanel(); return; }
+  drawAssignCanvas();
+  updateAssignMetrics();
+}
+
+function drawAssignCanvas(){
+  if(!ctx3) return;
+  const largo=+cfg('cfg_largo').value||12;
+  const ancho=+cfg('cfg_ancho').value||8;
+  const S=SCALE*scale3;
+  const MARG=30; // coordenadas locales — el pan se aplica con translate
+  ctx3.clearRect(0,0,canvas3.width,canvas3.height);
+
+  // Aplicar pan con translate
+  ctx3.save();
+  ctx3.translate(panX, panY);
+  // Sala
+  ctx3.fillStyle='#f8f7f4';
+  ctx3.strokeStyle='#c8c5bf';
+  ctx3.lineWidth=1.5;
+  ctx3.beginPath();
+  ctx3.roundRect(30,30,largo*S,ancho*S,4);
+  ctx3.fill(); ctx3.stroke();
+
+  // Grilla ligera
+  ctx3.strokeStyle='#eeece8';
+  ctx3.lineWidth=0.4;
+  for(let x=0;x<=largo;x++){ ctx3.beginPath(); ctx3.moveTo(MARG+x*S,MARG); ctx3.lineTo(MARG+x*S,MARG+ancho*S); ctx3.stroke(); }
+  for(let y=0;y<=ancho;y++){ ctx3.beginPath(); ctx3.moveTo(MARG,MARG+y*S); ctx3.lineTo(MARG+largo*S,MARG+y*S); ctx3.stroke(); }
+
+  // Dibujar elementos con módulos clickeables
+  elements.forEach(el=>drawAssignEl(el,S,MARG));
+  ctx3.restore(); // restore del pan global
+}
+
+function drawAssignEl(el, S, MARG){
+  const rot=el.rotation||0;
+  const bx=MARG+el.x*S, by=MARG+el.y*S;
+  ctx3.save();
+  ctx3.translate(bx,by);
+  ctx3.rotate(rot*Math.PI/180);
+
+  if(el.type==='pared'){
+    const dims2=getElDims(el);
+    const W=dims2.w*S, H=dims2.h*S;
+    const GAP3=4;
+
+    // Fondo
+    ctx3.fillStyle='#ede9e0';
+    ctx3.strokeStyle='#888780'; ctx3.lineWidth=1.5;
+    ctx3.beginPath(); ctx3.roundRect(0,0,W,H,5); ctx3.fill(); ctx3.stroke();
+
+    // Label "cara única"
+    ctx3.fillStyle='#5a5955';
+    ctx3.font=`500 ${Math.max(7,Math.min(9,H*0.15))}px system-ui`;
+    ctx3.textAlign='left'; ctx3.textBaseline='top';
+    ctx3.fillText('Cara única', 4, 3);
+
+    // Módulos pared — con multi-cat verticales usando getModCats
+    let curX=0;
+    (el.mods||[]).forEach((m,i)=>{
+      const mw=Math.round(m.w*S);
+      const key=`${el.id}_u_${i}`;
+      const modCats=getModCats(key).map(id=>cats.find(cc=>cc.id===id)).filter(Boolean);
+      const rx=curX+GAP3/2, rw=mw-GAP3, ry=2, rh=H-4;
+      if(modCats.length===0){
+        ctx3.fillStyle='#f7f6f2'; ctx3.strokeStyle='#c8c5bf'; ctx3.lineWidth=1;
+        ctx3.beginPath(); ctx3.roundRect(rx,ry,rw,rh,5); ctx3.fill(); ctx3.stroke();
+        if(rw>14&&rh>12){
+          ctx3.fillStyle='#9a9895';
+          ctx3.font=`${Math.max(7,Math.min(10,rw*0.1))}px system-ui`;
+          ctx3.textAlign='center'; ctx3.textBaseline='middle';
+          ctx3.fillText(m.w.toFixed(2)+' m',rx+rw/2,ry+rh/2);
+        }
+      } else {
+        const sliceH=rh/modCats.length;
+        modCats.forEach((cat,ci)=>{
+          const sy=ry+ci*sliceH;
+          const sh=ci===modCats.length-1?rh-ci*sliceH:sliceH;
+          ctx3.fillStyle='#'+cat.color;
+          ctx3.strokeStyle='rgba(0,0,0,0.12)'; ctx3.lineWidth=1;
+          ctx3.beginPath();
+          if(ci===0&&modCats.length===1) ctx3.roundRect(rx,sy,rw,sh,5);
+          else if(ci===0) ctx3.roundRect(rx,sy,rw,sh,[5,5,0,0]);
+          else if(ci===modCats.length-1) ctx3.roundRect(rx,sy,rw,sh,[0,0,5,5]);
+          else ctx3.rect(rx,sy,rw,sh);
+          ctx3.fill(); ctx3.stroke();
+          if(ci<modCats.length-1){
+            ctx3.strokeStyle='rgba(255,255,255,0.5)'; ctx3.lineWidth=1;
+            ctx3.beginPath(); ctx3.moveTo(rx,sy+sh); ctx3.lineTo(rx+rw,sy+sh); ctx3.stroke();
+          }
+          if(rw>14&&sh>10){
+            ctx3.fillStyle='rgba(255,255,255,0.95)';
+            ctx3.font=`bold ${Math.max(6,Math.min(10,rw*0.1))}px system-ui`;
+            ctx3.textAlign='center'; ctx3.textBaseline='middle';
+            const nm=cat.name.length>10?cat.name.slice(0,9)+'…':cat.name;
+            ctx3.fillText(nm,rx+rw/2,sy+sh/2);
+          }
+        });
+        ctx3.strokeStyle='rgba(0,0,0,0.18)'; ctx3.lineWidth=1.5;
+        ctx3.beginPath(); ctx3.roundRect(rx,ry,rw,rh,5); ctx3.stroke();
+      }
+      curX+=mw;
+    });
+
+    // Nombre de la pared abajo
+    ctx3.fillStyle='rgba(26,39,68,0.75)';
+    ctx3.font=`bold ${Math.max(8,Math.min(11,H*0.18))}px system-ui`;
+    ctx3.textAlign='center'; ctx3.textBaseline='bottom';
+    ctx3.fillText(el.label||'Pared', W/2, H-3);
+
+    // Label encima
+    ctx3.font=`bold ${Math.max(8,S*0.1)}px system-ui`;
+    ctx3.textAlign='center'; ctx3.textBaseline='middle';
+    ctx3.fillStyle='#1a2744';
+    ctx3.fillText(el.label||'Pared', W/2, -9);
+    ctx3.restore(); return;
+  }
+
+  const pt=(el.puntera_w||0.75)*S;
+  const dims=getElDims(el);
+  const H=dims.h*S;
+
+  let curX=0;
+  // Puntera inicio
+  ctx3.fillStyle='#fff3cd'; ctx3.strokeStyle='#d68910'; ctx3.lineWidth=1;
+  ctx3.beginPath(); ctx3.roundRect(curX,0,pt,H,3); ctx3.fill(); ctx3.stroke();
+  ctx3.fillStyle='#9a6e07'; ctx3.font=`bold ${Math.max(7,S*0.1)}px system-ui`;
+  ctx3.textAlign='center'; ctx3.textBaseline='middle';
+  ctx3.fillText('P',curX+pt/2,H/2);
+  curX+=pt;
+
+  // Función helper para dibujar una cara con multi-cat
+  const drawFace=(faceY, faceH, keyFn)=>{
+    let fcx=pt;
+    el.mods_a.forEach((m,i)=>{
+      const mw=m.w*S;
+      const key=keyFn(i);
+      const modCats=getModCats(key).map(id=>cats.find(cc=>cc.id===id)).filter(Boolean);
+      if(modCats.length===0){
+        ctx3.fillStyle='#e8e7e2'; ctx3.strokeStyle='#c8c5bf'; ctx3.lineWidth=0.8;
+        ctx3.fillRect(fcx,faceY,mw,faceH); ctx3.strokeRect(fcx,faceY,mw,faceH);
+      } else {
+        const sliceH=faceH/modCats.length;
+        modCats.forEach((cat,ci)=>{
+          const sy=faceY+ci*sliceH;
+          const sh=ci===modCats.length-1?faceH-ci*sliceH:sliceH;
+          ctx3.fillStyle='#'+cat.color; ctx3.strokeStyle='rgba(0,0,0,0.08)'; ctx3.lineWidth=0.5;
+          ctx3.fillRect(fcx,sy,mw,sh); ctx3.strokeRect(fcx,sy,mw,sh);
+          if(!( ci===modCats.length-1)){
+            ctx3.strokeStyle='rgba(255,255,255,0.5)'; ctx3.lineWidth=1;
+            ctx3.beginPath(); ctx3.moveTo(fcx,sy+sh); ctx3.lineTo(fcx+mw,sy+sh); ctx3.stroke();
+          }
+          if(mw>16&&sh>9){
+            ctx3.fillStyle='rgba(255,255,255,0.9)';
+            ctx3.font=`bold ${Math.max(6,Math.min(9,mw*0.08))}px system-ui`;
+            ctx3.textAlign='center'; ctx3.textBaseline='middle';
+            const nm=cat.name.length>8?cat.name.slice(0,7)+'…':cat.name;
+            ctx3.fillText(nm,fcx+mw/2,sy+sh/2);
+          }
+        });
+        ctx3.strokeStyle='rgba(0,0,0,0.15)'; ctx3.lineWidth=1;
+        ctx3.strokeRect(fcx,faceY,mw,faceH);
+      }
+      fcx+=mw;
+    });
+  };
+  drawFace(0, H/2, i=>`${el.id}_a_${i}`);
+  drawFace(H/2, H/2, i=>`${el.id}_b_${i}`);
+
+  // Separador espalda
+  const totalModW=el.mods_a.reduce((a,m)=>a+m.w*S,0);
+  ctx3.strokeStyle='#888780'; ctx3.lineWidth=1; ctx3.setLineDash([2,2]);
+  ctx3.beginPath(); ctx3.moveTo(pt,H/2); ctx3.lineTo(pt+totalModW,H/2); ctx3.stroke();
+  ctx3.setLineDash([]);
+  curX=pt;
+  el.mods_a.forEach(m=>{ curX+=m.w*S; });
+
+  // Puntera fin
+  ctx3.fillStyle='#fff3cd'; ctx3.strokeStyle='#d68910'; ctx3.lineWidth=1; ctx3.setLineDash([]);
+  ctx3.beginPath(); ctx3.roundRect(curX,0,pt,H,3); ctx3.fill(); ctx3.stroke();
+  ctx3.fillStyle='#9a6e07'; ctx3.font=`bold ${Math.max(7,S*0.1)}px system-ui`;
+  ctx3.textAlign='center'; ctx3.fillText('P',curX+pt/2,H/2);
+
+  // Label isla con fondo
+  const islLbl=el.label||`Isla ${el.id}`;
+  ctx3.font=`bold ${Math.max(8,S*0.11)}px system-ui`;
+  ctx3.textAlign='center';
+  const tw=dims.w*S;
+  const tlw=ctx3.measureText(islLbl).width;
+  ctx3.fillStyle='rgba(26,39,68,0.12)';
+  ctx3.fillRect(tw/2-tlw/2-3,-16,tlw+6,14);
+  ctx3.fillStyle='#1a2744';
+  ctx3.fillText(islLbl,tw/2,-9);
+
+  // Borde isla
+  ctx3.strokeStyle='#888780'; ctx3.lineWidth=1; ctx3.setLineDash([]);
+  ctx3.beginPath(); ctx3.roundRect(0,0,dims.w*S,H,4); ctx3.stroke();
+
+  ctx3.restore();
+}
+
+function onAssignClick(e){
+  // Modo borrar: vaciar el módulo en lugar de asignar
+  _borrarModo = modoBorrar; // resetear limpio en cada click
+  if(!activeCat && !_borrarModo){ cfg('assignInfoBar').textContent='Seleccioná primero una categoría del panel.'; return; }
+  const rect=canvas3.getBoundingClientRect();
+  const scaleX=canvas3.width/rect.width;
+  const scaleY=canvas3.height/rect.height;
+  const mx=(e.clientX-rect.left)*scaleX;
+  const my=(e.clientY-rect.top)*scaleY;
+  const S=SCALE*scale3;
+  const MARG=30;
+  // Compensar pan: el canvas usa translate(panX,panY), 
+  // entonces las coords reales son (mx - panX - MARG) / S
+  const wx=(mx-panX-MARG)/S, wy=(my-panY-MARG)/S;
+
+  for(const el of elements){
+    // Pared cara única
+    if(el.type==='pared'){
+      const rot=el.rotation||0;
+      const dx=wx-el.x,dy=wy-el.y;
+      const rad=-rot*Math.PI/180;
+      const lx=dx*Math.cos(rad)-dy*Math.sin(rad);
+      const ly=dx*Math.sin(rad)+dy*Math.cos(rad);
+      const dims=getElDims(el);
+      if(lx<0||lx>dims.w||ly<0||ly>dims.h) continue;
+      let curX=0;
+      for(let i=0;i<(el.mods||[]).length;i++){
+        const mw=el.mods[i].w;
+        if(lx>=curX&&lx<curX+mw){
+          const key=`${el.id}_u_${i}`;
+          if(_borrarModo){
+            delModKey(key);
+            cfg('assignInfoBar').textContent=`🗑 Módulo ${i+1} de ${el.label||'Pared'} vaciado.`;
+          } else {
+            setModCat(key, activeCat);
+            const cur=getModCats(key);
+            const names=cur.map(id=>cats.find(cc=>cc.id===id)?.name||'?').join(' + ');
+            cfg('assignInfoBar').textContent=`✓ Módulo ${i+1} de ${el.label||'Pared'} → ${names} (${cur.length} cat${cur.length>1?'s':''})`;
+          }
+          drawAssignCanvas(); buildLegend3(); updateAssignMetrics(); scheduleAutoSave(); return;
+        }
+        curX+=mw;
+      }
+      continue;
+    }
+    const rot=el.rotation||0;
+    const dx=wx-el.x, dy=wy-el.y;
+    const rad=-rot*Math.PI/180;
+    const lx=dx*Math.cos(rad)-dy*Math.sin(rad);
+    const ly=dx*Math.sin(rad)+dy*Math.cos(rad);
+    const pt=el.puntera_w||0.75;
+    const dims=getElDims(el);
+    if(lx<0||lx>dims.w||ly<0||ly>dims.h) continue;
+    // Dentro del elemento — determinar módulo y cara
+    if(lx<pt||lx>dims.w-pt) continue; // puntera
+    let curX=pt;
+    for(let i=0;i<el.mods_a.length;i++){
+      const mw=el.mods_a[i].w;
+      if(lx>=curX && lx<curX+mw){
+        const side=ly<dims.h/2?'a':'b';
+        const key=`${el.id}_${side}_${i}`;
+        if(_borrarModo){
+          delModKey(key);
+          cfg('assignInfoBar').textContent=`🗑 Módulo ${i+1} Cara ${side.toUpperCase()} de ${el.label||'Isla '+el.id} vaciado.`;
+        } else {
+          setModCat(key, activeCat);
+          const cur=getModCats(key);
+          const names=cur.map(id=>cats.find(cc=>cc.id===id)?.name||'?').join(' + ');
+          cfg('assignInfoBar').textContent=`✓ Módulo ${i+1} Cara ${side.toUpperCase()} de ${el.label||'Isla '+el.id} → ${names} (${cur.length} cat${cur.length>1?'s':''})`;
+        }
+        drawAssignCanvas(); buildLegend3(); updateAssignMetrics(); scheduleAutoSave(); return;
+      }
+      curX+=mw;
+    }
+  }
+  cfg('assignInfoBar').textContent='Hacé clic sobre un módulo de góndola (evitá las punteras en amarillo).';
+}
+
+function buildLegend3(){
+  const used=new Set(Object.values(assignMap).flat());
+  const el=cfg('assignLegend'); el.innerHTML='';
+  cats.filter(c=>used.has(c.id)).forEach(c=>{
+    const d=document.createElement('div'); d.className='leg-item';
+    d.innerHTML=`<span class="leg-dot" style="background:#${c.color}"></span><span>${c.name}</span>`;
+    el.appendChild(d);
+  });
+}
+
+function resetAssign(){
+  if(!confirm('¿Limpiar todas las asignaciones?')) return;
+  assignMap={};
+  drawAssignCanvas();
+  buildLegend3();
+  updateAssignMetrics();
+  cfg('assignInfoBar').textContent='Planograma limpiado.';
+}
+
+function updateAssignMetrics(){
+  let meters=0, mods=0;
+  elements.forEach(el=>{
+    if(el.type==='pared'){
+      (el.mods||[]).forEach((m,i)=>{
+        if(getModCats(`${el.id}_u_${i}`).length){ meters+=m.w*(m.chapas||7); mods++; }
+      });
+    } else {
+      el.mods_a.forEach((m,i)=>{
+        if(getModCats(`${el.id}_a_${i}`).length){ meters+=m.w*m.chapas; mods++; }
+        if(getModCats(`${el.id}_b_${i}`).length){ meters+=m.w*m.chapas; mods++; }
+      });
+    }
+  });
+  cfg('mA2').textContent=meters.toFixed(1)+' m';
+  cfg('mM2').textContent=mods;
+}
+
+function onAssignMouseDown(e){
+  // Pan con click derecho o click izquierdo sin categoría activa ni modo borrar
+  const isPanTrigger = e.button===1 || e.button===2 || (e.button===0 && !activeCat && !modoBorrar);
+  if(!isPanTrigger) return;
+  e.preventDefault();
+  isPanning=true;
+  panStartX=e.clientX; panStartY=e.clientY;
+  panStartPanX=panX; panStartPanY=panY;
+  canvas3.style.cursor='grabbing';
+  const onMove=(ev)=>{
+    if(!isPanning) return;
+    panX=panStartPanX+(ev.clientX-panStartX);
+    panY=panStartPanY+(ev.clientY-panStartY);
+    drawAssignCanvas();
+  };
+  const onUp=()=>{
+    isPanning=false;
+    canvas3.style.cursor=modoBorrar?'cell':'pointer';
+    window.removeEventListener('mousemove',onMove);
+    window.removeEventListener('mouseup',onUp);
+  };
+  window.addEventListener('mousemove',onMove);
+  window.addEventListener('mouseup',onUp);
+}
+
+function zoom2(d){
+  // Igual que zoom() en paso 2: solo cambia scale3 y redibuja
+  scale3=Math.max(0.2,Math.min(4,scale3+d));
+  drawAssignCanvas();
+  const lbl=document.getElementById('zoomLbl3');
+  if(lbl) lbl.textContent=Math.round(scale3*100)+'%';
+}
+function fitView3(){
+  if(!canvas3) return;
+  const largo=+cfg('cfg_largo').value||12;
+  const ancho=+cfg('cfg_ancho').value||8;
+  scale3=Math.min(canvas3.width/((largo+2)*SCALE), canvas3.height/((ancho+2)*SCALE), 1.2);
+  panX=0; panY=0; // resetear pan al ajustar
+  drawAssignCanvas();
+  const lbl=document.getElementById('zoomLbl3');
+  if(lbl) lbl.textContent=Math.round(scale3*100)+'%';
+}
+
+// ════════════════════════════════════════════════════════════════════
+// PASO 5 — ANÁLISIS
+// ════════════════════════════════════════════════════════════════════
+function cargarRubrosFERNI(){
+  // Limpiar y cargar rubros predefinidos de FERNI
+  if(cats.length>0 && !confirm('¿Reemplazar las categorías actuales con los rubros FERNI?')) return;
+  cats=[]; catIdN=1;
+  RUBROS_FERNI.forEach(nombre => addCat(nombre,0,0,0,5,1.50));
+  renderCats();
+  scheduleAutoSave();
+}
+
+function buildAnalisis(){
+  // Título dinámico
+  const tEl=document.getElementById('analisisTitulo');
+  if(tEl) tEl.textContent = modoActual==='general'
+    ? 'Análisis general de sucursal — espacio por rubro'
+    : 'Análisis del planograma';
+  const thCat=document.getElementById('thCatLabel');
+  if(thCat) thCat.textContent = modoActual==='general' ? 'Rubro' : 'Categoría';
+  const catMeters={};
+  cats.forEach(c=>{ catMeters[c.id]=0; });
+  elements.forEach(el=>{
+    if(el.type==='pared'){
+      (el.mods||[]).forEach((m,i)=>{
+        const key=`${el.id}_u_${i}`;
+        const modCats=getModCats(key);
+        const share=modCats.length>0?1/modCats.length:0;
+        modCats.forEach(id=>{ catMeters[id]=(catMeters[id]||0)+m.w*(m.chapas||7)*share; });
+      });
+    } else {
+      el.mods_a.forEach((m,i)=>{
+        ['a','b'].forEach(side=>{
+          const key=`${el.id}_${side}_${i}`;
+          const modCats=getModCats(key);
+          const share=modCats.length>0?1/modCats.length:0;
+          modCats.forEach(id=>{ catMeters[id]=(catMeters[id]||0)+m.w*m.chapas*share; });
+        });
+      });
+    }
+  });
+
+  let totalM=0;
+  elements.forEach(el=>{
+    if(el.type==='pared'){
+      (el.mods||[]).forEach(m=>{ totalM+=m.w*(m.chapas||7); });
+    } else {
+      el.mods_a.forEach(m=>{ totalM+=m.w*m.chapas*2; });
+    }
+  });
+
+  const totalVenta=cats.reduce((a,cc)=>a+(+cc.venta||0),0);
+  const assignedM=Object.values(catMeters).reduce((a,b)=>a+b,0);
+  const rentaG=assignedM>0?Math.round(totalVenta/assignedM):0;
+
+  const alerts=[];
+  let rows='';
+
+  cats.filter(c=>catMeters[c.id]>0).sort((a,b)=>catMeters[b.id]-catMeters[a.id]).forEach(c=>{
+    const m=catMeters[c.id];
+    const pctEsp=totalM>0?((m/totalM)*100).toFixed(1):'0';
+    const pctVenta=getCatPct(c).toFixed(1);
+    const rpm=(m>0&&(+c.venta||0)>0)?Math.round((+c.venta||0)/m):0;
+    const diff=parseFloat(pctEsp)-parseFloat(pctVenta);
+    let badge='';
+    if((+c.venta||0)===0&&!getCatPct(c)){
+      badge='<span class="badge br">Sin venta</span>';
+      alerts.push(`<div class="alert-block ar"><strong>${c.name}:</strong> ${m.toFixed(1)} m asignados sin venta registrada.</div>`);
+    } else if(Math.abs(diff)<3){
+      badge='<span class="badge bg2">Bien equilibrado</span>';
+    } else if(diff>5){
+      badge='<span class="badge by">Sobredimensionado</span>';
+      alerts.push(`<div class="alert-block ay"><strong>${c.name}:</strong> ocupa ${pctEsp}% del espacio pero genera solo ${pctVenta}% de la venta.</div>`);
+    } else if(diff<-5){
+      badge='<span class="badge bb">Subrepresentado</span>';
+      alerts.push(`<div class="alert-block ag"><strong>${c.name}:</strong> genera ${pctVenta}% de la venta pero ocupa solo ${pctEsp}% del espacio.</div>`);
+    } else {
+      badge='<span class="badge by">Revisar</span>';
+    }
+    if(c.stock>0&&(+c.units||0)===0){
+      alerts.push(`<div class="alert-block ar"><strong>${c.name}:</strong> ${c.stock} ud en stock sin ventas registradas — stock muerto.</div>`);
+    } else if(c.stock>0&&(+c.units||0)>0){
+      const rotPct=((+c.units||0)/c.stock*100).toFixed(0);
+      if(rotPct<15) alerts.push(`<div class="alert-block ay"><strong>${c.name}:</strong> rotación baja — vendió ${(+c.units||0).toLocaleString('es-AR')} ud de ${c.stock.toLocaleString('es-AR')} en stock (${rotPct}%).</div>`);
+    }
+    const dot=`<span style="display:inline-block;width:9px;height:9px;border-radius:2px;background:#${c.color};margin-right:4px;vertical-align:middle"></span>`;
+    rows+=`<tr>
+      <td>${dot}${c.name}</td>
+      <td style="text-align:right">${m.toFixed(1)} m</td>
+      <td style="text-align:right;font-weight:600">${pctEsp}%</td>
+      <td style="text-align:right;font-weight:600;color:var(--blue)">${pctVenta}%</td>
+      <td style="text-align:right">$${rpm>0?rpm.toLocaleString('es-AR')+'/m':'—'}</td>
+      <td style="text-align:right">${(+c.units||0)>0?(+c.units).toLocaleString('es-AR'):'—'}</td>
+      <td style="text-align:right">${(+c.stock||0)>0?(+c.stock).toLocaleString('es-AR'):'—'}</td>
+      <td style="text-align:right;font-weight:600;color:${
+        (+c.stock||0)>0&&(+c.units||0)>0
+          ? ((+c.units||0)/(+c.stock||0))>=0.5?'var(--green)':((+c.units||0)/(+c.stock||0))>=0.15?'var(--orange)':'var(--red)'
+          : 'var(--text3)'
+      }">
+        ${(+c.stock||0)>0&&(+c.units||0)>0
+          ? (((+c.units||0)/(+c.stock||0))*100).toFixed(0)+'%'
+          : '—'}
+      </td>
+      <td>${badge}</td>
+    </tr>`;
+  });
+
+  cats.filter(c=>(+c.venta||0)>0&&!catMeters[c.id]).forEach(c=>{
+    alerts.push(`<div class="alert-block ay"><strong>${c.name}:</strong> tiene venta pero no está asignada a ningún módulo del planograma.</div>`);
+  });
+
+  cfg('analisisOut').innerHTML=`
+    <div style="display:grid;grid-template-columns:repeat(4,1fr);gap:8px;margin-bottom:1rem">
+      <div class="metric"><div class="metric-label">Metros totales</div><div class="metric-value">${totalM.toFixed(1)} m</div></div>
+      <div class="metric"><div class="metric-label">Metros asignados</div><div class="metric-value" style="color:var(--green)">${assignedM.toFixed(1)} m</div></div>
+      <div class="metric"><div class="metric-label">Venta total rubro</div><div class="metric-value" style="color:var(--blue)">${totalVenta>0?'$'+totalVenta.toLocaleString('es-AR'):'—'}</div></div>
+      <div class="metric"><div class="metric-label">Rentabilidad global</div><div class="metric-value" style="color:var(--orange)">${rentaG>0?'$'+rentaG.toLocaleString('es-AR')+'/m':'—'}</div></div>
+    </div>
+    <div class="card"><div class="card-title">Resumen por categoría</div>
+      <div style="overflow-x:auto"><table class="cat-table">
+        <thead><tr>
+          <th id="thCatLabel">Categoría</th>
+          <th style="text-align:right">Metros</th>
+          <th style="text-align:right">% espacio</th>
+          <th style="text-align:right;color:var(--blue)">% venta</th>
+          <th style="text-align:right">$/metro</th>
+          <th style="text-align:right">Unid. vendidas</th>
+          <th style="text-align:right">Stock góndola</th>
+          <th style="text-align:right">Rotación</th>
+          <th>Estado</th>
+        </tr></thead>
+        <tbody>${rows||'<tr><td colspan="8" style="text-align:center;color:var(--text3);padding:1.5rem">Sin asignaciones en el planograma.</td></tr>'}</tbody>
+      </table></div>
+    </div>
+    <div class="card" style="margin-top:.75rem"><div class="card-title">Alertas</div>
+      ${alerts.length?alerts.join(''):'<div style="color:var(--text3);font-size:13px">Sin alertas. El planograma está bien distribuido.</div>'}
+    </div>`;
+}
+
+// ══════════════════════════════════════════════════════════════════════
+// EXCEL IMPORT / EXPORT
+// ══════════════════════════════════════════════════════════════════════
+function importExcel(event){
+  const file=event.target.files[0]; if(!file) return;
+  if(typeof XLSX==='undefined'){ showExcelMsg('Error: librería Excel no cargó. Verificá tu conexión.','error'); return; }
+  const isCSV=file.name.toLowerCase().endsWith('.csv');
+  const reader=new FileReader();
+  reader.onload=e=>{
+    try{
+      let wb;
+      if(isCSV){
+        wb=XLSX.read(e.target.result,{type:'string'});
+      } else {
+        wb=XLSX.read(new Uint8Array(e.target.result),{type:'array'});
+      }
+      const ws=wb.Sheets[wb.SheetNames[0]];
+      const data=XLSX.utils.sheet_to_json(ws,{defval:'',raw:false});
+      if(!data.length){ showExcelMsg('El archivo está vacío o no tiene datos.','error'); return; }
+      const keys=Object.keys(data[0]);
+      // findCol: primero busca match exacto, después match parcial
+      const normalize=s=>s.toLowerCase().normalize('NFD').replace(/[\u0300-\u036f]/g,'').trim();
+      const findCol=terms=>{
+        // Intento 1: match exacto
+        const exact=keys.find(k=>terms.some(t=>normalize(k)===normalize(t)));
+        if(exact) return exact;
+        // Intento 2: match parcial (el término está contenido en el nombre de columna)
+        return keys.find(k=>terms.some(t=>normalize(k).includes(normalize(t))))||null;
+      };
+      // Formato NAPSE: Descripción Detalle / Importe vendido / Cantidad vendidas / Stock tienda
+      // Priorizar match exacto de "descripcion detalle" antes que "detalle" suelto
+      const colNombre=findCol(['descripcion detalle','descripción detalle','descripcion de subfamilia','descripcion de familia','descripcion','descripción','nombre','categoria','rubro','name','articulo','artículo']);
+      const colVenta=findCol(['importe vendido','venta','importe','monto','total','ingreso','facturacion','facturación']);
+      const colUnidades=findCol(['cantidad vendidas','unidades','unidad','units','ud','qty','cantidad','vendidas']);
+      const colStock=findCol(['stock tienda','stock gondola','stock góndola','stock','existencia','disponible','inventario']);
+      if(!colNombre){
+        showExcelMsg(`No se encontró columna de nombre. Columnas detectadas: ${keys.join(', ')}`, 'error');
+        return;
+      }
+      const prevLen=cats.length;
+      cats=[]; catIdN=1;
+      let added=0;
+      data.forEach(row=>{
+        const name=String(row[colNombre]||'').trim();
+        if(!name||name.toLowerCase()==='nombre') return; // saltar header duplicado
+        // Parsear número con formato argentino (puntos de miles, coma decimal)
+        let ventaRaw=colVenta?String(row[colVenta]||'0'):'0';
+        // Si tiene coma decimal: 1.234.567,89 → remover puntos, reemplazar coma
+        if(ventaRaw.includes(',')){ ventaRaw=ventaRaw.replace(/\./g,'').replace(',','.'); }
+        else { ventaRaw=ventaRaw.replace(/[^0-9.]/g,''); }
+        const venta=parseFloat(ventaRaw)||0;
+        const units=colUnidades?+String(row[colUnidades]).replace(/[^0-9.]/g,'')||0:0;
+        const stock=colStock?+String(row[colStock]).replace(/[^0-9.]/g,'')||0:0;
+        addCat(name,venta,units,stock,5,1.50);
+        added++;
+      });
+      if(!added){ showExcelMsg('No se encontraron filas con datos válidos.','error'); return; }
+      showExcelMsg(`✓ ${added} categorías importadas correctamente.`,'success');
+      renderCats();
+      scheduleAutoSave();
+    } catch(err){
+      showExcelMsg(`Error al procesar el archivo: ${err.message}`,'error');
+      console.error('importExcel error:',err);
+    }
+    event.target.value='';
+  };
+  if(isCSV) reader.readAsText(file,'UTF-8');
+  else reader.readAsArrayBuffer(file);
+}
+
+function showExcelMsg(msg,type='success'){
+  const el=cfg('excelMsg');
+  el.textContent=msg; el.style.display='block';
+  el.style.background=type==='success'?'#eafaf1':'#fdf2f2';
+  el.style.color=type==='success'?'#186a3b':'#922b21';
+  el.style.border=`1px solid ${type==='success'?'#a9dfbf':'#f5b7b1'}`;
+  setTimeout(()=>el.style.display='none',5000);
+}
+
+function downloadTemplate(e){
+  e.preventDefault();
+  const ws=XLSX.utils.aoa_to_sheet([
+    ['Nombre','Venta ($)','Unidades','Stock góndola'],
+    ['Juegos de Mesa',3860000,563,837],
+    ['Masas / Slime',2490000,933,762],
+    ['Peluches',2470000,253,281],
+    ['Vehículos',2970000,442,508],
+  ]);
+  const wb=XLSX.utils.book_new();
+  XLSX.utils.book_append_sheet(wb,ws,'Categorías');
+  XLSX.writeFile(wb,'plantilla_categorias.xlsx');
+}
+
+// ══════════════════════════════════════════════════════════════════════
+// GUARDADO AUTOMÁTICO + HISTORIAL + EXPORT/IMPORT .ferni
+// ══════════════════════════════════════════════════════════════════════
+function scheduleAutoSave(){ if(window.plMarcarCambio) plMarcarCambio(); }
+
+function getState(){
+  return {
+    v:2, ts:Date.now(),
+    modo:modoActual||'rubro',
+    sucursal:cfg('cfg_suc').value,
+    rubro:cfg('cfg_rub').value,
+    cfg:{
+      largo:cfg('cfg_largo').value, ancho:cfg('cfg_ancho').value,
+      pis:cfg('cfg_pis').value, plat:cfg('cfg_plat').value,
+      chp:cfg('cfg_chp').value, alt:cfg('cfg_alt').value,
+    },
+    elements:JSON.parse(JSON.stringify(elements)),
+    cats:JSON.parse(JSON.stringify(cats)),
+    assignMap:JSON.parse(JSON.stringify(assignMap)),
+    catIdN, elIdN,
+  };
+}
+
+function applyState(st){
+  if(!st||st.v!==2) return false;
+  if(st.modo){ modoActual=st.modo; setModo(st.modo); }
+  const sucEl=cfg('cfg_suc');
+  if(sucEl.tagName==='SELECT'){
+    const opt=[...sucEl.options].find(o=>o.value===st.sucursal);
+    if(opt) sucEl.value=st.sucursal; else sucEl.value='';
+  } else { sucEl.value=st.sucursal||''; }
+  cfg('cfg_rub').value=st.rubro||'';
+  if(st.cfg){
+    cfg('cfg_largo').value=st.cfg.largo||12;
+    cfg('cfg_ancho').value=st.cfg.ancho||8;
+    cfg('cfg_pis').value=st.cfg.pis||1.20;
+    cfg('cfg_plat').value=st.cfg.plat||1.20;
+    cfg('cfg_chp').value=st.cfg.chp||5;
+    cfg('cfg_alt').value=st.cfg.alt||1.50;
+  }
+  elements=st.elements||[];
+  cats=st.cats||[];
+  assignMap=st.assignMap||{};
+  catIdN=st.catIdN||1;
+  elIdN=st.elIdN||1;
+  return true;
+}
+
+function exportFerni(){
+  const st=getState();
+  const suc=st.sucursal||'Sucursal';
+  const rub=st.rubro||'Rubro';
+  const fecha=new Date().toLocaleDateString('es-AR',{weekday:'long',year:'numeric',month:'long',day:'numeric'});
+
+  // ── Calcular análisis ──────────────────────────────────────────
+  const catMeters={};
+  st.cats.forEach(c=>{ catMeters[c.id]=0; });
+  const getExportCats=(key)=>{ const v=st.assignMap[key]; if(!v) return []; return Array.isArray(v)?v:[v]; };
+  st.elements.forEach(el=>{
+    if(el.type==='pared'){
+      (el.mods||[]).forEach((m,i)=>{
+        const key=`${el.id}_u_${i}`;
+        const mc=getExportCats(key); const share=mc.length>0?1/mc.length:0;
+        mc.forEach(id=>{ catMeters[id]=(catMeters[id]||0)+m.w*(m.chapas||7)*share; });
+      });
+    } else {
+      (el.mods_a||[]).forEach((m,i)=>{
+        ['a','b'].forEach(side=>{
+          const key=`${el.id}_${side}_${i}`;
+          const mc=getExportCats(key); const share=mc.length>0?1/mc.length:0;
+          mc.forEach(id=>{ catMeters[id]=(catMeters[id]||0)+m.w*m.chapas*share; });
+        });
+      });
+    }
+  });
+  let totalM=0;
+  st.elements.forEach(el=>{
+    if(el.type==='pared'){ (el.mods||[]).forEach(m=>{ totalM+=m.w*(m.chapas||7); }); }
+    else { (el.mods_a||[]).forEach(m=>{ totalM+=m.w*m.chapas*2; }); }
+  });
+  const totalVenta=st.cats.reduce((a,c)=>a+(+c.venta||0),0);
+  const assignedM=Object.values(catMeters).reduce((a,b)=>a+b,0);
+  const rentaG=assignedM>0?Math.round(totalVenta/assignedM):0;
+
+  const getCatPctExport=(c)=>{
+    if(c.pctManual!==null&&c.pctManual!==undefined&&+c.pctManual>0) return +c.pctManual;
+    if(totalVenta>0&&+c.venta>0) return (+c.venta/totalVenta)*100;
+    return 0;
+  };
+
+  // ── Generar plano SVG estático ─────────────────────────────────
+  const SCALESVG=55, MARG=30;
+  const largo=+st.cfg.largo||12, ancho=+st.cfg.ancho||8;
+  const svgW=Math.round((largo+2)*SCALESVG)+60;
+  const svgH=Math.round((ancho+2)*SCALESVG)+60;
+
+  const svgEl=document.createElementNS('http://www.w3.org/2000/svg','svg');
+  svgEl.setAttribute('viewBox',`0 0 ${svgW} ${svgH}`);
+  svgEl.setAttribute('width','100%');
+  svgEl.setAttribute('style','display:block;max-width:900px;margin:0 auto');
+
+  const ns='http://www.w3.org/2000/svg';
+  const mkR=(x,y,w,h,rx,fill,stroke,sw=1)=>{ const r=document.createElementNS(ns,'rect'); r.setAttribute('x',x);r.setAttribute('y',y);r.setAttribute('width',w);r.setAttribute('height',h);r.setAttribute('rx',rx);r.setAttribute('fill',fill);r.setAttribute('stroke',stroke);r.setAttribute('stroke-width',sw); svgEl.appendChild(r); };
+  const mkT=(x,y,s,fill,size,anchor='middle')=>{ const t=document.createElementNS(ns,'text'); t.setAttribute('x',x);t.setAttribute('y',y);t.setAttribute('fill',fill);t.setAttribute('font-size',size);t.setAttribute('font-family','system-ui,sans-serif');t.setAttribute('text-anchor',anchor);t.setAttribute('dominant-baseline','middle');t.textContent=s; svgEl.appendChild(t); };
+
+  // Sala
+  mkR(MARG,MARG,largo*SCALESVG,ancho*SCALESVG,6,'#f8f7f4','#c8c5bf',1.5);
+
+  // Dibujar elementos
+  st.elements.forEach(el=>{
+    const rot=el.rotation||0;
+    const bx=MARG+el.x*SCALESVG, by=MARG+el.y*SCALESVG;
+    const g=document.createElementNS(ns,'g');
+    g.setAttribute('transform',`translate(${bx},${by}) rotate(${rot})`);
+    svgEl.appendChild(g);
+
+    const mkRg=(x,y,w,h,rx,fill,stroke,sw=1)=>{ const r=document.createElementNS(ns,'rect'); r.setAttribute('x',x);r.setAttribute('y',y);r.setAttribute('width',w);r.setAttribute('height',h);r.setAttribute('rx',rx);r.setAttribute('fill',fill);r.setAttribute('stroke',stroke);r.setAttribute('stroke-width',sw); g.appendChild(r); };
+    const mkTg=(x,y,s,fill,size,anchor='middle')=>{ const t=document.createElementNS(ns,'text'); t.setAttribute('x',x);t.setAttribute('y',y);t.setAttribute('fill',fill);t.setAttribute('font-size',size);t.setAttribute('font-family','system-ui,sans-serif');t.setAttribute('text-anchor',anchor);t.setAttribute('dominant-baseline','middle');t.textContent=s; g.appendChild(t); };
+
+    // Dibuja un módulo con hasta 3 categorías apiladas (igual que en el canvas)
+    const drawSlices=(key,x,y,w,h,rx,emptyFill,emptyStroke,fs,maxChars)=>{
+      const mc=getExportCats(key).map(id=>st.cats.find(c=>c.id===id)).filter(Boolean);
+      if(mc.length===0){
+        mkRg(x,y,w,h,rx,emptyFill,emptyStroke,0.8);
+        return;
+      }
+      const sh=h/mc.length;
+      mc.forEach((cat,ci)=>{
+        const sy=y+ci*sh;
+        mkRg(x,sy,w,sh,mc.length===1?rx:0,'#'+cat.color,'rgba(0,0,0,0.12)',0.8);
+        if(w>18&&sh>9){
+          const nm=cat.name.length>maxChars?cat.name.slice(0,maxChars-1)+'…':cat.name;
+          mkTg(x+w/2,sy+sh/2,nm,'rgba(255,255,255,0.95)',Math.min(fs,w*0.09));
+        }
+      });
+      if(mc.length>1) mkRg(x,y,w,h,rx,'none','rgba(0,0,0,0.2)',1);
+    };
+
+    if(el.type==='pared'){
+      const W=(el.mods||[]).reduce((a,m)=>a+m.w,0)*SCALESVG;
+      const H=(el.depth||0.4)*SCALESVG;
+      mkRg(0,0,W,H,4,'#e8e4dc','#888780',1.5);
+      let cx=0;
+      (el.mods||[]).forEach((m,i)=>{
+        const mw=m.w*SCALESVG;
+        drawSlices(`${el.id}_u_${i}`,cx+2,2,mw-4,H-4,3,'#f0eeea','#c8c5bf',9,9);
+        cx+=mw;
+      });
+      mkTg(W/2,H+9,el.label||'Pared','rgba(26,39,68,0.7)',9);
+    } else {
+      const pt=(el.puntera_w||0.3)*SCALESVG;
+      const modW=(el.mods_a||[]).reduce((a,m)=>a+m.w,0)*SCALESVG;
+      const W=pt*2+modW;
+      const H=(el.depth||0.6)*SCALESVG;
+      mkRg(0,0,W,H,4,'#f0eeea','#888780',1);
+      // Puntera inicio
+      mkRg(0,0,pt,H,3,'#fff3cd','#d68910',1);
+      let cx=pt;
+      (el.mods_a||[]).forEach((m,i)=>{
+        const mw=m.w*SCALESVG;
+        drawSlices(`${el.id}_a_${i}`,cx,0,mw,H/2,0,'#e8e7e2','#c8c5bf',8,7);
+        drawSlices(`${el.id}_b_${i}`,cx,H/2,mw,H/2,0,'#e8e7e2','#c8c5bf',8,7);
+        cx+=mw;
+      });
+      // Puntera fin
+      mkRg(cx,0,pt,H,3,'#fff3cd','#d68910',1);
+      // Label
+      mkTg(W/2,H/2,el.label||`Isla ${el.id}`,'rgba(26,39,68,0.7)',Math.min(10,W*0.07));
+    }
+  });
+
+  const svgString=new XMLSerializer().serializeToString(svgEl);
+
+  // ── Tabla de análisis ─────────────────────────────────────────
+  let tableRows='', alertsHtml='';
+  st.cats.filter(c=>catMeters[c.id]>0).sort((a,b)=>catMeters[b.id]-catMeters[a.id]).forEach(c=>{
+    const m=catMeters[c.id];
+    const pctEsp=totalM>0?((m/totalM)*100).toFixed(1):'0';
+    const pctV=getCatPctExport(c).toFixed(1);
+    const rpm=m>0&&+c.venta>0?Math.round(+c.venta/m):0;
+    const diff=parseFloat(pctEsp)-parseFloat(pctV);
+    let badge='', badgeStyle='';
+    if(+c.venta===0&&!getCatPctExport(c)){ badge='Sin datos'; badgeStyle='background:#fdf2f2;color:#c0392b'; }
+    else if(Math.abs(diff)<3){ badge='Equilibrado'; badgeStyle='background:#eafaf1;color:#186a3b'; }
+    else if(diff>5){ badge='Sobredimensionado'; badgeStyle='background:#fdf6e3;color:#9a6e07'; alertsHtml+=`<div style="border-left:3px solid #d68910;background:#fdf6e3;color:#9a6e07;padding:6px 10px;margin-bottom:6px;border-radius:0 6px 6px 0;font-size:13px"><strong>${c.name}:</strong> ocupa ${pctEsp}% del espacio pero genera solo ${pctV}% de la venta.</div>`; }
+    else if(diff<-5){ badge='Subrepresentado'; badgeStyle='background:#eef3fb;color:#1a5fb4'; alertsHtml+=`<div style="border-left:3px solid #2a78d6;background:#eef3fb;color:#1a5fb4;padding:6px 10px;margin-bottom:6px;border-radius:0 6px 6px 0;font-size:13px"><strong>${c.name}:</strong> genera ${pctV}% de la venta pero ocupa solo ${pctEsp}% del espacio.</div>`; }
+    else { badge='Revisar'; badgeStyle='background:#fdf6e3;color:#9a6e07'; }
+    if(c.stock>0&&+c.units===0) alertsHtml+=`<div style="border-left:3px solid #c0392b;background:#fdf2f2;color:#922b21;padding:6px 10px;margin-bottom:6px;border-radius:0 6px 6px 0;font-size:13px"><strong>${c.name}:</strong> ${c.stock} ud de stock sin ventas registradas — stock muerto.</div>`;
+    tableRows+=`<tr>
+      <td style="padding:6px 8px;border-bottom:1px solid #e8e6e0">
+        <span style="display:inline-block;width:10px;height:10px;border-radius:2px;background:#${c.color};margin-right:5px;vertical-align:middle"></span>${c.name}
+      </td>
+      <td style="padding:6px 8px;border-bottom:1px solid #e8e6e0;text-align:right">${m.toFixed(1)} m</td>
+      <td style="padding:6px 8px;border-bottom:1px solid #e8e6e0;text-align:right;font-weight:600">${pctEsp}%</td>
+      <td style="padding:6px 8px;border-bottom:1px solid #e8e6e0;text-align:right;font-weight:600;color:#2a78d6">${pctV}%</td>
+      <td style="padding:6px 8px;border-bottom:1px solid #e8e6e0;text-align:right">${rpm>0?'$'+rpm.toLocaleString('es-AR')+'/m':'—'}</td>
+      <td style="padding:6px 8px;border-bottom:1px solid #e8e6e0;text-align:center"><span style="padding:2px 8px;border-radius:20px;font-size:11px;font-weight:600;${badgeStyle}">${badge}</span></td>
+    </tr>`;
+  });
+
+  // ── HTML final ────────────────────────────────────────────────
+  const html=`<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8"/>
+<meta name="viewport" content="width=device-width,initial-scale=1"/>
+<title>${suc} — ${rub} — Planograma</title>
+<style>
+  *{box-sizing:border-box;margin:0;padding:0}
+  body{background:#f5f4f0;font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',system-ui,sans-serif;color:#1a1917}
+  header{background:#1a2744;color:#fff;padding:1rem 1.5rem;display:flex;align-items:center;justify-content:space-between}
+  header h1{font-size:18px;font-weight:600}
+  header p{font-size:12px;color:rgba(255,255,255,.5);margin-top:3px}
+  .badge-suc{background:#e8363b;color:#fff;font-size:11px;font-weight:700;padding:3px 10px;border-radius:20px;margin-right:.6rem}
+  .main{max-width:960px;margin:0 auto;padding:1.5rem}
+  .card{background:#fff;border:1px solid #e0ddd8;border-radius:10px;padding:1.1rem 1.25rem;margin-bottom:1rem}
+  .card-title{font-size:13px;font-weight:600;color:#1a2744;margin-bottom:.75rem}
+  .kpis{display:grid;grid-template-columns:repeat(4,1fr);gap:10px;margin-bottom:1rem}
+  .kpi{background:#fff;border:1px solid #e0ddd8;border-radius:10px;padding:.8rem 1rem;text-align:center}
+  .kpi-label{font-size:11px;color:#9a9895;margin-bottom:4px}
+  .kpi-value{font-size:22px;font-weight:600;color:#1a1917}
+  table{width:100%;border-collapse:collapse;font-size:13px}
+  th{text-align:left;padding:7px 8px;color:#9a9895;font-weight:500;border-bottom:2px solid #e0ddd8;font-size:12px}
+  th:not(:first-child){text-align:right}
+  footer{text-align:center;padding:1.5rem;font-size:11px;color:#9a9895;border-top:1px solid #e0ddd8;margin-top:1rem}
+  @media(max-width:600px){.kpis{grid-template-columns:repeat(2,1fr)}}
+</style>
+</head>
+<body>
+<header>
+  <div>
+    <div style="display:flex;align-items:center;margin-bottom:4px">
+      <span class="badge-suc">${suc}</span>
+      <h1>${rub} — Planograma de Góndola</h1>
+    </div>
+    <p>${fecha}</p>
+  </div>
+  <div style="font-size:11px;color:rgba(255,255,255,.4);text-align:right">Uso interno FERNI</div>
+</header>
+
+<div class="main">
+
+  <div class="kpis">
+    <div class="kpi"><div class="kpi-label">Metros totales</div><div class="kpi-value">${totalM.toFixed(1)} m</div></div>
+    <div class="kpi"><div class="kpi-label">Metros asignados</div><div class="kpi-value" style="color:#1baf7a">${assignedM.toFixed(1)} m</div></div>
+    <div class="kpi"><div class="kpi-label">% ocupación</div><div class="kpi-value" style="color:#2a78d6">${totalM>0?((assignedM/totalM)*100).toFixed(0):0}%</div></div>
+    <div class="kpi"><div class="kpi-label">Rentabilidad global</div><div class="kpi-value" style="color:#d68910">${rentaG>0?'$'+rentaG.toLocaleString('es-AR')+'/m':'—'}</div></div>
+  </div>
+
+  <div class="card">
+    <div class="card-title">Plano del sector</div>
+    ${svgString}
+    <div style="display:flex;flex-wrap:wrap;gap:8px;margin-top:.75rem">
+      ${[...new Set(Object.values(st.assignMap).flat())].map(id=>{
+        const cat=st.cats.find(c=>c.id===id);
+        return cat?`<span style="display:flex;align-items:center;gap:4px;font-size:11px;color:#5a5955"><span style="width:10px;height:10px;border-radius:2px;background:#${cat.color};display:inline-block"></span>${cat.name}</span>`:'';
+      }).join('')}
+    </div>
+  </div>
+
+  <div class="card">
+    <div class="card-title">Análisis por categoría</div>
+    <div style="overflow-x:auto">
+    <table>
+      <thead><tr>
+        <th>Categoría</th>
+        <th style="text-align:right">Metros</th>
+        <th style="text-align:right">% espacio</th>
+        <th style="text-align:right;color:#2a78d6">% venta</th>
+        <th style="text-align:right">$/metro</th>
+        <th style="text-align:center">Estado</th>
+      </tr></thead>
+      <tbody>${tableRows||'<tr><td colspan="6" style="text-align:center;padding:1rem;color:#9a9895">Sin asignaciones.</td></tr>'}</tbody>
+    </table>
+    </div>
+  </div>
+
+  ${alertsHtml?`<div class="card"><div class="card-title">Alertas</div>${alertsHtml}</div>`:''}
+
+</div>
+<footer>FERNI · ${suc} · ${rub} · Generado el ${fecha}</footer>
+</body>
+</html>`;
+
+  const sucFile=(st.sucursal||'suc').replace(/\s+/g,'_');
+  const fechaFile=new Date().toISOString().slice(0,10);
+  const fname=`resumen_${sucFile}_${rub.replace(/\s+/g,'_')}_${fechaFile}.html`;
+  _downloadText(html, fname, 'text/html');
+  plToast('Resumen exportado');
+}
+
+// Descarga universal — funciona desde cualquier URL incluyendo iframes y links compartidos
+function _downloadText(content, filename, mime){
+  try {
+    // Intento 1: Blob URL (funciona en la mayoría de casos)
+    const blob = new Blob([content], {type: mime+';charset=utf-8'});
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement('a');
+    a.href = url; a.download = filename;
+    document.body.appendChild(a); a.click();
+    document.body.removeChild(a);
+    setTimeout(()=>URL.revokeObjectURL(url), 1000);
+  } catch(e) {
+    try {
+      // Intento 2: data URI con btoa (para iframes con restricciones)
+      const b64 = btoa(unescape(encodeURIComponent(content)));
+      const a = document.createElement('a');
+      a.href = `data:${mime};base64,${b64}`;
+      a.download = filename;
+      document.body.appendChild(a); a.click();
+      document.body.removeChild(a);
+    } catch(e2) {
+      // Fallback: abrir en nueva pestaña
+      const w = window.open('', '_blank');
+      if(w) { w.document.write('<pre>'+content.replace(/</g,'&lt;')+'</pre>'); w.document.close(); }
+      else alert('No se pudo descargar. Copiá el contenido manualmente.');
+    }
+  }
+}
+
+function guardarEstado(){
+  const st=getState();
+  const suc=(st.sucursal||'suc').replace(/\s+/g,'_');
+  const fecha=new Date().toISOString().slice(0,10);
+  _downloadText(JSON.stringify(st,null,2), `estado_${suc}_${fecha}.ferni`, 'application/json');
+  plToast('Respaldo descargado');
+}
+
+function importFerni(event){
+  const file=event.target.files[0]; if(!file) return;
+  const reader=new FileReader();
+  reader.onload=e=>{
+    try{
+      const st=JSON.parse(e.target.result);
+      if(!st||st.v!==2) throw new Error('formato inválido');
+      if(!confirm('Esto reemplaza el contenido del planograma que tenés abierto con el del respaldo.\n(Podés volver atrás desde "Versiones".)\n\n¿Continuar?')){ event.target.value=''; return; }
+      plCargarEstadoEnEditor(st,{paso:'mantener'});
+      scheduleAutoSave();
+      plToast('Respaldo importado');
+    } catch(err){ alert('Archivo no válido. Importá un archivo .ferni exportado desde esta herramienta.'); }
+    event.target.value='';
+  };
+  reader.readAsText(file);
+}
+
+// Auto-save al cambiar configuración
+['cfg_suc','cfg_rub','cfg_largo','cfg_ancho','cfg_pis','cfg_plat','cfg_chp','cfg_alt'].forEach(id=>{
+  const el=document.getElementById(id);
+  if(el) el.addEventListener('change',scheduleAutoSave);
+});
+
+
+
+// ══════════════════════════════════════════════════════════════════════════
+// NUBE — login por código de sucursal, biblioteca "Mis planogramas",
+// autoguardado en Firestore con versiones, bloqueo de edición y accesos.
+// Usa el mismo proyecto Firebase que Incidencias, pero como una app NOMBRADA
+// ("planogramas"): así la sesión de esta app no se mezcla con la de Incidencias.
+// ══════════════════════════════════════════════════════════════════════════
+const PL_CFG={
+  apiKey:"AIzaSyASCknH-hS84WKM4sGFehfVraXKm6T-ob0",
+  authDomain:"ferni-incidencias.firebaseapp.com",
+  projectId:"ferni-incidencias",
+  storageBucket:"ferni-incidencias.firebasestorage.app",
+  messagingSenderId:"744424538106",
+  appId:"1:744424538106:web:8392fbe4f3e8c9b5e7c8d9"
+};
+const PL_SUCS=['F1','F2','F3','F4','F5','F6','F7','F8','F9','F10'];
+const PL_CENTRO=['F1','F3','F4','F7','F8'];
+const PL_DIAS_CODIGO=90;
+const PL_TTL_ADMIN=12*3600*1000;      // admin: 12 h (igual que Incidencias)
+const PL_TTL_LIDER=90*86400*1000;     // líder: 90 días (igual que el código)
+const PL_LOCK_MS=3*60*1000;           // un bloqueo sin latido por 3 min se considera vencido
+const PL_HB_MS=60*1000;               // latido del bloqueo
+const PL_VER_CADA=15*60*1000;         // una versión automática cada 15 min como máximo
+const PL_MAX_VER=20;                  // versiones que se conservan
+const PL_SES_KEY='ferni_pl_sesion';
+const PL_LEGACY_PREFIX='ferni_planograma_';
+const PL_IMPORTADOS_KEY='ferni_pl_importados';
+
+let plApp=null, plAuth=null, plDb=null;
+(function(){
+  try{
+    if(typeof firebase==='undefined') return;
+    plApp=firebase.initializeApp(PL_CFG,'planogramas');
+    plAuth=plApp.auth();
+    plDb=plApp.firestore();
+    if(window.__PL_EMU__){                       // solo para pruebas con el emulador
+      plAuth.useEmulator(window.__PL_EMU__.auth);
+      plDb.useEmulator(window.__PL_EMU__.fsHost,window.__PL_EMU__.fsPort);
+    } else {
+      plDb.enablePersistence({synchronizeTabs:true}).catch(()=>{});  // escribe sin conexión y sincroniza al volver
+    }
+    plAuth.setPersistence(firebase.auth.Auth.Persistence.LOCAL).catch(()=>{});
+  }catch(e){ console.error('Firebase:',e); plApp=null; plAuth=null; plDb=null; }
+})();
+const plTS=()=>firebase.firestore.FieldValue.serverTimestamp();
+
+// Firebase restaura la sesión guardada de forma asincrónica: hay que esperar el primer evento
+const plAuthInicial=new Promise(res=>{
+  if(!plAuth){ res(null); return; }
+  const un=plAuth.onAuthStateChanged(u=>{ res(u); setTimeout(()=>un(),0); });
+});
+
+// ── Estado ──────────────────────────────────────────────────────────────
+let plSes=null;              // {nombre,sucursal,rol:'lider'|'admin',uid,codigo,expiraEn}
+let plPlan=null;             // plan abierto en el editor
+let plPlanes=[];             // planes listados en la biblioteca
+let plFiltroSuc=null;
+let plUnsubLista=null, plUnsubPlan=null, plUnsubAcc=null;
+let plGuardando=false, plConflicto=null, plTimerTick=null, plHbMs=0;
+let plCodigos=[], plAccesos=[];
+
+// ── Utilidades ──────────────────────────────────────────────────────────
+function plEl(tag,props,...kids){
+  const e=document.createElement(tag);
+  if(props) Object.keys(props).forEach(k=>{
+    const v=props[k];
+    if(v===false||v==null) return;
+    if(k==='class') e.className=v;
+    else if(k==='style') e.style.cssText=v;
+    else if(k.startsWith('on')) e[k]=v;
+    else if(k==='value'||k==='checked'||k==='disabled'||k==='selected') e[k]=v;
+    else e.setAttribute(k,v===true?'':v);
+  });
+  kids.flat(Infinity).forEach(c=>{
+    if(c==null||c===false) return;
+    e.appendChild(c.nodeType?c:document.createTextNode(String(c)));
+  });
+  return e;
+}
+const plId=id=>document.getElementById(id);
+function plMs(t){
+  if(!t) return 0;
+  if(typeof t==='number') return t;
+  if(typeof t.toMillis==='function') return t.toMillis();
+  if(t instanceof Date) return t.getTime();
+  return 0;
+}
+function plHace(ms){
+  if(!ms) return 'recién';
+  const m=Math.round((Date.now()-ms)/60000);
+  if(m<1) return 'recién';
+  if(m<60) return `hace ${m} min`;
+  const h=Math.round(m/60);
+  if(h<24) return `hace ${h} h`;
+  const d=Math.round(h/24);
+  if(d<30) return `hace ${d} d`;
+  return new Date(ms).toLocaleDateString('es-AR');
+}
+function plFechaHora(ms){
+  if(!ms) return '—';
+  return new Date(ms).toLocaleString('es-AR',{day:'2-digit',month:'2-digit',year:'numeric',hour:'2-digit',minute:'2-digit'});
+}
+const PL_ALFA='ABCDEFGHJKLMNPQRSTUVWXYZ23456789';
+function plToken(n){
+  const b=new Uint8Array(n); crypto.getRandomValues(b);
+  let o=''; for(let i=0;i<n;i++) o+=PL_ALFA[b[i]%32];
+  return o;
+}
+let plToastT=null;
+function plToast(msg){
+  const t=plId('plToast'); t.textContent=msg; t.classList.add('show');
+  clearTimeout(plToastT); plToastT=setTimeout(()=>t.classList.remove('show'),3200);
+}
+function plMsgError(e,ctx){
+  const c=e&&e.code||'';
+  if(c==='permission-denied'||c==='auth/permission-denied'){
+    return ctx==='codigo'?'Código incorrecto, vencido o revocado. Consultá con el administrador.':'No tenés permiso para esta operación.';
+  }
+  switch(c){
+    case 'auth/invalid-email': return 'El email no es válido.';
+    case 'auth/user-disabled': return 'Este usuario está deshabilitado.';
+    case 'auth/user-not-found':
+    case 'auth/wrong-password':
+    case 'auth/invalid-credential': return 'Email o contraseña incorrectos.';
+    case 'auth/too-many-requests': return 'Demasiados intentos. Esperá unos minutos.';
+    case 'auth/network-request-failed':
+    case 'unavailable': return 'Sin conexión. Revisá tu internet.';
+    case 'auth/operation-not-allowed':
+    case 'auth/admin-restricted-operation': return 'El acceso anónimo no está habilitado en Firebase (Authentication > Sign-in method > Anonymous).';
+    default: return 'No se pudo completar la operación. Intentá de nuevo.';
+  }
+}
+
+function plMostrar(id){
+  document.querySelectorAll('.panel').forEach(p=>p.classList.remove('active'));
+  const el=plId(id); if(el) el.classList.add('active');
+  const ed=/^p[1-5]$/.test(id);
+  plId('stepsNav').style.display=ed?'flex':'none';
+  plId('saveBar').style.display=ed?'flex':'none';
+  if(!ed) plId('modoLabel').textContent=plSes?(plSes.rol==='admin'?'Administración de planogramas':`Sucursal ${plSes.sucursal}`):'Ingresá para comenzar';
+}
+function plMostrarCarga(msg){ plId('pLoadMsg').textContent=msg||'Cargando…'; plId('pLoadRetry').style.display='none'; plMostrar('pLoad'); }
+function plErrorFatal(msg){ plId('pLoadMsg').textContent=msg; plId('pLoadRetry').style.display='inline-block'; plMostrar('pLoad'); }
+
+function plModal(titulo,cuerpo,botones){
+  plCerrarModal();
+  const ov=plEl('div',{class:'pl-overlay',onclick:e=>{ if(e.target===ov) plCerrarModal(); }});
+  const bar=plEl('div',{class:'pl-actions'},(botones||[]).map(b=>plEl('button',{
+    class:'btn '+(b.cls||'btn-outline'),
+    onclick:async()=>{ if(b.fn){ const r=await b.fn(); if(r===false) return; } if(b.cerrar!==false) plCerrarModal(); }
+  },b.txt)));
+  ov.appendChild(plEl('div',{class:'pl-modal'},plEl('h3',null,titulo),cuerpo,bar));
+  plId('plModalRoot').appendChild(ov);
+  return ov;
+}
+function plCerrarModal(){ plId('plModalRoot').textContent=''; }
+
+// ── Sesión ──────────────────────────────────────────────────────────────
+function plGuardarSesion(){ try{ localStorage.setItem(PL_SES_KEY,JSON.stringify(Object.assign({v:1},plSes))); }catch(e){} }
+function plLeerSesion(){
+  try{
+    const s=JSON.parse(localStorage.getItem(PL_SES_KEY)||'null');
+    if(!s||s.v!==1||!s.expiraEn||Date.now()>s.expiraEn) return null;
+    return s;
+  }catch(e){ return null; }
+}
+function plActualizarHeader(){
+  const h=plId('plHdrUser'); h.textContent='';
+  if(!plSes){ h.style.display='none'; return; }
+  h.style.display='flex';
+  h.appendChild(plEl('span',null,plEl('strong',null,plSes.nombre),' · '+(plSes.rol==='admin'?'Administrador':plSes.sucursal)));
+  h.appendChild(plEl('button',{class:'hbtn',onclick:()=>plSalir()},'Salir'));
+}
+async function plPerfilAdmin(u){
+  if(!u||u.isAnonymous) return null;
+  try{ const d=await plDb.collection('admins').doc(u.uid).get(); return d.exists?d.data():null; }
+  catch(e){ return null; }
+}
+async function plRestaurar(){
+  const u=await plAuthInicial;
+  const s=plLeerSesion();
+  if(!u||!s||s.uid!==u.uid){ if(s) localStorage.removeItem(PL_SES_KEY); return false; }
+  if(s.rol==='admin'){
+    const perfil=await plPerfilAdmin(u);
+    if(!perfil){ localStorage.removeItem(PL_SES_KEY); return false; }
+  } else {
+    try{
+      const d=await plDb.collection('planograma_accesos').doc(u.uid).get();
+      if(!d.exists){ localStorage.removeItem(PL_SES_KEY); return false; }
+    }catch(e){
+      if(e&&e.code==='permission-denied'){ localStorage.removeItem(PL_SES_KEY); return false; }
+      // sin conexión: se sigue con la sesión local y la biblioteca usa la caché
+    }
+  }
+  plSes=s;
+  return true;
+}
+function plErrLogin(id,msg){ const e=plId(id); e.textContent=msg||''; e.classList.toggle('show',!!msg); }
+function plTabLogin(t){
+  plId('plTabCodigo').classList.toggle('active',t==='codigo');
+  plId('plTabAdmin').classList.toggle('active',t==='admin');
+  plId('plFormCodigo').style.display=t==='codigo'?'block':'none';
+  plId('plFormAdmin').style.display=t==='admin'?'block':'none';
+}
+async function plIngresarCodigo(){
+  const codigo=plId('plInCodigo').value.trim().toUpperCase();
+  const nombre=plId('plInNombre').value.trim().replace(/\s+/g,' ').slice(0,60);
+  plErrLogin('plErrCodigo','');
+  if(!/^PLG-F(10|[1-9])-[A-Z2-9]{8}$/.test(codigo)){ plErrLogin('plErrCodigo','El código no tiene el formato correcto (ejemplo: PLG-F3-ABCD2345).'); return; }
+  if(!nombre){ plErrLogin('plErrCodigo','Escribí tu nombre.'); return; }
+  const btn=plId('plBtnCodigo'); btn.disabled=true; btn.textContent='Verificando…';
+  try{
+    let u=plAuth.currentUser;
+    if(u&&!u.isAnonymous){ await plAuth.signOut(); u=null; }
+    if(!u) u=(await plAuth.signInAnonymously()).user;
+    const suc=codigo.split('-')[1];
+    // La regla de Firestore valida acá mismo que el código exista, esté vigente y sea de esta sucursal
+    await plDb.collection('planograma_accesos').doc(u.uid).set({uid:u.uid,sucursal:suc,codigo,nombre,creadoEn:plTS()});
+    plSes={nombre,sucursal:suc,rol:'lider',uid:u.uid,codigo,expiraEn:Date.now()+PL_TTL_LIDER};
+    plGuardarSesion();
+    plEntrarBiblioteca();
+  }catch(e){ console.error(e); plErrLogin('plErrCodigo',plMsgError(e,'codigo')); }
+  finally{ btn.disabled=false; btn.textContent='Entrar'; }
+}
+async function plIngresarAdmin(){
+  const mail=plId('plInEmail').value.trim().toLowerCase();
+  const pass=plId('plInPass').value;
+  plErrLogin('plErrAdmin','');
+  if(!/^[^\s@]+@[^\s@]+\.[^\s@]{2,}$/.test(mail)||!pass){ plErrLogin('plErrAdmin','Completá email y contraseña.'); return; }
+  const btn=plId('plBtnAdmin'); btn.disabled=true; btn.textContent='Verificando…';
+  try{
+    const cred=await plAuth.signInWithEmailAndPassword(mail,pass);
+    const perfil=await plPerfilAdmin(cred.user);
+    if(!perfil){ await plAuth.signOut(); plErrLogin('plErrAdmin','Este usuario no tiene permisos de administrador.'); return; }
+    plSes={nombre:perfil.nombre||cred.user.email,sucursal:null,rol:'admin',uid:cred.user.uid,expiraEn:Date.now()+PL_TTL_ADMIN};
+    plId('plInPass').value='';
+    plGuardarSesion();
+    plEntrarBiblioteca();
+  }catch(e){ console.error(e); plErrLogin('plErrAdmin',plMsgError(e,'admin')); }
+  finally{ btn.disabled=false; btn.textContent='Entrar'; }
+}
+function plDesuscribirTodo(){
+  [plUnsubLista,plUnsubPlan,plUnsubAcc].forEach(f=>{ try{ f&&f(); }catch(e){} });
+  plUnsubLista=plUnsubPlan=plUnsubAcc=null;
+  clearInterval(plTimerTick); plTimerTick=null;
+}
+async function plSalir(){
+  try{ if(plPlan) await plCerrarPlan(true); }catch(e){}
+  const s=plSes;
+  plDesuscribirTodo();
+  plSes=null; plPlanes=[];
+  try{ localStorage.removeItem(PL_SES_KEY); }catch(e){}
+  try{ if(s&&s.rol==='lider') await plDb.collection('planograma_accesos').doc(s.uid).delete(); }catch(e){}
+  try{ await plAuth.signOut(); }catch(e){}
+  plActualizarHeader();
+  plMostrar('pLogin');
+}
+async function plSinAcceso(){
+  plDesuscribirTodo();
+  plPlan=null; plSes=null;
+  try{ localStorage.removeItem(PL_SES_KEY); }catch(e){}
+  try{ await plAuth.signOut(); }catch(e){}
+  plActualizarHeader();
+  plMostrar('pLogin'); plTabLogin('codigo');
+  plErrLogin('plErrCodigo','Tu código de acceso venció o fue revocado. Pedile uno nuevo al administrador.');
+}
+
+// ── Resumen y miniatura (funciones puras sobre un estado) ──────────────
+function plCatsDe(st,key){ const v=st.assignMap&&st.assignMap[key]; return !v?[]:(Array.isArray(v)?v:[v]); }
+function plResumenDe(st){
+  let tot=0,asig=0; const usadas=new Set();
+  (st.elements||[]).forEach(el=>{
+    if(el.type==='pared'){
+      (el.mods||[]).forEach((m,i)=>{
+        const w=m.w*(m.chapas||7); tot+=w;
+        const c=plCatsDe(st,`${el.id}_u_${i}`); if(c.length){ asig+=w; c.forEach(x=>usadas.add(x)); }
+      });
+    } else {
+      (el.mods_a||[]).forEach((m,i)=>{
+        const w=m.w*m.chapas; tot+=2*w;
+        ['a','b'].forEach(s=>{ const c=plCatsDe(st,`${el.id}_${s}_${i}`); if(c.length){ asig+=w; c.forEach(x=>usadas.add(x)); } });
+      });
+    }
+  });
+  return {mTotal:+tot.toFixed(1),mAsig:+asig.toFixed(1),nElem:(st.elements||[]).length,nCats:usadas.size};
+}
+function plThumbDe(st){
+  const W=+(st.cfg&&st.cfg.largo)||12, H=+(st.cfg&&st.cfg.ancho)||8;
+  const r=[];
+  const push=(x1,y1,x2,y2,col)=>{
+    if(r.length>=700) return;
+    r.push([+Math.min(x1,x2).toFixed(2),+Math.min(y1,y2).toFixed(2),+Math.max(x1,x2).toFixed(2),+Math.max(y1,y2).toFixed(2),col]);
+  };
+  const colorDe=key=>{
+    const ids=plCatsDe(st,key); if(!ids.length) return 'e3e1da';
+    const c=(st.cats||[]).find(x=>x.id===ids[0]);
+    return c&&/^[0-9a-fA-F]{6}$/.test(c.color)?c.color:'9a9895';
+  };
+  (st.elements||[]).forEach(el=>{
+    const rot=(((el.rotation||0)%360)+360)%360;
+    // local (lx,ly) -> sala, igual que el canvas (rotación alrededor de el.x, el.y)
+    const tw=(lx,ly)=>rot===90?[el.x-ly,el.y+lx]:rot===180?[el.x-lx,el.y-ly]:rot===270?[el.x+ly,el.y-lx]:[el.x+lx,el.y+ly];
+    const rect=(lx1,ly1,lx2,ly2,col)=>{ const a=tw(lx1,ly1), b=tw(lx2,ly2); push(a[0],a[1],b[0],b[1],col); };
+    if(el.type==='pared'){
+      const h=el.depth||0.4; let x=0;
+      (el.mods||[]).forEach((m,i)=>{ rect(x,0,x+m.w,h,colorDe(`${el.id}_u_${i}`)); x+=m.w; });
+    } else {
+      const pt=el.puntera_w||0.75, h=el.depth||0.6;
+      const modW=(el.mods_a||[]).reduce((a,m)=>a+m.w,0);
+      rect(0,0,pt,h,'fff3cd');
+      let x=pt;
+      (el.mods_a||[]).forEach((m,i)=>{
+        rect(x,0,x+m.w,h/2,colorDe(`${el.id}_a_${i}`));
+        rect(x,h/2,x+m.w,h,colorDe(`${el.id}_b_${i}`));
+        x+=m.w;
+      });
+      rect(pt+modW,0,pt*2+modW,h,'fff3cd');
+    }
+  });
+  return {w:W,h:H,r};
+}
+function plDibujarThumb(canvas,th){
+  const cw=240,ch=130,k=2;
+  canvas.width=cw*k; canvas.height=ch*k; canvas.style.width=cw+'px'; canvas.style.height=ch+'px';
+  const ctx=canvas.getContext('2d'); ctx.scale(k,k);
+  ctx.fillStyle='#f8f7f4'; ctx.fillRect(0,0,cw,ch);
+  if(!th||!(th.w>0)||!(th.h>0)||!Array.isArray(th.r)) return false;
+  const esc=Math.min((cw-14)/th.w,(ch-14)/th.h);
+  const ox=(cw-th.w*esc)/2, oy=(ch-th.h*esc)/2;
+  ctx.fillStyle='#fff'; ctx.strokeStyle='#c8c5bf'; ctx.lineWidth=1;
+  ctx.fillRect(ox,oy,th.w*esc,th.h*esc); ctx.strokeRect(ox,oy,th.w*esc,th.h*esc);
+  th.r.forEach(q=>{
+    if(!Array.isArray(q)||q.length<5) return;
+    const [x1,y1,x2,y2,c]=q;
+    if(![x1,y1,x2,y2].every(Number.isFinite)) return;
+    ctx.fillStyle='#'+(/^[0-9a-fA-F]{6}$/.test(String(c))?c:'cfcac2');
+    ctx.fillRect(ox+x1*esc,oy+y1*esc,Math.max(1,(x2-x1)*esc),Math.max(1,(y2-y1)*esc));
+  });
+  return th.r.length>0;
+}
+function plEstadoVacio(tipo,suc,rubro){
+  return {v:2,ts:Date.now(),modo:tipo,sucursal:suc,
+    rubro:rubro||(tipo==='general'?'Sucursal':''),
+    cfg:{largo:'12',ancho:'8',pis:'1.2',plat:'1.2',chp:'5',alt:'1.5'},
+    elements:[],cats:[],assignMap:{},catIdN:1,elIdN:1};
+}
+function plSnapshotJson(){ const st=getState(); delete st.ts; return JSON.stringify(st); }
+
+// ── Biblioteca ──────────────────────────────────────────────────────────
+function plEntrarBiblioteca(){
+  plActualizarHeader();
+  const admin=plSes.rol==='admin';
+  plFiltroSuc=admin?(plFiltroSuc||'ALL'):plSes.sucursal;
+  const sel=plId('plFiltroSuc'); sel.textContent='';
+  if(admin){
+    sel.appendChild(plEl('option',{value:'ALL'},'Todas las sucursales'));
+    PL_SUCS.forEach(s=>sel.appendChild(plEl('option',{value:s},`${s} · ${PL_CENTRO.includes(s)?'Centro':'Barrio'}`)));
+    sel.value=plFiltroSuc;
+  }
+  sel.style.display=admin?'inline-block':'none';
+  plId('plBtnAccesos').style.display=admin?'inline-block':'none';
+  plId('plLibTitulo').textContent=admin?'Planogramas':`Planogramas · ${plSes.sucursal}`;
+  plId('plAvisos').textContent='';
+  plMostrar('pLib');
+  plSuscribirLista();
+  plRevisarLegacy();
+}
+function plCambiarFiltro(){ plFiltroSuc=plId('plFiltroSuc').value; plSuscribirLista(); }
+function plSuscribirLista(){
+  if(plUnsubLista){ plUnsubLista(); plUnsubLista=null; }
+  let q=plDb.collection('planograma_planos');
+  if(plSes.rol!=='admin') q=q.where('sucursal','==',plSes.sucursal);
+  else if(plFiltroSuc&&plFiltroSuc!=='ALL') q=q.where('sucursal','==',plFiltroSuc);
+  plPlanes=[]; plRenderLista(true);
+  plUnsubLista=q.onSnapshot(snap=>{
+    plPlanes=snap.docs.map(d=>Object.assign({id:d.id,_pend:d.metadata.hasPendingWrites},d.data({serverTimestamps:'estimate'})));
+    plId('plAvisos').querySelectorAll('[data-err]').forEach(n=>n.remove());
+    plRenderLista();
+  },err=>{
+    console.error('lista',err);
+    if(err&&err.code==='permission-denied'){
+      if(plSes&&plSes.rol==='lider'){ plSinAcceso(); return; }
+      plId('plAvisos').appendChild(plEl('div',{class:'pl-banner red','data-err':'1'},
+        'Firestore no permite leer los planogramas. Falta publicar las reglas de planogramas en Firebase (archivo firestore.rules.planogramas).'));
+    }
+    plRenderLista();
+  });
+}
+function plCmp(a,b){
+  const rank=p=>p.estado==='archivado'?3:(p.tipo==='general'&&p.estado==='vigente'?0:(p.tipo==='general'?1:2));
+  const ns=s=>+String(s||'F99').slice(1);
+  if(ns(a.sucursal)!==ns(b.sucursal)) return ns(a.sucursal)-ns(b.sucursal);
+  if(rank(a)!==rank(b)) return rank(a)-rank(b);
+  return plMs(b.actualizadoEn)-plMs(a.actualizadoEn);
+}
+function plRenderLista(cargando){
+  const cont=plId('plLista'); cont.textContent='';
+  const verArch=plId('plVerArchivados').checked;
+  let l=plPlanes.slice();
+  if(!verArch) l=l.filter(p=>p.estado!=='archivado');
+  l.sort(plCmp);
+  if(!l.length){
+    cont.appendChild(plEl('div',{class:'pl-empty',style:'grid-column:1/-1'},
+      cargando?'Cargando planogramas…':'Todavía no hay planogramas acá. Creá el primero con "Nuevo planograma".'));
+    return;
+  }
+  l.forEach(p=>cont.appendChild(plTarjeta(p)));
+}
+function plTarjeta(p){
+  const admin=plSes.rol==='admin';
+  const canvas=plEl('canvas');
+  const ok=plDibujarThumb(canvas,p.thumb);
+  const thumb=plEl('div',{class:'pl-thumb',onclick:()=>plAbrir(p.id)},canvas);
+  if(!ok) thumb.appendChild(plEl('span',{class:'pl-vacio',style:'position:absolute'},'Sin elementos todavía'));
+  thumb.style.position='relative';
+  const chips=plEl('div',{class:'pl-chips'});
+  chips.appendChild(plEl('span',{class:'pl-chip '+(p.tipo==='general'?'blue':'gray')},p.tipo==='general'?'General':'Rubro'));
+  chips.appendChild(plEl('span',{class:'pl-chip '+(p.estado==='vigente'?'green':p.estado==='archivado'?'gray':'amber')},
+    p.estado==='vigente'?'Vigente':p.estado==='archivado'?'Archivado':'Borrador'));
+  if(admin&&plFiltroSuc==='ALL') chips.appendChild(plEl('span',{class:'pl-chip'},p.sucursal));
+  if(p.campana) chips.appendChild(plEl('span',{class:'pl-chip amber'},p.campana));
+  if(p._pend) chips.appendChild(plEl('span',{class:'pl-chip'},'Sincronizando'));
+  const r=p.resumen||{};
+  const fechas=(p.desde||p.hasta)?`Fechas: ${p.desde||'?'} al ${p.hasta||'?'}`:'';
+  const meta=plEl('div',{class:'pl-plan-meta'},
+    p.tipo==='rubro'&&p.rubro?plEl('div',null,'Rubro: '+p.rubro):null,
+    fechas?plEl('div',null,fechas):null,
+    r.mTotal!=null?plEl('div',null,`${r.mAsig||0} m asignados de ${r.mTotal} m · ${r.nCats||0} categorías`):null,
+    plEl('div',null,`Editó ${p.actualizadoPor||'—'} · ${plHace(plMs(p.actualizadoEn))}`));
+  const sel=plEl('select',{style:'width:auto;font-size:11px;padding:4px 6px',onchange:e=>{ const v=e.target.value; e.target.value=''; if(v) plAccion(p.id,v); }},
+    plEl('option',{value:''},'Más…'),
+    plEl('option',{value:'renombrar'},'Renombrar'),
+    p.estado==='vigente'?plEl('option',{value:'quitarvigente'},'Quitar vigente'):(p.estado!=='archivado'?plEl('option',{value:'vigente'},'Marcar como vigente'):null),
+    p.estado==='archivado'?plEl('option',{value:'reactivar'},'Reactivar'):plEl('option',{value:'archivar'},'Archivar'),
+    admin?plEl('option',{value:'eliminar'},'Eliminar definitivamente'):null);
+  const acciones=plEl('div',{class:'pl-plan-actions'},
+    plEl('button',{class:'btn btn-primary btn-sm',onclick:()=>plAbrir(p.id)},'Abrir'),
+    plEl('button',{class:'btn btn-outline btn-sm',onclick:()=>plNuevoModal(p.id)},'Duplicar'),
+    sel);
+  return plEl('div',{class:'pl-plan'+(p.estado==='vigente'?' vigente':'')},
+    thumb,
+    plEl('div',{class:'pl-plan-body'},
+      plEl('div',{class:'pl-plan-name',onclick:()=>plAbrir(p.id)},p.nombre||'Sin nombre'),
+      chips,meta,acciones));
+}
+async function plAccion(id,acc){
+  const p=plPlanes.find(x=>x.id===id); if(!p) return;
+  const ref=plDb.collection('planograma_planos').doc(id);
+  const quien={actualizadoPor:plSes.nombre,actualizadoUid:plSes.uid,actualizadoEn:plTS()};
+  try{
+    if(acc==='renombrar'){
+      const n=(prompt('Nuevo nombre del planograma:',p.nombre||'')||'').trim().slice(0,120);
+      if(!n||n===p.nombre) return;
+      await ref.update(Object.assign({nombre:n},quien));
+    } else if(acc==='vigente'){
+      const b=plDb.batch();
+      if(p.tipo==='general') plPlanes.filter(x=>x.id!==id&&x.sucursal===p.sucursal&&x.tipo==='general'&&x.estado==='vigente')
+        .forEach(x=>b.update(plDb.collection('planograma_planos').doc(x.id),{estado:'borrador'}));
+      b.update(ref,Object.assign({estado:'vigente'},quien));
+      await b.commit();
+      plToast('Marcado como vigente');
+    } else if(acc==='quitarvigente'||acc==='reactivar'){
+      await ref.update(Object.assign({estado:'borrador'},quien));
+    } else if(acc==='archivar'){
+      await ref.update(Object.assign({estado:'archivado'},quien));
+      plToast('Archivado. Podés verlo con "Ver archivados".');
+    } else if(acc==='eliminar'){
+      if(!confirm(`¿Eliminar "${p.nombre}" definitivamente?\nSe borran también sus versiones. No se puede deshacer.`)) return;
+      const vs=await ref.collection('versiones').get();
+      const b=plDb.batch();
+      vs.docs.forEach(d=>b.delete(d.ref));
+      b.delete(ref.collection('contenido').doc('actual'));
+      await b.commit();
+      await ref.delete();
+      plToast('Planograma eliminado');
+    }
+  }catch(e){ console.error(e); alert(plMsgError(e)); }
+}
+
+// ── Nuevo planograma / duplicar ─────────────────────────────────────────
+function plNuevoModal(origenId){
+  const admin=plSes.rol==='admin';
+  const origen=origenId?plPlanes.find(x=>x.id===origenId):null;
+  const sucInicial=origen?origen.sucursal:(admin?(plFiltroSuc&&plFiltroSuc!=='ALL'?plFiltroSuc:'F3'):plSes.sucursal);
+  let tipo=origen?origen.tipo:'general';
+  const iSuc=plEl('select',null,PL_SUCS.map(s=>plEl('option',{value:s,selected:s===sucInicial},`${s} · ${PL_CENTRO.includes(s)?'Centro':'Barrio'}`)));
+  const iNombre=plEl('input',{type:'text',maxlength:'120',value:origen?`${origen.nombre} (copia)`:'General'});
+  const iRubro=plEl('input',{type:'text',maxlength:'60',placeholder:'Ej: Juguetería',value:origen&&origen.rubro?origen.rubro:''});
+  const iCamp=plEl('input',{type:'text',maxlength:'80',placeholder:'Ej: Día del Niño 2026 (opcional)',value:origen&&origen.campana?origen.campana:''});
+  const iDesde=plEl('input',{type:'date',value:origen&&origen.desde?origen.desde:''});
+  const iHasta=plEl('input',{type:'date',value:origen&&origen.hasta?origen.hasta:''});
+  const iOrig=plEl('select',null,
+    plEl('option',{value:''},'En blanco'),
+    plPlanes.slice().sort(plCmp).map(p=>plEl('option',{value:p.id,selected:origen&&p.id===origen.id},
+      `${admin?p.sucursal+' · ':''}${p.nombre}${p.estado==='archivado'?' (archivado)':''}`)));
+  const wrapRubro=plEl('div',{class:'pl-field'},plEl('label',null,'Rubro'),iRubro);
+  const lblG=plEl('label',null,plEl('input',{type:'radio',name:'plTipo',value:'general',checked:tipo==='general'}),'General de sucursal');
+  const lblR=plEl('label',null,plEl('input',{type:'radio',name:'plTipo',value:'rubro',checked:tipo==='rubro'}),'De un rubro');
+  const pintar=()=>{
+    lblG.classList.toggle('on',tipo==='general'); lblR.classList.toggle('on',tipo==='rubro');
+    wrapRubro.style.display=tipo==='rubro'?'block':'none';
+  };
+  lblG.onclick=()=>{ tipo='general'; pintar(); };
+  lblR.onclick=()=>{ tipo='rubro'; pintar(); };
+  pintar();
+  const cuerpo=plEl('div',null,
+    admin?plEl('div',{class:'pl-field'},plEl('label',null,'Sucursal'),iSuc):null,
+    plEl('div',{class:'pl-radio'},lblG,lblR),
+    plEl('div',{class:'pl-field'},plEl('label',null,'Nombre'),iNombre),
+    wrapRubro,
+    plEl('div',{class:'pl-field'},plEl('label',null,'Fecha especial (opcional)'),iCamp),
+    plEl('div',{class:'frow c2'},plEl('div',null,plEl('label',null,'Desde'),iDesde),plEl('div',null,plEl('label',null,'Hasta'),iHasta)),
+    plEl('div',{class:'pl-field'},plEl('label',null,'Empezar desde'),iOrig),
+    plEl('div',{class:'pl-err',id:'plErrNuevo'}));
+  plModal(origen?'Duplicar planograma':'Nuevo planograma',cuerpo,[
+    {txt:'Cancelar'},
+    {txt:'Crear',cls:'btn-primary',cerrar:false,fn:async()=>{
+      const nombre=iNombre.value.trim();
+      const rubro=iRubro.value.trim();
+      const err=plId('plErrNuevo');
+      if(!nombre){ err.textContent='Escribí un nombre.'; err.classList.add('show'); return false; }
+      if(tipo==='rubro'&&!rubro){ err.textContent='Indicá el rubro.'; err.classList.add('show'); return false; }
+      const suc=admin?iSuc.value:plSes.sucursal;
+      try{
+        const id=await plCrearPlan({suc,tipo,nombre,rubro:tipo==='rubro'?rubro:'',campana:iCamp.value.trim(),desde:iDesde.value,hasta:iHasta.value,origenId:iOrig.value||null});
+        plCerrarModal();
+        plAbrir(id,{forzar:true});
+      }catch(e){ console.error(e); err.textContent=plMsgError(e); err.classList.add('show'); return false; }
+    }}
+  ]);
+}
+async function plCrearPlan(o){
+  const col=plDb.collection('planograma_planos');
+  const ref=col.doc();
+  let st;
+  if(o.origenId){
+    const c=await col.doc(o.origenId).collection('contenido').doc('actual').get();
+    if(!c.exists) throw new Error('No se pudo leer el planograma de origen');
+    st=JSON.parse(c.data().estadoJson);
+  } else st=plEstadoVacio(o.tipo,o.suc,o.rubro);
+  st.sucursal=o.suc; st.modo=o.tipo;
+  if(o.tipo==='rubro'&&o.rubro) st.rubro=o.rubro;
+  if(o.tipo==='general'&&(!st.rubro||o.origenId)) st.rubro=o.origenId&&st.rubro&&st.modo==='general'?st.rubro:'Sucursal';
+  delete st.ts;
+  const json=JSON.stringify(st);
+  const meta={
+    sucursal:o.suc,tipo:o.tipo,nombre:o.nombre.slice(0,120),rubro:o.rubro||'',campana:o.campana||'',desde:o.desde||'',hasta:o.hasta||'',
+    estado:'borrador',creadoPor:plSes.nombre,creadoEn:plTS(),
+    actualizadoPor:plSes.nombre,actualizadoUid:plSes.uid,actualizadoEn:plTS(),
+    rev:1,resumen:plResumenDe(st),thumb:plThumbDe(st),editando:null,nVersiones:1,ultimaVersion:plTS()
+  };
+  const b=plDb.batch();
+  b.set(ref,meta);
+  b.set(ref.collection('contenido').doc('actual'),{estadoJson:json});
+  b.set(ref.collection('versiones').doc(),{ts:plTS(),autor:plSes.nombre,nota:o.origenId?'Copia de otro planograma':'Creación',rev:1,estadoJson:json});
+  await b.commit();
+  return ref.id;
+}
+
+// ── Editor: abrir, cargar, cerrar ───────────────────────────────────────
+function plCargarEstadoEnEditor(st,opts){
+  const paso=(opts&&opts.paso!==undefined)?opts.paso:null;
+  const act=document.querySelector('.panel.active');
+  const prev=act&&/^p[1-5]$/.test(act.id)?+act.id.slice(1):null;
+  if(!applyState(st)) throw new Error('El contenido del planograma no es válido');
+  const sel=cfg('cfg_suc');
+  if(plPlan&&plPlan.meta) sel.value=plPlan.meta.sucursal;
+  sel.disabled=true;      // la sucursal de un planograma no se cambia desde el editor
+  selectedEl=null; dragging=null; activeCat=null;
+  if(typeof modoBorrar!=='undefined'&&modoBorrar) toggleBorrarModo();
+  scale=1; pan2X=0; pan2Y=0; panX=0; panY=0;
+  cfg('zoomLbl').textContent='100%';
+  cfg('islaDetail').style.display='none';
+  initCanvas(); renderCats(); renderCatListPg();
+  const n=paso==='mantener'?(prev||2):(typeof paso==='number'?paso:(elements.length?2:1));
+  goStep(n,document.getElementById('sb'+n));
+  plId('saveBar').style.display='flex';
+  if(plPlan&&plPlan.meta){
+    const m=plPlan.meta;
+    plId('modoLabel').textContent=`${m.nombre} · ${m.tipo==='general'?'General de sucursal':'Rubro'}${m.campana?' · '+m.campana:''}`;
+  }
+  plId('sb0').textContent='← Mis planogramas';
+}
+async function plAbrir(id,opts){
+  const forzar=!!(opts&&opts.forzar);
+  plMostrarCarga('Abriendo planograma…');
+  try{
+    if(plPlan) await plCerrarPlan(true);
+    const ref=plDb.collection('planograma_planos').doc(id);
+    const [m,c]=await Promise.all([ref.get(),ref.collection('contenido').doc('actual').get()]);
+    if(!m.exists||!c.exists) throw new Error('No se encontró el planograma');
+    const meta=m.data({serverTimestamps:'estimate'});
+    const ed=meta.editando;
+    if(!forzar&&ed&&ed.uid!==plSes.uid&&Date.now()-ed.ts<PL_LOCK_MS){
+      if(!confirm(`${ed.nombre||'Otra persona'} está editando este planograma ahora.\nSi lo abrís también, pueden pisarse los cambios.\n\n¿Abrirlo de todos modos?`)){ plMostrar('pLib'); return; }
+    }
+    const st=JSON.parse(c.data().estadoJson);
+    plPlan={id,meta,rev:meta.rev||0,ultimo:null,visto:null,ultVerMs:plMs(meta.ultimaVersion),guardadoMs:Date.now(),estadoUI:{tipo:'ok',texto:'Guardado en la nube'}};
+    plConflicto=null; plId('plConflicto').classList.remove('show');
+    plCargarEstadoEnEditor(st,{paso:null});
+    plPlan.ultimo=plSnapshotJson(); plPlan.visto=plPlan.ultimo;
+    plEstadoGuardado('ok','Guardado en la nube');
+    plHbMs=Date.now();
+    ref.update({editando:{uid:plSes.uid,nombre:plSes.nombre,ts:Date.now()}}).catch(()=>{});
+    plSuscribirPlan();
+    clearInterval(plTimerTick); plTimerTick=setInterval(plTick,2000);
+  }catch(e){
+    console.error(e); plPlan=null;
+    alert('No se pudo abrir el planograma: '+(e&&e.message?e.message:plMsgError(e)));
+    plMostrar('pLib');
+  }
+}
+async function plCerrarPlan(guardar){
+  clearInterval(plTimerTick); plTimerTick=null;
+  if(plUnsubPlan){ plUnsubPlan(); plUnsubPlan=null; }
+  const p=plPlan;
+  if(p){
+    try{ if(guardar&&!plConflicto&&!p.bloqueado){ const j=plSnapshotJson(); if(j!==p.ultimo) await plGuardar(j); } }catch(e){}
+    try{ await plDb.collection('planograma_planos').doc(p.id).update({editando:null}); }catch(e){}
+  }
+  plPlan=null; plConflicto=null;
+  plId('plConflicto').classList.remove('show');
+  cfg('cfg_suc').disabled=false;
+}
+async function plVolverBiblioteca(){
+  if(!plSes){ plMostrar('pLogin'); return; }
+  plMostrarCarga('Guardando…');
+  try{ await plCerrarPlan(true); }catch(e){}
+  plEntrarBiblioteca();
+}
+
+// ── Guardado ────────────────────────────────────────────────────────────
+function plEstadoGuardado(tipo,texto){
+  if(plPlan) plPlan.estadoUI={tipo,texto};
+  const col={ok:'#1baf7a',pend:'#d68910',guardando:'#2a78d6',off:'#d68910',err:'#e8363b'}[tipo]||'#9a9895';
+  plId('saveIcon').style.background=col;
+  plId('saveLabel').textContent=texto;
+}
+function plActualizarEtiqueta(){
+  if(!plPlan||!plPlan.estadoUI||plPlan.estadoUI.tipo!=='ok') return;
+  plId('saveLabel').textContent=`Guardado en la nube · ${plHace(plPlan.guardadoMs)}`;
+}
+function plMarcarCambio(){ if(plPlan&&!plGuardando&&!plConflicto) plEstadoGuardado('pend','Cambios sin guardar…'); }
+function plErrorGuardado(e,p){
+  console.error('guardar',e);
+  if(p&&plPlan!==p) return;
+  if(e&&e.code==='permission-denied'){
+    if(plPlan) plPlan.bloqueado=true;
+    plEstadoGuardado('err','Sin permiso para guardar');
+    const b=plId('plConflicto'); b.textContent='';
+    b.appendChild(plEl('div',{class:'grow'},'No se pudieron guardar los cambios: tu código venció o fue revocado, o el planograma ya no te pertenece. Exportá un respaldo (.ferni) para no perder el trabajo.'));
+    b.appendChild(plEl('button',{class:'btn btn-outline btn-sm',onclick:()=>guardarEstado()},'Descargar respaldo'));
+    b.classList.add('show');
+  } else {
+    if(plPlan) plPlan.proxIntento=Date.now()+10000;
+    plEstadoGuardado('err','Error al guardar · reintentando');
+  }
+}
+async function plGuardar(j,opt){
+  const p=plPlan; if(!p||!plSes) return;
+  const version=!!(opt&&opt.version), nota=(opt&&opt.nota)||'';
+  plGuardando=true; plEstadoGuardado('guardando','Guardando…');
+  try{
+    const st=JSON.parse(j);
+    const ref=plDb.collection('planograma_planos').doc(p.id);
+    const ahora=Date.now();
+    const crearVer=version||(ahora-(p.ultVerMs||0)>PL_VER_CADA);
+    const FV=firebase.firestore.FieldValue;
+    const upd={
+      actualizadoPor:plSes.nombre,actualizadoUid:plSes.uid,actualizadoEn:plTS(),
+      rev:FV.increment(1),resumen:plResumenDe(st),thumb:plThumbDe(st),rubro:st.rubro||'',
+      editando:{uid:plSes.uid,nombre:plSes.nombre,ts:ahora}
+    };
+    if(crearVer){ upd.ultimaVersion=plTS(); upd.nVersiones=FV.increment(1); }
+    const b=plDb.batch();
+    b.update(ref,upd);
+    b.set(ref.collection('contenido').doc('actual'),{estadoJson:j});
+    if(crearVer) b.set(ref.collection('versiones').doc(),{ts:plTS(),autor:plSes.nombre,nota:nota||'Autoguardado',rev:(p.rev||0)+1,estadoJson:j});
+    const commit=b.commit();
+    const res=await Promise.race([commit.then(()=>'ok'),new Promise(r=>setTimeout(()=>r('lento'),6000))]);
+    if(plPlan!==p) return;
+    p.ultimo=j; p.proxIntento=0;
+    if(crearVer) p.ultVerMs=ahora;
+    if(res==='ok'){
+      p.guardadoMs=Date.now(); plEstadoGuardado('ok','Guardado en la nube');
+      if(crearVer) plPodarVersiones(ref,p);
+    } else {
+      // Sin conexión: la escritura queda en la cola local de Firestore y se envía al reconectar
+      plEstadoGuardado('off','Sin conexión · se sincroniza al reconectar');
+      commit.then(()=>{
+        if(plPlan===p){ p.guardadoMs=Date.now(); if(!plConflicto) plEstadoGuardado('ok','Guardado en la nube'); if(crearVer) plPodarVersiones(ref,p); }
+      }).catch(e=>plErrorGuardado(e,p));
+    }
+  }catch(e){ plErrorGuardado(e,p); }
+  finally{ plGuardando=false; }
+}
+async function plPodarVersiones(ref,p){
+  try{
+    const n=(p.meta&&p.meta.nVersiones||0)+1;
+    if(n<=PL_MAX_VER+4) return;
+    const k=n-PL_MAX_VER;
+    const s=await ref.collection('versiones').orderBy('ts','asc').limit(k).get();
+    if(s.empty) return;
+    const b=plDb.batch();
+    s.docs.forEach(d=>b.delete(d.ref));
+    b.update(ref,{nVersiones:firebase.firestore.FieldValue.increment(-s.size)});
+    await b.commit();
+  }catch(e){ console.warn('podar versiones',e); }
+}
+async function plTick(){
+  const p=plPlan;
+  if(!p||!plSes||plGuardando||plConflicto||p.bloqueado) return;
+  if(Date.now()<(p.proxIntento||0)) return;
+  const j=plSnapshotJson();
+  if(j===p.ultimo){
+    p.visto=j;
+    if(p.estadoUI&&p.estadoUI.tipo==='pend') plEstadoGuardado('ok','Guardado en la nube');
+    if(Date.now()-plHbMs>PL_HB_MS){
+      plHbMs=Date.now();
+      plDb.collection('planograma_planos').doc(p.id).update({editando:{uid:plSes.uid,nombre:plSes.nombre,ts:Date.now()}}).catch(()=>{});
+    }
+    return;
+  }
+  if(j!==p.visto){ p.visto=j; plEstadoGuardado('pend','Cambios sin guardar…'); return; }   // sigue cambiando: esperar
+  await plGuardar(j);
+}
+async function plGuardarAhora(){
+  const p=plPlan; if(!p||plGuardando||plConflicto||p.bloqueado) return;
+  const j=plSnapshotJson(); if(j!==p.ultimo) await plGuardar(j);
+}
+
+// ── Conflictos entre dos personas ───────────────────────────────────────
+function plSuscribirPlan(){
+  const p=plPlan;
+  if(plUnsubPlan){ plUnsubPlan(); plUnsubPlan=null; }
+  plUnsubPlan=plDb.collection('planograma_planos').doc(p.id).onSnapshot(snap=>{
+    if(plPlan!==p) return;
+    if(!snap.exists){ alert('Este planograma fue eliminado.'); plVolverBiblioteca(); return; }
+    const m=snap.data({serverTimestamps:'estimate'});
+    const remRev=m.rev||0;
+    if(m.actualizadoUid===plSes.uid){ p.rev=Math.max(p.rev||0,remRev); p.meta=m; return; }   // lo guardé yo (o mi otra pestaña)
+    if(snap.metadata.hasPendingWrites) return;
+    p.meta=m;
+    if(remRev>(p.rev||0)){
+      if(plSnapshotJson()===p.ultimo) plRecargarContenido(p,m,true);     // no tengo cambios propios: actualizar en silencio
+      else{ plConflicto={por:m.actualizadoPor||'otra persona',rev:remRev}; plMostrarConflicto(); }
+    }
+  },err=>{ if(err&&err.code==='permission-denied'&&plSes&&plSes.rol==='lider') plSinAcceso(); });
+}
+async function plRecargarContenido(p,m,silencioso){
+  try{
+    const c=await plDb.collection('planograma_planos').doc(p.id).collection('contenido').doc('actual').get();
+    if(plPlan!==p||!c.exists) return;
+    const st=JSON.parse(c.data().estadoJson);
+    plCargarEstadoEnEditor(st,{paso:'mantener'});
+    p.ultimo=plSnapshotJson(); p.visto=p.ultimo; p.rev=m.rev||p.rev; p.guardadoMs=Date.now();
+    plEstadoGuardado('ok','Guardado en la nube');
+    if(silencioso) plToast(`Se actualizó con los cambios de ${m.actualizadoPor||'otra persona'}`);
+  }catch(e){ console.error(e); }
+}
+function plMostrarConflicto(){
+  const b=plId('plConflicto'); b.textContent='';
+  b.appendChild(plEl('div',{class:'grow'},`${plConflicto.por} guardó cambios en este planograma mientras lo editabas. Tus cambios todavía no se guardaron.`));
+  b.appendChild(plEl('button',{class:'btn btn-outline btn-sm',onclick:()=>plResolverConflicto('cargar')},'Cargar su versión (descarta lo mío)'));
+  b.appendChild(plEl('button',{class:'btn btn-primary btn-sm',onclick:()=>plResolverConflicto('mia')},'Seguir con la mía (sobrescribe)'));
+  b.classList.add('show');
+  plEstadoGuardado('err','Conflicto de edición');
+}
+async function plResolverConflicto(op){
+  const p=plPlan; if(!p) return;
+  const m=p.meta;
+  if(op==='cargar'){
+    // por las dudas, lo propio queda en el historial
+    try{
+      await plDb.collection('planograma_planos').doc(p.id).collection('versiones').add({ts:plTS(),autor:plSes.nombre,nota:`Mis cambios descartados al cargar la versión de ${m.actualizadoPor||'otra persona'}`,rev:p.rev||0,estadoJson:plSnapshotJson()});
+    }catch(e){}
+    plConflicto=null;
+    await plRecargarContenido(p,m,false);
+  } else { p.rev=m.rev||p.rev; plConflicto=null; plEstadoGuardado('pend','Cambios sin guardar…'); }
+  plId('plConflicto').classList.remove('show');
+}
+
+// ── Historial de versiones ──────────────────────────────────────────────
+async function plAbrirVersiones(){
+  if(!plPlan) return;
+  const p=plPlan;
+  const lista=plEl('div',null,plEl('div',{class:'pl-plan-meta'},'Cargando versiones…'));
+  plModal('Versiones de este planograma',lista,[
+    {txt:'Guardar versión ahora',cls:'btn-outline',cerrar:false,fn:async()=>{
+      const nota=(prompt('Nota para esta versión (opcional):','')||'').trim().slice(0,120);
+      await plGuardar(plSnapshotJson(),{version:true,nota:nota||'Versión manual'});
+      plToast('Versión guardada'); plCerrarModal(); plAbrirVersiones(); return false;
+    }},
+    {txt:'Cerrar',cls:'btn-primary'}
+  ]);
+  try{
+    const s=await plDb.collection('planograma_planos').doc(p.id).collection('versiones').orderBy('ts','desc').limit(PL_MAX_VER+5).get();
+    lista.textContent='';
+    if(s.empty){ lista.appendChild(plEl('div',{class:'pl-plan-meta'},'Todavía no hay versiones guardadas.')); return; }
+    s.docs.forEach(d=>{
+      const v=d.data({serverTimestamps:'estimate'});
+      lista.appendChild(plEl('div',{class:'pl-ver'},
+        plEl('div',{class:'grow'},
+          plEl('div',{style:'font-weight:600'},plFechaHora(plMs(v.ts))),
+          plEl('div',{class:'pl-plan-meta'},`${v.autor||'—'} · ${v.nota||''}`)),
+        plEl('button',{class:'btn btn-outline btn-sm',onclick:()=>plRestaurarVersion(d.id,v)},'Restaurar')));
+    });
+  }catch(e){ lista.textContent=''; lista.appendChild(plEl('div',{class:'pl-plan-meta'},'No se pudieron cargar las versiones.')); }
+}
+async function plRestaurarVersion(vid,v){
+  const p=plPlan; if(!p) return;
+  if(!confirm(`¿Restaurar la versión del ${plFechaHora(plMs(v.ts))} (${v.autor||'—'})?\nTu estado actual queda guardado en el historial antes de restaurar.`)) return;
+  try{
+    await plGuardar(plSnapshotJson(),{version:true,nota:'Antes de restaurar una versión anterior'});
+    const st=JSON.parse(v.estadoJson);
+    plCerrarModal();
+    plCargarEstadoEnEditor(st,{paso:'mantener'});   // el cambio se detecta solo y se guarda como estado actual
+    plToast('Versión restaurada');
+  }catch(e){ console.error(e); alert('No se pudo restaurar la versión.'); }
+}
+
+// ── Accesos por sucursal (administrador) ────────────────────────────────
+function plAbrirAccesos(){
+  plMostrar('pAcc');
+  if(plUnsubAcc){ plUnsubAcc(); plUnsubAcc=null; }
+  const u1=plDb.collection('planograma_codigos').onSnapshot(s=>{ plCodigos=s.docs.map(d=>Object.assign({id:d.id},d.data({serverTimestamps:'estimate'}))); plRenderAccesos(); },e=>console.error(e));
+  const u2=plDb.collection('planograma_accesos').onSnapshot(s=>{ plAccesos=s.docs.map(d=>Object.assign({id:d.id},d.data({serverTimestamps:'estimate'}))); plRenderAccesos(); },e=>console.error(e));
+  plUnsubAcc=()=>{ u1(); u2(); };
+  plRenderAccesos();
+}
+function plCerrarAccesos(){ if(plUnsubAcc){ plUnsubAcc(); plUnsubAcc=null; } plEntrarBiblioteca(); }
+function plCodigosVigentes(suc){
+  return plCodigos.filter(c=>c.sucursal===suc&&!c.revocado&&plMs(c.expiraEn)>Date.now()).sort((a,b)=>plMs(b.creadaEn)-plMs(a.creadaEn));
+}
+function plRenderAccesos(){
+  const cont=plId('plAccTabla'); if(!cont) return; cont.textContent='';
+  const filas=PL_SUCS.map(s=>{
+    const vig=plCodigosVigentes(s); const c=vig[0];
+    const ingresos=plAccesos.filter(a=>a.sucursal===s).sort((a,b)=>plMs(b.creadoEn)-plMs(a.creadoEn));
+    const nombres=ingresos.slice(0,3).map(a=>`${a.nombre} (${plHace(plMs(a.creadoEn))})`).join(', ')+(ingresos.length>3?` y ${ingresos.length-3} más`:'');
+    const acc=plEl('div',{style:'display:flex;gap:4px;flex-wrap:wrap'});
+    if(c){
+      acc.appendChild(plEl('button',{class:'btn btn-outline btn-sm',onclick:()=>plCopiarCodigo(c.id)},'Copiar'));
+      acc.appendChild(plEl('button',{class:'btn btn-outline btn-sm',onclick:()=>plCompartirCodigo(c)},'WhatsApp'));
+      acc.appendChild(plEl('button',{class:'btn btn-outline btn-sm',onclick:()=>plGenerarCodigo(s)},'Regenerar'));
+      acc.appendChild(plEl('button',{class:'btn btn-sm',style:'background:#fdf2f2;border-color:#e24b4a;color:#c0392b',onclick:()=>plRevocarCodigo(s)},'Revocar'));
+    } else acc.appendChild(plEl('button',{class:'btn btn-primary btn-sm',onclick:()=>plGenerarCodigo(s)},'Generar código'));
+    return plEl('tr',null,
+      plEl('td',null,plEl('strong',null,s),plEl('div',{class:'pl-plan-meta'},PL_CENTRO.includes(s)?'Centro':'Barrio')),
+      plEl('td',null,c?plEl('span',{class:'pl-code'},c.id):plEl('span',{class:'pl-plan-meta'},'Sin código vigente')),
+      plEl('td',null,c?new Date(plMs(c.expiraEn)).toLocaleDateString('es-AR'):'—'),
+      plEl('td',{class:'pl-plan-meta'},ingresos.length?nombres:'Nadie ingresó todavía'),
+      plEl('td',null,acc));
+  });
+  cont.appendChild(plEl('table',{class:'pl-table'},
+    plEl('thead',null,plEl('tr',null,['Sucursal','Código vigente','Vence','Ingresos','Acciones'].map(h=>plEl('th',null,h)))),
+    plEl('tbody',null,filas)));
+}
+async function plGenerarCodigo(suc){
+  const prev=plCodigosVigentes(suc);
+  if(prev.length&&!confirm(`${suc} ya tiene un código vigente.\nSi generás uno nuevo, el anterior queda revocado y quienes lo usan perderán el acceso. ¿Continuar?`)) return;
+  const codigo=`PLG-${suc}-${plToken(8)}`;
+  const col=plDb.collection('planograma_codigos');
+  try{
+    const b=plDb.batch();
+    prev.forEach(c=>b.update(col.doc(c.id),{revocado:true}));
+    b.set(col.doc(codigo),{codigo,sucursal:suc,creadaPor:plSes.nombre,creadaEn:plTS(),
+      expiraEn:firebase.firestore.Timestamp.fromDate(new Date(Date.now()+PL_DIAS_CODIGO*86400000)),revocado:false});
+    await b.commit();
+    plToast(`Código generado para ${suc}`);
+  }catch(e){ console.error(e); alert(plMsgError(e)); }
+}
+async function plRevocarCodigo(suc){
+  const prev=plCodigosVigentes(suc); if(!prev.length) return;
+  if(!confirm(`¿Revocar el código de ${suc}? Quienes lo usan perderán el acceso.`)) return;
+  try{
+    const b=plDb.batch();
+    prev.forEach(c=>b.update(plDb.collection('planograma_codigos').doc(c.id),{revocado:true}));
+    await b.commit(); plToast('Código revocado');
+  }catch(e){ console.error(e); alert(plMsgError(e)); }
+}
+async function plCopiarCodigo(c){
+  try{ await navigator.clipboard.writeText(c); plToast('Código copiado'); }
+  catch(e){ prompt('Copiá el código:',c); }
+}
+function plCompartirCodigo(c){
+  const url=location.origin+location.pathname;
+  const msg=`Hola! Te paso el acceso a los Planogramas FERNI de la sucursal ${c.sucursal}.\n\nEntrá a: ${url}\nCódigo: *${c.id}*\n\nIngresá el código y tu nombre. El código sirve todas las veces que necesites entrar y vence el ${new Date(plMs(c.expiraEn)).toLocaleDateString('es-AR')}.`;
+  window.open('https://wa.me/?text='+encodeURIComponent(msg),'_blank','noopener,noreferrer');
+}
+
+// ── Planogramas guardados en este navegador por versiones anteriores ───
+function plLegacyPendientes(){
+  const out=[]; let imp=[];
+  try{ imp=JSON.parse(localStorage.getItem(PL_IMPORTADOS_KEY)||'[]'); }catch(e){}
+  for(let i=0;i<localStorage.length;i++){
+    const k=localStorage.key(i);
+    if(!k||!k.startsWith(PL_LEGACY_PREFIX)||imp.includes(k)) continue;
+    try{
+      const st=JSON.parse(localStorage.getItem(k));
+      if(!st||st.v!==2||!Array.isArray(st.elements)) continue;
+      if(plSes.rol!=='admin'&&st.sucursal!==plSes.sucursal) continue;
+      out.push({k,st});
+    }catch(e){}
+  }
+  return out;
+}
+function plMarcarLegacy(k){
+  let imp=[]; try{ imp=JSON.parse(localStorage.getItem(PL_IMPORTADOS_KEY)||'[]'); }catch(e){}
+  imp.push(k); try{ localStorage.setItem(PL_IMPORTADOS_KEY,JSON.stringify(imp)); }catch(e){}
+}
+function plRevisarLegacy(){
+  const av=plId('plAvisos'); av.querySelectorAll('[data-legacy]').forEach(n=>n.remove());
+  plLegacyPendientes().forEach(({k,st})=>{
+    const desc=`${st.sucursal||'?'} · ${st.rubro||'Planograma'} (${st.modo==='general'?'general':'rubro'}, guardado ${plHace(st.ts)})`;
+    const b=plEl('div',{class:'pl-banner','data-legacy':'1'},
+      plEl('div',{class:'grow'},`Hay un planograma guardado solo en este navegador: ${desc}.`),
+      plEl('button',{class:'btn btn-primary btn-sm',onclick:async e=>{
+        e.target.disabled=true;
+        try{
+          const suc=plSes.rol==='admin'?(PL_SUCS.includes(st.sucursal)?st.sucursal:'F3'):plSes.sucursal;
+          const tipo=st.modo==='general'?'general':'rubro';
+          const id=await plCrearPlanDeEstado({suc,tipo,nombre:`${st.rubro||'Planograma'} (importado)`,rubro:tipo==='rubro'?(st.rubro||''):'',st});
+          plMarcarLegacy(k); plToast('Subido a la nube'); plRevisarLegacy();
+        }catch(err){ console.error(err); alert(plMsgError(err)); e.target.disabled=false; }
+      }},'Subir a la nube'),
+      plEl('button',{class:'btn btn-outline btn-sm',onclick:()=>{ plMarcarLegacy(k); plRevisarLegacy(); }},'Ocultar'));
+    av.appendChild(b);
+  });
+}
+async function plCrearPlanDeEstado(o){
+  const st=JSON.parse(JSON.stringify(o.st)); st.sucursal=o.suc; st.modo=o.tipo; delete st.ts;
+  const ref=plDb.collection('planograma_planos').doc();
+  const json=JSON.stringify(st);
+  const b=plDb.batch();
+  b.set(ref,{sucursal:o.suc,tipo:o.tipo,nombre:o.nombre.slice(0,120),rubro:o.rubro||'',campana:'',desde:'',hasta:'',estado:'borrador',
+    creadoPor:plSes.nombre,creadoEn:plTS(),actualizadoPor:plSes.nombre,actualizadoUid:plSes.uid,actualizadoEn:plTS(),
+    rev:1,resumen:plResumenDe(st),thumb:plThumbDe(st),editando:null,nVersiones:1,ultimaVersion:plTS()});
+  b.set(ref.collection('contenido').doc('actual'),{estadoJson:json});
+  b.set(ref.collection('versiones').doc(),{ts:plTS(),autor:plSes.nombre,nota:'Importado desde este navegador',rev:1,estadoJson:json});
+  await b.commit();
+  return ref.id;
+}
+
+// ── Arranque ────────────────────────────────────────────────────────────
+window.addEventListener('beforeunload',e=>{
+  if(plPlan&&!plPlan.bloqueado&&plSnapshotJson()!==plPlan.ultimo){ e.preventDefault(); e.returnValue=''; }
+});
+document.addEventListener('visibilitychange',()=>{ if(document.hidden) plGuardarAhora(); });
+window.addEventListener('online',()=>{ if(plPlan) plToast('Conexión recuperada'); });
+setInterval(plActualizarEtiqueta,30000);
+
+async function plInit(){
+  if(!plAuth||!plDb){ plErrorFatal('No se pudo cargar Firebase. Revisá tu conexión y reintentá.'); return; }
+  plMostrarCarga('Cargando…');
+  let ok=false;
+  try{ ok=await plRestaurar(); }catch(e){ console.error(e); }
+  if(ok) plEntrarBiblioteca(); else { plActualizarHeader(); plMostrar('pLogin'); plTabLogin('codigo'); }
+}
+plInit();
+
+</script>
+</body>
+</html>
