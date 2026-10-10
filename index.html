@@ -204,7 +204,14 @@ input:focus,select:focus{border-color:var(--blue)}
 .hbtn:hover{background:rgba(255,255,255,.28)}
 #plHdrUser{display:none;align-items:center;gap:.5rem;font-size:11px;color:rgba(255,255,255,.75)}
 #plHdrUser strong{color:#fff;font-weight:600}
+body.viewer #saveBar,body.viewer #stepsNav,body.viewer #plHdrUser,body.viewer #v3BackRow,body.viewer header #fechaHdr{display:none!important}
+body.viewer #v3Wrap{height:calc(100vh - 250px)!important;min-height:300px}
+.seg{display:inline-flex;border:1px solid var(--border);border-radius:7px;overflow:hidden}
+.seg button{border:none;background:var(--surface);padding:4px 9px;font-size:11px;cursor:pointer;color:var(--text2)}
+.seg button+button{border-left:1px solid var(--border)}
+.seg button.active{background:var(--navy);color:#fff}
 </style>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js" integrity="sha384-CI3ELBVUz9XQO+97x6nwMDPosPR5XvsxW2ua7N1Xeygeh1IxtgqtCkGfQY9WWdHu" crossorigin="anonymous"></script>
 <script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-app-compat.js" integrity="sha384-yuGdyIzzYtOBlBG6JOWn+Ey9kpq7HocusNuxEGyyohr1eEyXpeEyehIIXC/hznw4" crossorigin="anonymous"></script>
 <script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-auth-compat.js" integrity="sha384-lI+CxEx/bCvWP1b0OK13j5HTrTZP7yf1xle8TVOFq2smz6KC1RChTarRV/RHP5PP" crossorigin="anonymous"></script>
 <script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore-compat.js" integrity="sha384-nwX2Qpkhc2sv6L0ZPkLefLGguao67toSowvePuQvGF6cG+8MUphGI2uI94Ls3JF7" crossorigin="anonymous"></script>
@@ -226,6 +233,7 @@ input:focus,select:focus{border-color:var(--blue)}
       <span id="saveIcon" style="width:8px;height:8px;border-radius:50%;background:#9aa3b5;display:inline-block"></span>
       <span id="saveLabel">Sin guardar</span>
       <button class="hbtn" onclick="plVolverBiblioteca()">Mis planogramas</button>
+      <button class="hbtn" onclick="plCompartirModal()">Compartir</button>
       <button class="hbtn" onclick="plAbrirVersiones()">Versiones</button>
       <button class="hbtn" onclick="exportFerni()">Exportar resumen</button>
       <button class="hbtn" onclick="guardarEstado()">Respaldo .ferni</button>
@@ -241,6 +249,7 @@ input:focus,select:focus{border-color:var(--blue)}
   <button class="sbtn" onclick="goStep(3,this)" id="sb3"><span class="snum">3</span><span id="sb3label">Categorías</span></button>
   <button class="sbtn" onclick="goStep(4,this)" id="sb4"><span class="snum">4</span><span id="sb4label">Asignar</span></button>
   <button class="sbtn" onclick="goStep(5,this)" id="sb5"><span class="snum">5</span>Análisis</button>
+  <button class="sbtn" onclick="goStep(6,this)" id="sb6"><span class="snum">6</span>Vista 3D</button>
 </div>
 
 <div id="plConflicto" class="pl-banner red"></div>
@@ -248,6 +257,12 @@ input:focus,select:focus{border-color:var(--blue)}
 <div id="plModalRoot"></div>
 
 <!-- ═══════════════════════════════ NUBE: carga / login / biblioteca / accesos -->
+<div id="vBar" style="display:none;position:sticky;top:0;z-index:15;background:#fff;border-bottom:1px solid var(--border);padding:8px 12px;align-items:center;gap:10px;flex-wrap:wrap">
+  <div style="flex:1;min-width:140px"><div id="vTitulo" style="font-size:14px;font-weight:700;color:var(--navy)"></div><div id="vSub" style="font-size:11px;color:var(--text3)"></div></div>
+  <div class="seg"><button id="vTabRes" class="active" onclick="plVerTab('res')">Resumen</button><button id="vTab3d" onclick="plVerTab('3d')">Vista 3D</button></div>
+</div>
+<div id="pVer" class="panel"><iframe id="vFrame" sandbox="" title="Resumen del planograma" style="display:block;width:100%;height:calc(100vh - 120px);border:0;background:#f5f4f0"></iframe></div>
+
 <div id="pLoad" class="panel active"><div class="pl-center"><div class="pl-card" style="text-align:center">
   <div class="pl-spin"></div><div id="pLoadMsg" class="pl-sub" style="margin:0">Cargando…</div>
   <button id="pLoadRetry" class="btn btn-outline btn-sm" style="display:none;margin-top:.8rem" onclick="location.reload()">Reintentar</button>
@@ -467,6 +482,11 @@ input:focus,select:focus{border-color:var(--blue)}
           <button id="btnBorrarMod" style="flex:1;padding:5px;background:var(--s2);border:1px solid var(--border);border-radius:6px;font-size:11px;color:var(--text2);cursor:pointer;transition:all .12s" onclick="toggleBorrarModo()">🗑 Borrar módulo</button>
           <button style="flex:1;padding:5px;background:var(--s2);border:1px solid var(--border);border-radius:6px;font-size:11px;color:var(--text2);cursor:pointer" onclick="clearActiveCat()">✕ Deseleccionar</button>
         </div>
+        <div class="sec-lbl" style="margin-top:.6rem">Pincel</div>
+        <div style="font-size:10px;color:var(--text3);margin:2px 0">Ancho</div>
+        <div class="seg"><button id="pnAncho_LR" class="active" onclick="frSetAncho('LR')">Módulo completo</button><button id="pnAncho_half" onclick="frSetAncho('half')">Mitad</button></div>
+        <div style="font-size:10px;color:var(--text3);margin:6px 0 2px">Alcance (vista de frente)</div>
+        <div class="seg"><button id="pnAlc_uno" class="active" onclick="frSetAlc('uno')">Una chapa</button><button id="pnAlc_col" onclick="frSetAlc('col')">Todas las chapas</button></div>
         <div class="hint" id="assignHint">Seleccioná una categoría y tocá un módulo en el plano.</div>
       </div>
       <div class="metrics-row" style="margin-top:.75rem;grid-template-columns:1fr 1fr">
@@ -478,7 +498,8 @@ input:focus,select:focus{border-color:var(--blue)}
       <div class="card" style="padding:.75rem">
         <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:.5rem">
           <span style="font-size:13px;font-weight:600" id="assignTitle">Asignación de categorías</span>
-          <div style="display:flex;gap:5px">
+          <div class="seg" style="margin:0 8px"><button id="btnVistaPlanta" class="active" onclick="setVistaAsig('planta')">Planta</button><button id="btnVistaFrente" onclick="setVistaAsig('frente')">Frente</button></div>
+          <div id="planTools" style="display:flex;gap:5px">
             <button class="btn btn-outline btn-sm" onclick="resetAssign()">Limpiar</button>
             <button class="btn btn-outline btn-sm" onclick="zoom2(-0.1)">−</button>
             <button class="btn btn-outline btn-sm" id="zoomLbl3" style="min-width:44px;text-align:center;pointer-events:none">100%</button>
@@ -486,8 +507,19 @@ input:focus,select:focus{border-color:var(--blue)}
             <button class="btn btn-outline btn-sm" onclick="fitView3()">Ajustar</button>
           </div>
         </div>
-        <div style="overflow:auto;border:1px solid var(--border);border-radius:8px;background:#fff;height:480px">
+        <div id="planWrap" style="overflow:auto;border:1px solid var(--border);border-radius:8px;background:#fff;height:480px">
         <canvas id="assignCanvas" style="display:block;cursor:pointer"></canvas>
+        </div>
+        <div id="frenteWrap" style="display:none">
+          <div style="display:flex;align-items:center;gap:8px;margin-bottom:6px;flex-wrap:wrap">
+            <select id="frSel" onchange="frElegir(this.value)" style="width:auto;max-width:260px"></select>
+            <div class="seg" id="frCaras"><button id="btnCaraA" class="active" onclick="frSetCara('a')">Cara A</button><button id="btnCaraB" onclick="frSetCara('b')">Cara B</button></div>
+            <span style="font-size:11px;color:var(--text3)">Elegí una categoría, ajustá el pincel y pintá las chapas. Arrastrá para pintar varias.</span>
+          </div>
+          <div style="overflow:auto;border:1px solid var(--border);border-radius:8px;background:#fff">
+            <canvas id="frenteCanvas" style="display:block;cursor:crosshair"></canvas>
+          </div>
+          <div id="frResumen" style="margin-top:8px"></div>
         </div>
         <div class="info-bar" id="assignInfoBar">Seleccioná una categoría y tocá un módulo.</div>
         <div class="legend" id="assignLegend"></div>
@@ -507,6 +539,30 @@ input:focus,select:focus{border-color:var(--blue)}
     <button class="btn btn-outline btn-sm" onclick="goStep(4,document.getElementById('sb4'))">← Volver</button>
   </div>
   <div id="analisisOut"></div>
+</div>
+
+<!-- ═══════════════════════════════ PASO 6 — VISTA 3D -->
+<div id="p6" class="panel">
+  <div style="max-width:1100px;margin:0 auto;padding:0 1rem">
+    <div class="card" style="padding:.75rem">
+      <div style="display:flex;align-items:center;gap:8px;flex-wrap:wrap;margin-bottom:.5rem">
+        <span style="font-size:13px;font-weight:600;margin-right:auto">Vista 3D</span>
+        <div class="seg"><button id="btnV3Orbit" class="active" onclick="v3Modo('orbit')">Órbita</button><button id="btnV3Pov" onclick="v3Modo('pov')">Recorrido</button></div>
+        <select id="v3Dest" onchange="v3Ir(this.value)" style="width:auto;max-width:240px"></select>
+        <button class="btn btn-outline btn-sm" onclick="v3Reiniciar()">Reiniciar vista</button>
+      </div>
+      <div id="v3Wrap" style="position:relative;height:560px;background:#dfe6ee;border-radius:8px;overflow:hidden">
+        <canvas id="v3Canvas" style="display:block;width:100%;height:100%;touch-action:none;cursor:grab"></canvas>
+        <div id="v3Hint" style="position:absolute;left:8px;bottom:8px;background:rgba(26,39,68,.72);color:#fff;font-size:11px;padding:4px 9px;border-radius:6px;max-width:80%"></div>
+        <div id="v3Pad" style="display:none;position:absolute;right:10px;bottom:10px;flex-direction:column;gap:6px">
+          <button id="v3Fw" class="btn btn-outline btn-sm" style="min-width:64px;background:#fff">Adelante</button>
+          <button id="v3Bk" class="btn btn-outline btn-sm" style="min-width:64px;background:#fff">Atrás</button>
+        </div>
+      </div>
+      <div class="legend" id="v3Leg" style="margin-top:8px"></div>
+    </div>
+    <div id="v3BackRow" style="margin-top:.5rem"><button class="btn btn-outline" onclick="goStep(5,document.getElementById('sb5'))">← Volver</button></div>
+  </div>
 </div>
 
 <script>
@@ -536,18 +592,114 @@ let catIdN=1;
 let activeCat=null;
 let modoBorrar=false;
 let _borrarModo=false;
-let assignMap={}; // {elId_side_modIdx: [catId, ...]} — máx 3 cats por módulo
+let assignMap={}; // {elId_cara_modIdx: {L:[cat|null ×n], R:[cat|null ×n]}} — por chapa (0 = superior), L/R = mitades del módulo
 
-// Helpers assignMap
-const getModCats = (key) => { const v=assignMap[key]; if(!v) return []; return Array.isArray(v)?v:[v]; };
-const setModCat  = (key, catId) => {
-  const cur = getModCats(key);
-  if(cur.includes(catId)){ cfg('assignInfoBar').textContent='Esa categoría ya está en este módulo.'; return; }
-  if(cur.length>=3){ cfg('assignInfoBar').textContent='Máximo 3 categorías por módulo.'; return; }
-  assignMap[key] = [...cur, catId];
-  scheduleAutoSave();
-};
+// ── Modelo por chapa ────────────────────────────────────────────────────
+// Funciones puras: sirven para el estado del editor, para el .ferni y para la miniatura.
+// Cada módulo tiene n chapas. Cada chapa se asigna por mitades (izquierda / derecha);
+// una categoría de ancho completo ocupa la misma categoría en las dos mitades.
+function chpLegacy(lst,n){
+  // Formato viejo (hasta 3 categorías por módulo): reparte las chapas lo más parejo posible,
+  // en el mismo orden en que estaban apiladas.
+  const k=lst.length, col=[];
+  if(k&&n>0){
+    const base=Math.floor(n/k), extra=n%k;
+    lst.forEach((id,j)=>{ const c=base+(j<extra?1:0); for(let q=0;q<c;q++) col.push(id); });
+  }
+  while(col.length<n) col.push(null);
+  return {L:col.slice(0,n),R:col.slice(0,n)};
+}
+function chpNorm(v,n){
+  n=Math.max(1,Math.round(+n)||1);
+  const fix=a=>{ const r=[]; for(let i=0;i<n;i++) r.push((a&&a[i])||null); return r; };
+  if(v&&typeof v==='object'&&!Array.isArray(v)) return {L:fix(v.L),R:fix(v.R)};
+  const lst=Array.isArray(v)?v.filter(Boolean):(v?[v]:[]);
+  return chpLegacy(lst,n);
+}
+// Vista de una cara desde el pasillo: la cara A se ve de frente con las mitades invertidas
+function chpView(h,rev){ return rev?{L:h.R,R:h.L}:h; }
+function chpCatsRaw(v){
+  if(!v) return [];
+  if(Array.isArray(v)) return v.filter(Boolean);
+  if(typeof v==='object') return [...new Set((v.L||[]).concat(v.R||[]).filter(Boolean))];
+  return [v];
+}
+// Rectángulos (fracciones del módulo) para dibujar: tramos de chapas consecutivas con la misma categoría
+function chpRects(h){
+  const n=h.L.length;
+  const same=h.L.every((c,i)=>c===h.R[i]);
+  const halves=same?[[0,1,h.L]]:[[0,0.5,h.L],[0.5,1,h.R]];
+  const out=[];
+  halves.forEach(([x0,x1,arr])=>{
+    let i=0;
+    while(i<n){ let j=i; while(j+1<n&&arr[j+1]===arr[i]) j++; out.push({id:arr[i],x0,x1,y0:i/n,y1:(j+1)/n,n:j-i+1}); i=j+1; }
+  });
+  return out;
+}
+// Metros lineales por categoría: ancho del módulo × fracción del ancho × chapas cubiertas
+function chpMeters(h,w){
+  const r={};
+  ['L','R'].forEach(s=>h[s].forEach(id=>{ if(id) r[id]=(r[id]||0)+w*0.5; }));
+  return r;
+}
+function chpDominant(v,n){
+  const h=chpNorm(v,n), c={};
+  h.L.concat(h.R).forEach(id=>{ if(id) c[id]=(c[id]||0)+1; });
+  let best=null,bn=0; Object.keys(c).forEach(id=>{ if(c[id]>bn){ best=id; bn=c[id]; } });
+  return best;
+}
+// Convierte los módulos del formato viejo (listas) al formato por chapa, en un estado completo
+function chpMigrar(st){
+  if(!st||!st.assignMap) return st;
+  const out={};
+  Object.keys(st.assignMap).forEach(k=>{
+    const p=k.split('_'); if(p.length!==3) return;
+    const el=(st.elements||[]).find(e=>String(e.id)===p[0]); if(!el) return;
+    const i=+p[2];
+    const m=p[1]==='u'?(el.mods||[])[i]:(el.mods_a||[])[i]; if(!m) return;
+    const n=+m.chapas||(p[1]==='u'?7:5);
+    const h=chpNorm(st.assignMap[k],n);
+    if(h.L.some(Boolean)||h.R.some(Boolean)) out[k]=h;
+  });
+  st.assignMap=out;
+  return st;
+}
+
+// ── Helpers del editor ──────────────────────────────────────────────────
+function modN(key){
+  const p=key.split('_'); const el=elements.find(e=>String(e.id)===p[0]);
+  if(!el) return 5;
+  if(p[1]==='u') return +((el.mods||[])[+p[2]]||{}).chapas||7;
+  return +((el.mods_a||[])[+p[2]]||{}).chapas||5;
+}
+const getModCats = (key) => chpCatsRaw(assignMap[key]);
 const delModKey  = (key) => { delete assignMap[key]; };
+const chpR = (key,n) => chpRects(chpNorm(assignMap[key],n||modN(key)));
+// Pinta chapas de un módulo. half: 'L' | 'R' | 'LR'; idxs: índices de chapa; catId null = vaciar
+function paintChapas(key,half,idxs,catId){
+  const n=modN(key), h=chpNorm(assignMap[key],n);
+  idxs.forEach(i=>{ if(i<0||i>=n) return; if(half!=='R') h.L[i]=catId; if(half!=='L') h.R[i]=catId; });
+  if(h.L.some(Boolean)||h.R.some(Boolean)) assignMap[key]=h; else delete assignMap[key];
+  scheduleAutoSave();
+}
+function allUsedCats(){ const s=new Set(); Object.values(assignMap).forEach(v=>chpCatsRaw(v).forEach(id=>s.add(id))); return s; }
+// Dibuja los rectángulos de un módulo en un canvas 2D
+function chpDrawRects(c,rects,x,y,w,h,o){
+  o=o||{};
+  rects.forEach(r=>{
+    const cat=r.id?cats.find(cc=>cc.id===r.id):null;
+    const rx=x+r.x0*w, ry=y+r.y0*h, rw=(r.x1-r.x0)*w, rh=(r.y1-r.y0)*h;
+    c.fillStyle=cat?'#'+cat.color:(o.empty||'#e8e7e2'); c.fillRect(rx,ry,rw,rh);
+    c.strokeStyle='rgba(0,0,0,0.10)'; c.lineWidth=0.6; c.strokeRect(rx,ry,rw,rh);
+    if(cat&&o.labels!==false&&rw>16&&rh>9){
+      const fs=Math.max(6,Math.min(o.fs||9,rw*0.1,rh*0.8));
+      c.fillStyle='rgba(255,255,255,0.95)'; c.font=`bold ${fs}px system-ui`;
+      c.textAlign='center'; c.textBaseline='middle';
+      const mx=o.max||9; const nm=cat.name.length>mx?cat.name.slice(0,mx-1)+'…':cat.name;
+      c.fillText(nm,rx+rw/2,ry+rh/2);
+    }
+  });
+}
 
 // Canvas 2D (diseño planta)
 let canvas2d, ctx2d;
@@ -640,6 +792,7 @@ function goStep(n,btn){
   if(n===2){ drawFloor(); }
   if(n===4){ buildAssignPanel(); }
   if(n===5){ buildAnalisis(); }
+  if(n===6){ init3D(); }
 }
 
 // ════════════════════════════════════════════════════════════════════
@@ -846,30 +999,7 @@ function drawElement(el, selected){
           ctx2d.fillText(m.w.toFixed(2)+' m',rx+rw/2,ry+rh/2);
         }
       } else {
-        const sliceH=rh/modCats.length;
-        modCats.forEach((cat,ci)=>{
-          const sy=ry+ci*sliceH;
-          const sh=ci===modCats.length-1?rh-ci*sliceH:sliceH;
-          ctx2d.fillStyle='#'+cat.color;
-          ctx2d.strokeStyle='rgba(0,0,0,0.12)'; ctx2d.lineWidth=1;
-          ctx2d.beginPath();
-          if(ci===0&&modCats.length===1) ctx2d.roundRect(rx,sy,rw,sh,5);
-          else if(ci===0) ctx2d.roundRect(rx,sy,rw,sh,[5,5,0,0]);
-          else if(ci===modCats.length-1) ctx2d.roundRect(rx,sy,rw,sh,[0,0,5,5]);
-          else ctx2d.rect(rx,sy,rw,sh);
-          ctx2d.fill(); ctx2d.stroke();
-          if(!( ci===modCats.length-1)){
-            ctx2d.strokeStyle='rgba(255,255,255,0.4)'; ctx2d.lineWidth=1;
-            ctx2d.beginPath(); ctx2d.moveTo(rx,sy+sh); ctx2d.lineTo(rx+rw,sy+sh); ctx2d.stroke();
-          }
-          if(rw>18&&sh>10){
-            ctx2d.fillStyle='rgba(255,255,255,0.92)';
-            ctx2d.font=`bold ${Math.max(6,Math.min(9,rw*0.09))}px system-ui`;
-            ctx2d.textAlign='center'; ctx2d.textBaseline='middle';
-            const nm=cat.name.length>10?cat.name.slice(0,9)+'…':cat.name;
-            ctx2d.fillText(nm,rx+rw/2,sy+sh/2);
-          }
-        });
+        chpDrawRects(ctx2d,chpR(`${el.id}_u_${i}`,m.chapas||7),rx,ry,rw,rh,{empty:'#f0eeea',fs:9,max:10});
         ctx2d.strokeStyle='rgba(0,0,0,0.18)'; ctx2d.lineWidth=1.5;
         ctx2d.beginPath(); ctx2d.roundRect(rx,ry,rw,rh,5); ctx2d.stroke();
       }
@@ -912,25 +1042,7 @@ function drawElement(el, selected){
           ctx2d.strokeStyle=selected?'#2a78d6':'#c8c5bf'; ctx2d.lineWidth=0.8;
           ctx2d.fillRect(fcx,faceY,mw,faceH); ctx2d.strokeRect(fcx,faceY,mw,faceH);
         } else {
-          const sliceH=faceH/modCats.length;
-          modCats.forEach((cat,ci)=>{
-            const sy=faceY+ci*sliceH;
-            const sh=ci===modCats.length-1?faceH-ci*sliceH:sliceH;
-            ctx2d.fillStyle='#'+cat.color;
-            ctx2d.strokeStyle='rgba(0,0,0,0.07)'; ctx2d.lineWidth=0.5;
-            ctx2d.fillRect(fcx,sy,mw,sh); ctx2d.strokeRect(fcx,sy,mw,sh);
-            if(ci<modCats.length-1){
-              ctx2d.strokeStyle='rgba(255,255,255,0.4)'; ctx2d.lineWidth=0.8;
-              ctx2d.beginPath(); ctx2d.moveTo(fcx,sy+sh); ctx2d.lineTo(fcx+mw,sy+sh); ctx2d.stroke();
-            }
-            if(mw>16&&sh>8){
-              ctx2d.fillStyle='rgba(255,255,255,0.85)';
-              ctx2d.font=`${Math.max(6,Math.min(8,mw*0.08))}px system-ui`;
-              ctx2d.textAlign='center'; ctx2d.textBaseline='middle';
-              const nm=cat.name.length>7?cat.name.slice(0,6)+'…':cat.name;
-              ctx2d.fillText(nm,fcx+mw/2,sy+sh/2);
-            }
-          });
+          chpDrawRects(ctx2d,chpR(keyFn(i),m.chapas),fcx,faceY,mw,faceH,{empty:'#e8e7e2',fs:8,max:7});
         }
         fcx+=mw;
       });
@@ -1527,9 +1639,9 @@ function addCat(name='',venta=0,units=0,stock=0,chapas=5,h=1.50,pctManual=null){
 function remCat(id){
   cats=cats.filter(c=>c.id!==id);
   Object.keys(assignMap).forEach(k=>{
-    const cur=getModCats(k).filter(cid=>cid!==id);
-    if(cur.length===0) delete assignMap[k];
-    else assignMap[k]=cur;
+    const hh=chpNorm(assignMap[k],modN(k));
+    ['L','R'].forEach(s=>{ hh[s]=hh[s].map(x=>x===id?null:x); });
+    if(hh.L.some(Boolean)||hh.R.some(Boolean)) assignMap[k]=hh; else delete assignMap[k];
   });
   renderCats();
 }
@@ -1614,12 +1726,15 @@ function buildAssignPanel(){
   canvas3.style.width=maxW+'px';
   canvas3.style.height=maxH+'px';
   canvas3.onclick=onAssignClick;
+  canvas3.ondblclick=onAssignDbl;
   // Pan: middle button o space+drag, o simplemente drag cuando no hay cat activa
   canvas3.addEventListener('mousedown', onAssignMouseDown, {once:false});
   drawAssignCanvas();
   updateAssignMetrics();
   const lbl=document.getElementById('zoomLbl3');
   if(lbl) lbl.textContent=Math.round(scale3*100)+'%';
+  frInit(); frActualizarPincel(); setVistaAsig(vistaAsig);
+  buildLegend3();
 }
 
 function renderCatListPg(){
@@ -1749,30 +1864,7 @@ function drawAssignEl(el, S, MARG){
           ctx3.fillText(m.w.toFixed(2)+' m',rx+rw/2,ry+rh/2);
         }
       } else {
-        const sliceH=rh/modCats.length;
-        modCats.forEach((cat,ci)=>{
-          const sy=ry+ci*sliceH;
-          const sh=ci===modCats.length-1?rh-ci*sliceH:sliceH;
-          ctx3.fillStyle='#'+cat.color;
-          ctx3.strokeStyle='rgba(0,0,0,0.12)'; ctx3.lineWidth=1;
-          ctx3.beginPath();
-          if(ci===0&&modCats.length===1) ctx3.roundRect(rx,sy,rw,sh,5);
-          else if(ci===0) ctx3.roundRect(rx,sy,rw,sh,[5,5,0,0]);
-          else if(ci===modCats.length-1) ctx3.roundRect(rx,sy,rw,sh,[0,0,5,5]);
-          else ctx3.rect(rx,sy,rw,sh);
-          ctx3.fill(); ctx3.stroke();
-          if(ci<modCats.length-1){
-            ctx3.strokeStyle='rgba(255,255,255,0.5)'; ctx3.lineWidth=1;
-            ctx3.beginPath(); ctx3.moveTo(rx,sy+sh); ctx3.lineTo(rx+rw,sy+sh); ctx3.stroke();
-          }
-          if(rw>14&&sh>10){
-            ctx3.fillStyle='rgba(255,255,255,0.95)';
-            ctx3.font=`bold ${Math.max(6,Math.min(10,rw*0.1))}px system-ui`;
-            ctx3.textAlign='center'; ctx3.textBaseline='middle';
-            const nm=cat.name.length>10?cat.name.slice(0,9)+'…':cat.name;
-            ctx3.fillText(nm,rx+rw/2,sy+sh/2);
-          }
-        });
+        chpDrawRects(ctx3,chpR(key,m.chapas||7),rx,ry,rw,rh,{empty:'#f7f6f2',fs:10,max:10});
         ctx3.strokeStyle='rgba(0,0,0,0.18)'; ctx3.lineWidth=1.5;
         ctx3.beginPath(); ctx3.roundRect(rx,ry,rw,rh,5); ctx3.stroke();
       }
@@ -1817,24 +1909,7 @@ function drawAssignEl(el, S, MARG){
         ctx3.fillStyle='#e8e7e2'; ctx3.strokeStyle='#c8c5bf'; ctx3.lineWidth=0.8;
         ctx3.fillRect(fcx,faceY,mw,faceH); ctx3.strokeRect(fcx,faceY,mw,faceH);
       } else {
-        const sliceH=faceH/modCats.length;
-        modCats.forEach((cat,ci)=>{
-          const sy=faceY+ci*sliceH;
-          const sh=ci===modCats.length-1?faceH-ci*sliceH:sliceH;
-          ctx3.fillStyle='#'+cat.color; ctx3.strokeStyle='rgba(0,0,0,0.08)'; ctx3.lineWidth=0.5;
-          ctx3.fillRect(fcx,sy,mw,sh); ctx3.strokeRect(fcx,sy,mw,sh);
-          if(!( ci===modCats.length-1)){
-            ctx3.strokeStyle='rgba(255,255,255,0.5)'; ctx3.lineWidth=1;
-            ctx3.beginPath(); ctx3.moveTo(fcx,sy+sh); ctx3.lineTo(fcx+mw,sy+sh); ctx3.stroke();
-          }
-          if(mw>16&&sh>9){
-            ctx3.fillStyle='rgba(255,255,255,0.9)';
-            ctx3.font=`bold ${Math.max(6,Math.min(9,mw*0.08))}px system-ui`;
-            ctx3.textAlign='center'; ctx3.textBaseline='middle';
-            const nm=cat.name.length>8?cat.name.slice(0,7)+'…':cat.name;
-            ctx3.fillText(nm,fcx+mw/2,sy+sh/2);
-          }
-        });
+        chpDrawRects(ctx3,chpR(key,m.chapas),fcx,faceY,mw,faceH,{empty:'#e8e7e2',fs:9,max:8});
         ctx3.strokeStyle='rgba(0,0,0,0.15)'; ctx3.lineWidth=1;
         ctx3.strokeRect(fcx,faceY,mw,faceH);
       }
@@ -1876,86 +1951,61 @@ function drawAssignEl(el, S, MARG){
   ctx3.restore();
 }
 
-function onAssignClick(e){
-  // Modo borrar: vaciar el módulo en lugar de asignar
-  _borrarModo = modoBorrar; // resetear limpio en cada click
-  if(!activeCat && !_borrarModo){ cfg('assignInfoBar').textContent='Seleccioná primero una categoría del panel.'; return; }
+function assignHit(e){
   const rect=canvas3.getBoundingClientRect();
-  const scaleX=canvas3.width/rect.width;
-  const scaleY=canvas3.height/rect.height;
-  const mx=(e.clientX-rect.left)*scaleX;
-  const my=(e.clientY-rect.top)*scaleY;
-  const S=SCALE*scale3;
-  const MARG=30;
-  // Compensar pan: el canvas usa translate(panX,panY), 
-  // entonces las coords reales son (mx - panX - MARG) / S
+  const mx=(e.clientX-rect.left)*(canvas3.width/rect.width);
+  const my=(e.clientY-rect.top)*(canvas3.height/rect.height);
+  const S=SCALE*scale3, MARG=30;
   const wx=(mx-panX-MARG)/S, wy=(my-panY-MARG)/S;
-
   for(const el of elements){
-    // Pared cara única
+    const rad=-(el.rotation||0)*Math.PI/180;
+    const dx=wx-el.x, dy=wy-el.y;
+    const lx=dx*Math.cos(rad)-dy*Math.sin(rad), ly=dx*Math.sin(rad)+dy*Math.cos(rad);
+    const dims=getElDims(el);
+    if(lx<0||lx>dims.w||ly<0||ly>dims.h) continue;
     if(el.type==='pared'){
-      const rot=el.rotation||0;
-      const dx=wx-el.x,dy=wy-el.y;
-      const rad=-rot*Math.PI/180;
-      const lx=dx*Math.cos(rad)-dy*Math.sin(rad);
-      const ly=dx*Math.sin(rad)+dy*Math.cos(rad);
-      const dims=getElDims(el);
-      if(lx<0||lx>dims.w||ly<0||ly>dims.h) continue;
       let curX=0;
       for(let i=0;i<(el.mods||[]).length;i++){
         const mw=el.mods[i].w;
-        if(lx>=curX&&lx<curX+mw){
-          const key=`${el.id}_u_${i}`;
-          if(_borrarModo){
-            delModKey(key);
-            cfg('assignInfoBar').textContent=`🗑 Módulo ${i+1} de ${el.label||'Pared'} vaciado.`;
-          } else {
-            setModCat(key, activeCat);
-            const cur=getModCats(key);
-            const names=cur.map(id=>cats.find(cc=>cc.id===id)?.name||'?').join(' + ');
-            cfg('assignInfoBar').textContent=`✓ Módulo ${i+1} de ${el.label||'Pared'} → ${names} (${cur.length} cat${cur.length>1?'s':''})`;
-          }
-          drawAssignCanvas(); buildLegend3(); updateAssignMetrics(); scheduleAutoSave(); return;
-        }
+        if(lx>=curX&&lx<curX+mw) return {el,i,side:'u',key:`${el.id}_u_${i}`,half:(lx-curX)<mw/2?'L':'R'};
         curX+=mw;
       }
       continue;
     }
-    const rot=el.rotation||0;
-    const dx=wx-el.x, dy=wy-el.y;
-    const rad=-rot*Math.PI/180;
-    const lx=dx*Math.cos(rad)-dy*Math.sin(rad);
-    const ly=dx*Math.sin(rad)+dy*Math.cos(rad);
     const pt=el.puntera_w||0.75;
-    const dims=getElDims(el);
-    if(lx<0||lx>dims.w||ly<0||ly>dims.h) continue;
-    // Dentro del elemento — determinar módulo y cara
-    if(lx<pt||lx>dims.w-pt) continue; // puntera
+    if(lx<pt||lx>dims.w-pt) continue;
     let curX=pt;
     for(let i=0;i<el.mods_a.length;i++){
       const mw=el.mods_a[i].w;
-      if(lx>=curX && lx<curX+mw){
+      if(lx>=curX&&lx<curX+mw){
         const side=ly<dims.h/2?'a':'b';
-        const key=`${el.id}_${side}_${i}`;
-        if(_borrarModo){
-          delModKey(key);
-          cfg('assignInfoBar').textContent=`🗑 Módulo ${i+1} Cara ${side.toUpperCase()} de ${el.label||'Isla '+el.id} vaciado.`;
-        } else {
-          setModCat(key, activeCat);
-          const cur=getModCats(key);
-          const names=cur.map(id=>cats.find(cc=>cc.id===id)?.name||'?').join(' + ');
-          cfg('assignInfoBar').textContent=`✓ Módulo ${i+1} Cara ${side.toUpperCase()} de ${el.label||'Isla '+el.id} → ${names} (${cur.length} cat${cur.length>1?'s':''})`;
-        }
-        drawAssignCanvas(); buildLegend3(); updateAssignMetrics(); scheduleAutoSave(); return;
+        return {el,i,side,key:`${el.id}_${side}_${i}`,half:(lx-curX)<mw/2?'L':'R'};
       }
       curX+=mw;
     }
   }
-  cfg('assignInfoBar').textContent='Hacé clic sobre un módulo de góndola (evitá las punteras en amarillo).';
+  return null;
+}
+function onAssignClick(e){
+  _borrarModo = modoBorrar;
+  if(!activeCat && !_borrarModo){ cfg('assignInfoBar').textContent='Seleccioná primero una categoría del panel.'; return; }
+  const hit=assignHit(e);
+  if(!hit){ cfg('assignInfoBar').textContent='Hacé clic sobre un módulo de góndola (evitá las punteras en amarillo).'; return; }
+  const n=modN(hit.key);
+  const half=frAncho==='LR'?'LR':hit.half;
+  paintChapas(hit.key,half,Array.from({length:n},(_,i)=>i),_borrarModo?null:activeCat);
+  const nm=_borrarModo?'vacío':(cats.find(cc=>cc.id===activeCat)?.name||'?');
+  const cara=hit.side==='u'?'':` Cara ${hit.side.toUpperCase()}`;
+  cfg('assignInfoBar').textContent=`${nm} · Módulo ${hit.i+1}${cara} de ${frNombre(hit.el)} · todas las chapas · ${half==='LR'?'ancho completo':(half==='L'?'mitad izquierda':'mitad derecha')}. Doble clic para verlo de frente.`;
+  drawAssignCanvas(); buildLegend3(); updateAssignMetrics();
+}
+function onAssignDbl(e){
+  const hit=assignHit(e); if(!hit) return;
+  frMostrarDeFrente(hit.el.id,hit.side==='u'?null:hit.side);
 }
 
 function buildLegend3(){
-  const used=new Set(Object.values(assignMap).flat());
+  const used=allUsedCats();
   const el=cfg('assignLegend'); el.innerHTML='';
   cats.filter(c=>used.has(c.id)).forEach(c=>{
     const d=document.createElement('div'); d.className='leg-item';
@@ -1976,16 +2026,14 @@ function resetAssign(){
 function updateAssignMetrics(){
   let meters=0, mods=0;
   elements.forEach(el=>{
-    if(el.type==='pared'){
-      (el.mods||[]).forEach((m,i)=>{
-        if(getModCats(`${el.id}_u_${i}`).length){ meters+=m.w*(m.chapas||7); mods++; }
-      });
-    } else {
-      el.mods_a.forEach((m,i)=>{
-        if(getModCats(`${el.id}_a_${i}`).length){ meters+=m.w*m.chapas; mods++; }
-        if(getModCats(`${el.id}_b_${i}`).length){ meters+=m.w*m.chapas; mods++; }
-      });
-    }
+    const list=el.type==='pared'?(el.mods||[]):(el.mods_a||[]);
+    const sides=el.type==='pared'?['u']:['a','b'];
+    list.forEach((m,i)=>sides.forEach(s=>{
+      const key=`${el.id}_${s}_${i}`; const v=assignMap[key]; if(!v) return;
+      const mt=chpMeters(chpNorm(v,m.chapas||(el.type==='pared'?7:5)),m.w);
+      const t=Object.values(mt).reduce((a,b)=>a+b,0);
+      if(t>0){ meters+=t; mods++; }
+    }));
   });
   cfg('mA2').textContent=meters.toFixed(1)+' m';
   cfg('mM2').textContent=mods;
@@ -2057,23 +2105,12 @@ function buildAnalisis(){
   const catMeters={};
   cats.forEach(c=>{ catMeters[c.id]=0; });
   elements.forEach(el=>{
-    if(el.type==='pared'){
-      (el.mods||[]).forEach((m,i)=>{
-        const key=`${el.id}_u_${i}`;
-        const modCats=getModCats(key);
-        const share=modCats.length>0?1/modCats.length:0;
-        modCats.forEach(id=>{ catMeters[id]=(catMeters[id]||0)+m.w*(m.chapas||7)*share; });
-      });
-    } else {
-      el.mods_a.forEach((m,i)=>{
-        ['a','b'].forEach(side=>{
-          const key=`${el.id}_${side}_${i}`;
-          const modCats=getModCats(key);
-          const share=modCats.length>0?1/modCats.length:0;
-          modCats.forEach(id=>{ catMeters[id]=(catMeters[id]||0)+m.w*m.chapas*share; });
-        });
-      });
-    }
+    const list=el.type==='pared'?(el.mods||[]):(el.mods_a||[]);
+    const sides=el.type==='pared'?['u']:['a','b'];
+    list.forEach((m,i)=>sides.forEach(s=>{
+      const mt=chpMeters(chpNorm(assignMap[`${el.id}_${s}_${i}`],m.chapas||(el.type==='pared'?7:5)),m.w);
+      Object.keys(mt).forEach(id=>{ catMeters[id]=(catMeters[id]||0)+mt[id]; });
+    }));
   });
 
   let totalM=0;
@@ -2266,6 +2303,455 @@ function downloadTemplate(e){
   XLSX.writeFile(wb,'plantilla_categorias.xlsx');
 }
 
+
+// ════════════════════════════════════════════════════════════════════
+// PASO 4 — VISTA DE FRENTE (asignación por chapa con pincel)
+// ════════════════════════════════════════════════════════════════════
+let vistaAsig='planta';          // 'planta' | 'frente'
+let frEl=null;                   // id del elemento que se muestra de frente
+let frCara='a';                  // cara de la isla ('a'|'b'); la pared es cara única ('u')
+let frAncho='LR';                // pincel: 'LR' módulo completo | 'half' mitad (según dónde hagas clic)
+let frAlc='uno';                 // pincel: 'uno' una chapa | 'col' todas las chapas del módulo
+let frHover=null, frDown=false, frLastKey=null;
+let frLay={mods:[],x0:0,y0:0,H:0,rowH:0,maxN:0};
+
+function frElemento(){ return elements.find(e=>e.id===frEl)||null; }
+function frNombre(el){ return el.label||(el.type==='pared'?'Pared':'Isla '+el.id); }
+
+function setVistaAsig(v){
+  vistaAsig=v;
+  cfg('planWrap').style.display=v==='planta'?'block':'none';
+  cfg('frenteWrap').style.display=v==='frente'?'block':'none';
+  cfg('btnVistaPlanta').classList.toggle('active',v==='planta');
+  cfg('btnVistaFrente').classList.toggle('active',v==='frente');
+  cfg('planTools').style.display=v==='planta'?'flex':'none';
+  if(v==='frente'){ frRefrescarSel(); frDibujar(); }
+  else { drawAssignCanvas(); }
+  frTextoAyuda();
+}
+function frTextoAyuda(){
+  cfg('assignHint').textContent=activeCat
+    ? `Pincel: ${cats.find(c=>c.id===activeCat)?.name||''}. `+(vistaAsig==='frente'?'Pintá chapas en la vista de frente.':'Tocá un módulo en el plano (asigna todas sus chapas); doble clic para verlo de frente.')
+    : (modoBorrar?'Modo borrar activo.':'Seleccioná una categoría.');
+}
+function frRefrescarSel(){
+  const sel=cfg('frSel'); sel.innerHTML='';
+  elements.forEach(el=>{
+    const o=document.createElement('option'); o.value=el.id; o.textContent=frNombre(el)+(el.type==='pared'?' (pared)':'');
+    sel.appendChild(o);
+  });
+  if(!elements.length){ frEl=null; return; }
+  if(!frElemento()) frEl=elements[0].id;
+  sel.value=String(frEl);
+  const el=frElemento();
+  cfg('frCaras').style.display=el&&el.type!=='pared'?'inline-flex':'none';
+  if(el&&el.type==='pared') frCara='u'; else if(frCara==='u') frCara='a';
+  cfg('btnCaraA').classList.toggle('active',frCara==='a');
+  cfg('btnCaraB').classList.toggle('active',frCara==='b');
+}
+function frElegir(v){ frEl=isNaN(+v)?v:+v; frRefrescarSel(); frDibujar(); }
+function frSetCara(c){ frCara=c; frRefrescarSel(); frDibujar(); }
+function frSetAncho(v){ frAncho=v; frActualizarPincel(); frDibujar(); }
+function frSetAlc(v){ frAlc=v; frActualizarPincel(); frDibujar(); }
+function frActualizarPincel(){
+  cfg('pnAncho_LR').classList.toggle('active',frAncho==='LR');
+  cfg('pnAncho_half').classList.toggle('active',frAncho==='half');
+  cfg('pnAlc_uno').classList.toggle('active',frAlc==='uno');
+  cfg('pnAlc_col').classList.toggle('active',frAlc==='col');
+}
+function frMostrarDeFrente(elId,cara){
+  frEl=elId; if(cara) frCara=cara;
+  setVistaAsig('frente');
+}
+
+function frModulos(el){ return el.type==='pared'?(el.mods||[]):(el.mods_a||[]); }
+function frKey(el,i){ return `${el.id}_${el.type==='pared'?'u':frCara}_${i}`; }
+// La cara A se ve de frente desde su pasillo: los módulos aparecen en orden inverso (M1 a la derecha)
+function frRev(el){ return !!el&&el.type!=='pared'&&frCara==='a'; }
+
+function frDibujar(){
+  const cv=cfg('frenteCanvas'); if(!cv) return;
+  const cont=cv.parentElement;
+  const W=Math.max(320,(cont?cont.clientWidth:900)-4), Hc=360;
+  const dpr=window.devicePixelRatio||1;
+  if(cv.width!==Math.round(W*dpr)||cv.height!==Math.round(Hc*dpr)){
+    cv.width=Math.round(W*dpr); cv.height=Math.round(Hc*dpr);
+    cv.style.width=W+'px'; cv.style.height=Hc+'px';
+  }
+  const c=cv.getContext('2d'); c.setTransform(dpr,0,0,dpr,0,0);
+  c.fillStyle='#fff'; c.fillRect(0,0,W,Hc);
+  const el=frElemento();
+  frLay={mods:[],x0:0,y0:0,H:0,rowH:0,maxN:0};
+  if(!el){
+    c.fillStyle='#9a9895'; c.font='13px system-ui'; c.textAlign='center'; c.textBaseline='middle';
+    c.fillText('Todavía no hay góndolas. Diseñalas en el paso 2.',W/2,Hc/2); return;
+  }
+  const mods=frModulos(el);
+  const totalW=mods.reduce((a,m)=>a+m.w,0)||1;
+  const padL=34, padR=16, top=52, bottom=34;
+  const pxm=Math.min(130,(W-padL-padR)/totalW);
+  const maxN=Math.max(1,...mods.map(m=>+m.chapas||(el.type==='pared'?7:5)));
+  const rowH=Math.min(48,(Hc-top-bottom)/maxN);
+  const H=rowH*maxN;
+  const x0=padL+Math.max(0,((W-padL-padR)-pxm*totalW)/2);
+  frLay={mods:[],x0,y0:top,H,rowH,maxN};
+
+  const rev=frRev(el);
+  // Título
+  c.fillStyle='#1a2744'; c.font='bold 13px system-ui'; c.textAlign='left'; c.textBaseline='top';
+  const caraTxt=el.type==='pared'?'cara única':'Cara '+frCara.toUpperCase();
+  c.fillText(`${frNombre(el)} · ${caraTxt} · vista de frente${rev?' (como se ve desde el pasillo A)':''}`,padL,8);
+  c.fillStyle='#8a8884'; c.font='11px system-ui';
+  c.fillText(`${totalW.toFixed(2)} m de largo · chapa 1 arriba`,padL,26);
+
+  // Números de chapa
+  c.fillStyle='#9a9895'; c.font='10px system-ui'; c.textAlign='right'; c.textBaseline='middle';
+  for(let i=0;i<maxN;i++) c.fillText(String(i+1),x0-6,top+(i+0.5)*rowH);
+
+  let cx=x0;
+  const orden=mods.map((_,i)=>i); if(rev) orden.reverse();
+  orden.forEach(i=>{
+    const m=mods[i];
+    const mw=m.w*pxm, n=+m.chapas||(el.type==='pared'?7:5), key=frKey(el,i);
+    const h=chpView(chpNorm(assignMap[key],n),rev);
+    // Fondo vacío por chapa + categorías
+    c.fillStyle='#f0eeea'; c.fillRect(cx,top,mw,H);
+    chpDrawRects(c,chpRects(h),cx,top,mw,H,{empty:'#f0eeea',fs:11,max:Math.max(6,Math.floor(mw/7))});
+    // Divisiones de chapa
+    c.strokeStyle='rgba(0,0,0,0.12)'; c.lineWidth=0.8;
+    for(let r=1;r<n;r++){ const y=top+r*H/n; c.beginPath(); c.moveTo(cx,y); c.lineTo(cx+mw,y); c.stroke(); }
+    // Línea de mitad
+    c.setLineDash([3,3]); c.strokeStyle='rgba(26,39,68,0.35)'; c.lineWidth=0.8;
+    c.beginPath(); c.moveTo(cx+mw/2,top); c.lineTo(cx+mw/2,top+H); c.stroke(); c.setLineDash([]);
+    c.strokeStyle='#5f5e5a'; c.lineWidth=1.4; c.strokeRect(cx,top,mw,H);
+    // Cabecera del módulo
+    c.fillStyle='#5f5e5a'; c.font='11px system-ui'; c.textAlign='center'; c.textBaseline='top';
+    c.fillText(`M${i+1} · ${m.w.toFixed(2)} m`,cx+mw/2,top+H+6);
+    frLay.mods.push({i,key,x:cx,w:mw,n});
+    cx+=mw;
+  });
+
+  // Vista previa del pincel
+  if(frHover){
+    const mo=frLay.mods[frHover.mi];
+    if(mo){
+      const half=frAncho==='LR'?'LR':frHover.half;
+      const hx=half==='LR'?mo.x:(half==='L'?mo.x:mo.x+mo.w/2), hw=half==='LR'?mo.w:mo.w/2;
+      const ry=frAlc==='col'?top:top+frHover.row*H/mo.n, rh=frAlc==='col'?H:H/mo.n;
+      const cat=cats.find(cc=>cc.id===activeCat);
+      c.fillStyle=modoBorrar?'rgba(192,57,43,0.18)':(cat?'#'+cat.color+'66':'rgba(42,120,214,0.15)');
+      c.fillRect(hx,ry,hw,rh);
+      c.strokeStyle=modoBorrar?'#c0392b':'#2a78d6'; c.lineWidth=2; c.strokeRect(hx+1,ry+1,hw-2,rh-2);
+    }
+  }
+  frResumen(el,mods);
+}
+function frResumen(el,mods){
+  const tot={}; let cap=0;
+  mods.forEach((m,i)=>{
+    const n=+m.chapas||(el.type==='pared'?7:5); cap+=m.w*n;
+    const mt=chpMeters(chpNorm(assignMap[frKey(el,i)],n),m.w);
+    Object.keys(mt).forEach(id=>{ tot[id]=(tot[id]||0)+mt[id]; });
+  });
+  const asig=Object.values(tot).reduce((a,b)=>a+b,0);
+  const partes=Object.keys(tot).sort((a,b)=>tot[b]-tot[a]).map(id=>{
+    const ct=cats.find(cc=>cc.id===id); if(!ct) return '';
+    return `<span class="leg-item"><span class="leg-dot" style="background:#${ct.color}"></span>${escHtml(ct.name)} <strong>${tot[id].toFixed(1)} m</strong></span>`;
+  }).join('');
+  cfg('frResumen').innerHTML=`<div style="font-size:11px;color:var(--text3);margin-bottom:4px">Esta cara: ${asig.toFixed(1)} m asignados de ${cap.toFixed(1)} m (ancho × chapas)</div><div class="legend">${partes||'<span style="font-size:11px;color:var(--text3)">Sin asignar todavía.</span>'}</div>`;
+}
+function frHit(e){
+  const cv=cfg('frenteCanvas'); const r=cv.getBoundingClientRect();
+  const x=(e.clientX-r.left)*(cv.clientWidth/r.width), y=(e.clientY-r.top)*(cv.clientHeight/r.height);
+  for(let k=0;k<frLay.mods.length;k++){
+    const mo=frLay.mods[k];
+    if(x>=mo.x&&x<mo.x+mo.w&&y>=frLay.y0&&y<frLay.y0+frLay.H){
+      const row=Math.min(mo.n-1,Math.max(0,Math.floor((y-frLay.y0)/(frLay.H/mo.n))));
+      return {mi:k,row,half:(x-mo.x)<mo.w/2?'L':'R'};
+    }
+  }
+  return null;
+}
+function frPintar(h){
+  if(!h) return;
+  const el=frElemento(); if(!el) return;
+  if(!activeCat&&!modoBorrar){ cfg('assignInfoBar').textContent='Seleccioná primero una categoría del panel (o activá Borrar).'; return; }
+  const mo=frLay.mods[h.mi];
+  const hv=frAncho==='LR'?'LR':h.half;                 // mitad tal como se ve en pantalla
+  const half=hv==='LR'?'LR':(frRev(el)?(hv==='L'?'R':'L'):hv); // mitad en los datos
+  const n=mo.n;
+  const idxs=frAlc==='col'?Array.from({length:n},(_,i)=>i):[h.row];
+  const tag=`${mo.key}|${half}|${idxs.join(',')}|${modoBorrar?'x':activeCat}`;
+  if(tag===frLastKey) return; frLastKey=tag;
+  paintChapas(mo.key,half,idxs,modoBorrar?null:activeCat);
+  const nm=modoBorrar?'vacío':(cats.find(cc=>cc.id===activeCat)?.name||'?');
+  cfg('assignInfoBar').textContent=`${nm} · Módulo ${mo.i+1} · ${frAlc==='col'?'todas las chapas':'chapa '+(h.row+1)} · ${hv==='LR'?'ancho completo':(hv==='L'?'mitad izquierda':'mitad derecha')}`;
+  frDibujar(); buildLegend3(); updateAssignMetrics();
+}
+function frInit(){
+  const cv=cfg('frenteCanvas'); if(!cv||cv._ok) return; cv._ok=true;
+  cv.addEventListener('mousedown',e=>{ if(e.button!==0) return; e.preventDefault(); frDown=true; frLastKey=null; frPintar(frHit(e)); });
+  cv.addEventListener('mousemove',e=>{
+    const h=frHit(e);
+    const ch=!frHover!==!h||(h&&frHover&&(h.mi!==frHover.mi||h.row!==frHover.row||h.half!==frHover.half));
+    frHover=h;
+    if(frDown) frPintar(h); else if(ch) frDibujar();
+  });
+  cv.addEventListener('mouseleave',()=>{ frHover=null; frDown=false; frDibujar(); });
+  window.addEventListener('mouseup',()=>{ frDown=false; frLastKey=null; });
+  window.addEventListener('resize',()=>{ if(vistaAsig==='frente') frDibujar(); });
+}
+
+
+// ════════════════════════════════════════════════════════════════════
+// PASO 6 — VISTA 3D (órbita + recorrido en primera persona)
+// ════════════════════════════════════════════════════════════════════
+const V3_EYE=1.65, V3_PX=220;
+let v3={ren:null,scene:null,cam:null,mode:'orbit',raf:0,keys:{},dest:[],
+  orbit:{th:Math.PI/2,ph:1.0,r:14,tx:6,tz:4},
+  pov:{x:1,z:1,yaw:0,pitch:0}, last:0, ptr:null};
+
+function v3Sala(){ return {L:+cfg('cfg_largo').value||12, A:+cfg('cfg_ancho').value||8}; }
+
+function v3Textura(key,n,w,h,rev){
+  const pw=Math.max(32,Math.round(w*V3_PX)), ph=Math.max(32,Math.round(h*V3_PX));
+  const cv=document.createElement('canvas'); cv.width=pw; cv.height=ph;
+  const c=cv.getContext('2d');
+  c.fillStyle='#eceae4'; c.fillRect(0,0,pw,ph);
+  const hh=chpView(chpNorm(assignMap[key],n),rev);
+  chpDrawRects(c,chpRects(hh),0,0,pw,ph,{empty:'#eceae4',fs:34,max:16});
+  c.strokeStyle='rgba(0,0,0,0.22)'; c.lineWidth=2;
+  for(let r=1;r<n;r++){ const y=r*ph/n; c.beginPath(); c.moveTo(0,y); c.lineTo(pw,y); c.stroke(); }
+  c.strokeStyle='rgba(0,0,0,0.55)'; c.lineWidth=4; c.strokeRect(0,0,pw,ph);
+  const t=new THREE.CanvasTexture(cv);
+  t.anisotropy=4; return t;
+}
+function v3Limpiar(){
+  if(!v3.scene) return;
+  v3.scene.traverse(o=>{
+    if(o.geometry) o.geometry.dispose();
+    if(o.material){ (Array.isArray(o.material)?o.material:[o.material]).forEach(m=>{ if(m.map) m.map.dispose(); m.dispose(); }); }
+  });
+  while(v3.scene.children.length) v3.scene.remove(v3.scene.children[0]);
+}
+function v3Build(){
+  const {L,A}=v3Sala();
+  v3Limpiar();
+  const sc=v3.scene;
+  sc.background=new THREE.Color(0xdfe6ee);
+  sc.add(new THREE.HemisphereLight(0xffffff,0x9a9a9a,0.95));
+  const dl=new THREE.DirectionalLight(0xffffff,0.45); dl.position.set(L*0.3,10,A*0.2); sc.add(dl);
+
+  // Piso + grilla de 1 m
+  const fl=new THREE.Mesh(new THREE.PlaneGeometry(L,A),new THREE.MeshLambertMaterial({color:0xf3f1ec}));
+  fl.rotation.x=-Math.PI/2; fl.position.set(L/2,0,A/2); sc.add(fl);
+  const pts=[]; for(let x=0;x<=L;x++){ pts.push(x,0.003,0,x,0.003,A); } for(let z=0;z<=A;z++){ pts.push(0,0.003,z,L,0.003,z); }
+  const gg=new THREE.BufferGeometry(); gg.setAttribute('position',new THREE.Float32BufferAttribute(pts,3));
+  sc.add(new THREE.LineSegments(gg,new THREE.LineBasicMaterial({color:0xd9d6cf})));
+  // Paredes del local (semitransparentes para poder mirar desde afuera)
+  const wm=new THREE.MeshLambertMaterial({color:0xf7f5f0,transparent:true,opacity:0.35,depthWrite:false});
+  const wallH=2.8, t=0.1;
+  [[L,wallH,t,L/2,wallH/2,-t/2],[L,wallH,t,L/2,wallH/2,A+t/2],[t,wallH,A,-t/2,wallH/2,A/2],[t,wallH,A,L+t/2,wallH/2,A/2]]
+    .forEach(([w,h,d,x,y,z])=>{ const m=new THREE.Mesh(new THREE.BoxGeometry(w,h,d),wm); m.position.set(x,y,z); sc.add(m); });
+
+  v3.dest=[];
+  const bodyMat=new THREE.MeshLambertMaterial({color:0xd6d3cc});
+  const capMat=new THREE.MeshLambertMaterial({color:0xf2d36b});
+  const face=(parent,key,n,w,h,x,y,z,backwards,rev)=>{
+    const m=new THREE.Mesh(new THREE.PlaneGeometry(w,h),new THREE.MeshLambertMaterial({map:v3Textura(key,n,w,h,rev)}));
+    m.position.set(x,y,z); if(backwards) m.rotation.y=Math.PI; parent.add(m);
+  };
+  elements.forEach(el=>{
+    const g=new THREE.Group(); g.position.set(el.x,0,el.y); g.rotation.y=-(el.rotation||0)*Math.PI/180; sc.add(g);
+    const d=getElDims(el);
+    if(el.type==='pared'){
+      let x=0;
+      (el.mods||[]).forEach((m,i)=>{
+        const mh=+m.h||2, n=+m.chapas||7;
+        const b=new THREE.Mesh(new THREE.BoxGeometry(m.w,mh,d.h),bodyMat); b.position.set(x+m.w/2,mh/2,d.h/2); g.add(b);
+        face(g,`${el.id}_u_${i}`,n,m.w,mh,x+m.w/2,mh/2,d.h+0.003,false,false);
+        x+=m.w;
+      });
+      v3.dest.push({label:frNombre(el)+' (pared)',el,tipo:'u',xc:d.w/2,depth:d.h});
+    } else {
+      const pt=el.puntera_w||0.75, mods=el.mods_a||[];
+      const maxH=Math.max(1,...mods.map(m=>+m.h||1.5));
+      const modW=mods.reduce((a,m)=>a+m.w,0);
+      [0,pt+modW].forEach(x0=>{ const b=new THREE.Mesh(new THREE.BoxGeometry(pt,maxH,d.h),capMat); b.position.set(x0+pt/2,maxH/2,d.h/2); g.add(b); });
+      let x=pt;
+      mods.forEach((m,i)=>{
+        const mh=+m.h||1.5, n=+m.chapas||5;
+        const b=new THREE.Mesh(new THREE.BoxGeometry(m.w,mh,d.h),bodyMat); b.position.set(x+m.w/2,mh/2,d.h/2); g.add(b);
+        face(g,`${el.id}_a_${i}`,n,m.w,mh,x+m.w/2,mh/2,-0.003,true,true);
+        face(g,`${el.id}_b_${i}`,n,m.w,mh,x+m.w/2,mh/2,d.h+0.003,false,false);
+        x+=m.w;
+      });
+      v3.dest.push({label:frNombre(el)+' · Cara A',el,tipo:'a',xc:pt+modW/2,depth:d.h});
+      v3.dest.push({label:frNombre(el)+' · Cara B',el,tipo:'b',xc:pt+modW/2,depth:d.h});
+    }
+  });
+  // Selector de destinos
+  const sel=cfg('v3Dest'); sel.innerHTML='<option value="">Ir a una góndola…</option>';
+  v3.dest.forEach((d,i)=>{ const o=document.createElement('option'); o.value=i; o.textContent=d.label; sel.appendChild(o); });
+  // Leyenda
+  const used=allUsedCats();
+  cfg('v3Leg').innerHTML=cats.filter(c=>used.has(c.id)).map(c=>`<div class="leg-item"><span class="leg-dot" style="background:#${c.color}"></span><span>${escHtml(c.name)}</span></div>`).join('')||'<span style="font-size:11px;color:var(--text3)">Todavía no hay categorías asignadas a chapas.</span>';
+  v3.orbit.tx=L/2; v3.orbit.tz=A/2;
+}
+
+function v3Resize(){
+  if(!v3.ren) return;
+  const w=cfg('v3Wrap'); const W=Math.max(300,w.clientWidth), H=Math.max(260,w.clientHeight);
+  v3.ren.setPixelRatio(Math.min(2,window.devicePixelRatio||1));
+  v3.ren.setSize(W,H,false);
+  v3.cam.aspect=W/H; v3.cam.updateProjectionMatrix();
+}
+function v3Camara(){
+  const c=v3.cam;
+  if(v3.mode==='orbit'){
+    const o=v3.orbit;
+    c.position.set(o.tx+o.r*Math.sin(o.ph)*Math.cos(o.th),o.r*Math.cos(o.ph),o.tz+o.r*Math.sin(o.ph)*Math.sin(o.th));
+    c.lookAt(o.tx,0.6,o.tz);
+  } else {
+    const p=v3.pov;
+    c.position.set(p.x,V3_EYE,p.z);
+    c.rotation.set(p.pitch,p.yaw,0,'YXZ');
+  }
+}
+// Colisión simple contra las cajas de las góndolas (en coordenadas de planta)
+function v3Colisiona(x,z){
+  const r=0.3;
+  for(const el of elements){
+    const b=getElBounds(el);
+    if(x>b.x1-r&&x<b.x2+r&&z>b.y1-r&&z<b.y2+r){
+      const dl=x-(b.x1-r), dr=(b.x2+r)-x, du=z-(b.y1-r), dd=(b.y2+r)-z;
+      const m=Math.min(dl,dr,du,dd);
+      if(m===dl) x=b.x1-r; else if(m===dr) x=b.x2+r; else if(m===du) z=b.y1-r; else z=b.y2+r;
+    }
+  }
+  const {L,A}=v3Sala();
+  return {x:Math.max(0.3,Math.min(L-0.3,x)),z:Math.max(0.3,Math.min(A-0.3,z))};
+}
+function v3Paso(dt){
+  if(v3.mode!=='pov') return;
+  const k=v3.keys, p=v3.pov;
+  const sp=(k.shift?4:2.2)*dt;
+  let f=0,s=0;
+  if(k.w||k.arrowup||k.fw) f+=1; if(k.s||k.arrowdown||k.bk) f-=1;
+  if(k.d||k.arrowright) s+=1; if(k.a||k.arrowleft) s-=1;
+  if(!f&&!s) return;
+  const fx=-Math.sin(p.yaw), fz=-Math.cos(p.yaw), rx=Math.cos(p.yaw), rz=-Math.sin(p.yaw);
+  const nx=p.x+(fx*f+rx*s)*sp, nz=p.z+(fz*f+rz*s)*sp;
+  const q=v3Colisiona(nx,nz); p.x=q.x; p.z=q.z;
+}
+function v3Loop(t){
+  const act=document.getElementById('p6');
+  if(!act||!act.classList.contains('active')){ v3.raf=0; return; }
+  const dt=Math.min(0.1,(t-(v3.last||t))/1000); v3.last=t;
+  v3Paso(dt); v3Camara(); v3.ren.render(v3.scene,v3.cam);
+  v3.raf=requestAnimationFrame(v3Loop);
+}
+function v3Modo(m){
+  v3.mode=m;
+  cfg('btnV3Orbit').classList.toggle('active',m==='orbit');
+  cfg('btnV3Pov').classList.toggle('active',m==='pov');
+  cfg('v3Pad').style.display=m==='pov'?'flex':'none';
+  cfg('v3Hint').textContent=m==='orbit'
+    ? 'Arrastrá para girar · rueda para acercar · clic derecho o Shift + arrastrar para desplazar'
+    : 'Caminá con W A S D o las flechas (Shift corre) · arrastrá para mirar';
+  if(m==='pov'&&!v3.povInit){
+    const {L,A}=v3Sala(); const q=v3Colisiona(L/2,A-0.8); v3.pov.x=q.x; v3.pov.z=q.z; v3.pov.yaw=0; v3.pov.pitch=0; v3.povInit=true;
+  }
+}
+function v3Ir(i){
+  if(i===''||i==null) return;
+  const d=v3.dest[+i]; if(!d) return;
+  const el=d.el, th=(el.rotation||0)*Math.PI/180, dist=2.8;
+  const rot=(lx,lz)=>[el.x+lx*Math.cos(th)-lz*Math.sin(th), el.y+lx*Math.sin(th)+lz*Math.cos(th)];
+  let pos,f;
+  if(d.tipo==='a'){ pos=rot(d.xc,-dist); f=[-Math.sin(th),Math.cos(th)]; }
+  else { pos=rot(d.xc,d.depth+dist); f=[Math.sin(th),-Math.cos(th)]; }
+  const q=v3Colisiona(pos[0],pos[1]);
+  v3Modo('pov');
+  v3.pov.x=q.x; v3.pov.z=q.z; v3.pov.yaw=Math.atan2(-f[0],-f[1]); v3.pov.pitch=-0.12; v3.povInit=true;
+  cfg('v3Dest').value='';
+}
+function v3Encuadre(){
+  const {L,A}=v3Sala(); const asp=v3.cam?v3.cam.aspect:1.6;
+  return Math.max(L,A)*0.95*(asp<1?Math.min(1.9,1/Math.max(0.45,asp)*0.8):1);
+}
+function v3Reiniciar(){
+  const {L,A}=v3Sala();
+  v3.orbit={th:Math.PI/2,ph:1.0,r:v3Encuadre(),tx:L/2,tz:A/2};
+  v3.povInit=false; if(v3.mode==='pov') v3Modo('pov');
+}
+function v3Eventos(){
+  const cv=cfg('v3Canvas');
+  cv.addEventListener('contextmenu',e=>e.preventDefault());
+  v3.ptrs=new Map();
+  const pdist=()=>{ const q=[...v3.ptrs.values()]; return Math.hypot(q[0].x-q[1].x,q[0].y-q[1].y); };
+  cv.addEventListener('pointerdown',e=>{
+    cv.setPointerCapture(e.pointerId);
+    v3.ptrs.set(e.pointerId,{x:e.clientX,y:e.clientY});
+    v3.ptr={x:e.clientX,y:e.clientY,b:e.button,sh:e.shiftKey};
+    if(v3.ptrs.size===2) v3.pinch=pdist();
+  });
+  const fin=e=>{ v3.ptrs.delete(e.pointerId); v3.ptr=null; v3.pinch=0; };
+  cv.addEventListener('pointerup',fin); cv.addEventListener('pointercancel',fin);
+  cv.addEventListener('pointermove',e=>{
+    if(v3.ptrs.has(e.pointerId)) v3.ptrs.set(e.pointerId,{x:e.clientX,y:e.clientY});
+    if(v3.ptrs.size>=2){
+      const d=pdist();
+      if(v3.pinch&&v3.mode==='orbit') v3.orbit.r=Math.max(2,Math.min(60,v3.orbit.r*v3.pinch/d));
+      v3.pinch=d; return;
+    }
+    if(!v3.ptr) return;
+    const dx=e.clientX-v3.ptr.x, dy=e.clientY-v3.ptr.y; v3.ptr.x=e.clientX; v3.ptr.y=e.clientY;
+    if(v3.mode==='orbit'){
+      const o=v3.orbit;
+      if(v3.ptr.b===2||v3.ptr.sh){
+        const k=o.r*0.0016, fx=-Math.cos(o.th), fz=-Math.sin(o.th), rx=Math.sin(o.th), rz=-Math.cos(o.th);
+        o.tx+=-rx*dx*k+fx*dy*k; o.tz+=-rz*dx*k+fz*dy*k;
+      } else { o.th-=dx*0.006; o.ph=Math.max(0.15,Math.min(1.5,o.ph-dy*0.005)); }
+    } else {
+      v3.pov.yaw-=dx*0.004; v3.pov.pitch=Math.max(-1.2,Math.min(1.2,v3.pov.pitch-dy*0.004));
+    }
+  });
+  cv.addEventListener('wheel',e=>{
+    if(v3.mode!=='orbit') return; e.preventDefault();
+    v3.orbit.r=Math.max(2,Math.min(60,v3.orbit.r*(1+Math.sign(e.deltaY)*0.1)));
+  },{passive:false});
+  const kd=e=>{
+    const p6=document.getElementById('p6'); if(!p6||!p6.classList.contains('active')) return;
+    if(/INPUT|SELECT|TEXTAREA/.test((e.target.tagName||''))) return;
+    const k=e.key.toLowerCase(); v3.keys[k==='shift'?'shift':k]=true;
+    if(['arrowup','arrowdown','arrowleft','arrowright',' '].includes(k)) e.preventDefault();
+  };
+  window.addEventListener('keydown',kd);
+  window.addEventListener('keyup',e=>{ const k=e.key.toLowerCase(); v3.keys[k==='shift'?'shift':k]=false; });
+  window.addEventListener('blur',()=>{ v3.keys={}; });
+  window.addEventListener('resize',()=>{ if(document.getElementById('p6').classList.contains('active')) v3Resize(); });
+  // Botones táctiles
+  [['v3Fw','fw'],['v3Bk','bk']].forEach(([id,k])=>{
+    const b=cfg(id);
+    b.addEventListener('pointerdown',e=>{ e.preventDefault(); v3.keys[k]=true; });
+    ['pointerup','pointerleave','pointercancel'].forEach(ev=>b.addEventListener(ev,()=>{ v3.keys[k]=false; }));
+  });
+}
+function init3D(){
+  const hint=cfg('v3Hint');
+  if(typeof THREE==='undefined'){ hint.textContent='No se pudo cargar la librería 3D. Revisá la conexión y recargá la página.'; return; }
+  if(!v3.ren){
+    v3.ren=new THREE.WebGLRenderer({canvas:cfg('v3Canvas'),antialias:true});
+    v3.scene=new THREE.Scene();
+    v3.cam=new THREE.PerspectiveCamera(65,1,0.05,200);
+    v3Eventos();
+    const {L,A}=v3Sala(); v3.orbit.r=Math.max(L,A)*0.95;
+  }
+  v3Build(); v3Resize(); if(!v3.encuadrado){ v3.orbit.r=v3Encuadre(); v3.encuadrado=true; } v3Modo(v3.mode);
+  if(!v3.raf){ v3.last=0; v3.raf=requestAnimationFrame(v3Loop); }
+}
+
 // ══════════════════════════════════════════════════════════════════════
 // GUARDADO AUTOMÁTICO + HISTORIAL + EXPORT/IMPORT .ferni
 // ══════════════════════════════════════════════════════════════════════
@@ -2308,14 +2794,13 @@ function applyState(st){
   }
   elements=st.elements||[];
   cats=st.cats||[];
-  assignMap=st.assignMap||{};
+  assignMap=chpMigrar({elements:st.elements||[],assignMap:JSON.parse(JSON.stringify(st.assignMap||{}))}).assignMap;
   catIdN=st.catIdN||1;
   elIdN=st.elIdN||1;
   return true;
 }
 
-function exportFerni(){
-  const st=getState();
+function buildResumenHtml(st){
   const suc=st.sucursal||'Sucursal';
   const rub=st.rubro||'Rubro';
   const fecha=new Date().toLocaleDateString('es-AR',{weekday:'long',year:'numeric',month:'long',day:'numeric'});
@@ -2323,23 +2808,13 @@ function exportFerni(){
   // ── Calcular análisis ──────────────────────────────────────────
   const catMeters={};
   st.cats.forEach(c=>{ catMeters[c.id]=0; });
-  const getExportCats=(key)=>{ const v=st.assignMap[key]; if(!v) return []; return Array.isArray(v)?v:[v]; };
   st.elements.forEach(el=>{
-    if(el.type==='pared'){
-      (el.mods||[]).forEach((m,i)=>{
-        const key=`${el.id}_u_${i}`;
-        const mc=getExportCats(key); const share=mc.length>0?1/mc.length:0;
-        mc.forEach(id=>{ catMeters[id]=(catMeters[id]||0)+m.w*(m.chapas||7)*share; });
-      });
-    } else {
-      (el.mods_a||[]).forEach((m,i)=>{
-        ['a','b'].forEach(side=>{
-          const key=`${el.id}_${side}_${i}`;
-          const mc=getExportCats(key); const share=mc.length>0?1/mc.length:0;
-          mc.forEach(id=>{ catMeters[id]=(catMeters[id]||0)+m.w*m.chapas*share; });
-        });
-      });
-    }
+    const list=el.type==='pared'?(el.mods||[]):(el.mods_a||[]);
+    const sides=el.type==='pared'?['u']:['a','b'];
+    list.forEach((m,i)=>sides.forEach(s=>{
+      const mt=chpMeters(chpNorm(st.assignMap[`${el.id}_${s}_${i}`],m.chapas||(el.type==='pared'?7:5)),m.w);
+      Object.keys(mt).forEach(id=>{ catMeters[id]=(catMeters[id]||0)+mt[id]; });
+    }));
   });
   let totalM=0;
   st.elements.forEach(el=>{
@@ -2385,23 +2860,20 @@ function exportFerni(){
     const mkRg=(x,y,w,h,rx,fill,stroke,sw=1)=>{ const r=document.createElementNS(ns,'rect'); r.setAttribute('x',x);r.setAttribute('y',y);r.setAttribute('width',w);r.setAttribute('height',h);r.setAttribute('rx',rx);r.setAttribute('fill',fill);r.setAttribute('stroke',stroke);r.setAttribute('stroke-width',sw); g.appendChild(r); };
     const mkTg=(x,y,s,fill,size,anchor='middle')=>{ const t=document.createElementNS(ns,'text'); t.setAttribute('x',x);t.setAttribute('y',y);t.setAttribute('fill',fill);t.setAttribute('font-size',size);t.setAttribute('font-family','system-ui,sans-serif');t.setAttribute('text-anchor',anchor);t.setAttribute('dominant-baseline','middle');t.textContent=s; g.appendChild(t); };
 
-    // Dibuja un módulo con hasta 3 categorías apiladas (igual que en el canvas)
-    const drawSlices=(key,x,y,w,h,rx,emptyFill,emptyStroke,fs,maxChars)=>{
-      const mc=getExportCats(key).map(id=>st.cats.find(c=>c.id===id)).filter(Boolean);
-      if(mc.length===0){
-        mkRg(x,y,w,h,rx,emptyFill,emptyStroke,0.8);
-        return;
-      }
-      const sh=h/mc.length;
-      mc.forEach((cat,ci)=>{
-        const sy=y+ci*sh;
-        mkRg(x,sy,w,sh,mc.length===1?rx:0,'#'+cat.color,'rgba(0,0,0,0.12)',0.8);
-        if(w>18&&sh>9){
+    // Dibuja un módulo por chapas y mitades (igual que la vista de frente)
+    const drawSlices=(key,x,y,w,h,rx,emptyFill,emptyStroke,fs,maxChars,n)=>{
+      const raw=st.assignMap[key];
+      if(!chpCatsRaw(raw).length){ mkRg(x,y,w,h,rx,emptyFill,emptyStroke,0.8); return; }
+      chpRects(chpNorm(raw,n)).forEach(r=>{
+        const cat=r.id?st.cats.find(c=>c.id===r.id):null;
+        const rx0=x+r.x0*w, ry0=y+r.y0*h, rw=(r.x1-r.x0)*w, rh=(r.y1-r.y0)*h;
+        mkRg(rx0,ry0,rw,rh,0,cat?'#'+cat.color:emptyFill,'rgba(0,0,0,0.12)',0.8);
+        if(cat&&rw>18&&rh>9){
           const nm=cat.name.length>maxChars?cat.name.slice(0,maxChars-1)+'…':cat.name;
-          mkTg(x+w/2,sy+sh/2,nm,'rgba(255,255,255,0.95)',Math.min(fs,w*0.09));
+          mkTg(rx0+rw/2,ry0+rh/2,nm,'rgba(255,255,255,0.95)',Math.min(fs,rw*0.11,rh*0.8));
         }
       });
-      if(mc.length>1) mkRg(x,y,w,h,rx,'none','rgba(0,0,0,0.2)',1);
+      mkRg(x,y,w,h,rx,'none','rgba(0,0,0,0.2)',1);
     };
 
     if(el.type==='pared'){
@@ -2411,7 +2883,7 @@ function exportFerni(){
       let cx=0;
       (el.mods||[]).forEach((m,i)=>{
         const mw=m.w*SCALESVG;
-        drawSlices(`${el.id}_u_${i}`,cx+2,2,mw-4,H-4,3,'#f0eeea','#c8c5bf',9,9);
+        drawSlices(`${el.id}_u_${i}`,cx+2,2,mw-4,H-4,3,'#f0eeea','#c8c5bf',9,9,m.chapas||7);
         cx+=mw;
       });
       mkTg(W/2,H+9,el.label||'Pared','rgba(26,39,68,0.7)',9);
@@ -2426,8 +2898,8 @@ function exportFerni(){
       let cx=pt;
       (el.mods_a||[]).forEach((m,i)=>{
         const mw=m.w*SCALESVG;
-        drawSlices(`${el.id}_a_${i}`,cx,0,mw,H/2,0,'#e8e7e2','#c8c5bf',8,7);
-        drawSlices(`${el.id}_b_${i}`,cx,H/2,mw,H/2,0,'#e8e7e2','#c8c5bf',8,7);
+        drawSlices(`${el.id}_a_${i}`,cx,0,mw,H/2,0,'#e8e7e2','#c8c5bf',8,7,m.chapas);
+        drawSlices(`${el.id}_b_${i}`,cx,H/2,mw,H/2,0,'#e8e7e2','#c8c5bf',8,7,m.chapas);
         cx+=mw;
       });
       // Puntera fin
@@ -2519,7 +2991,7 @@ function exportFerni(){
     <div class="card-title">Plano del sector</div>
     ${svgString}
     <div style="display:flex;flex-wrap:wrap;gap:8px;margin-top:.75rem">
-      ${[...new Set(Object.values(st.assignMap).flat())].map(id=>{
+      ${[...new Set(Object.values(st.assignMap).flatMap(v=>chpCatsRaw(v)))].map(id=>{
         const cat=st.cats.find(c=>c.id===id);
         return cat?`<span style="display:flex;align-items:center;gap:4px;font-size:11px;color:#5a5955"><span style="width:10px;height:10px;border-radius:2px;background:#${cat.color};display:inline-block"></span>${cat.name}</span>`:'';
       }).join('')}
@@ -2550,10 +3022,15 @@ function exportFerni(){
 </body>
 </html>`;
 
+  return html;
+}
+function exportFerni(){
+  const st=getState();
+  const html=buildResumenHtml(st);
   const sucFile=(st.sucursal||'suc').replace(/\s+/g,'_');
+  const rubFile=(st.rubro||'Rubro').replace(/\s+/g,'_');
   const fechaFile=new Date().toISOString().slice(0,10);
-  const fname=`resumen_${sucFile}_${rub.replace(/\s+/g,'_')}_${fechaFile}.html`;
-  _downloadText(html, fname, 'text/html');
+  _downloadText(html, `resumen_${sucFile}_${rubFile}_${fechaFile}.html`, 'text/html');
   plToast('Resumen exportado');
 }
 
@@ -2754,10 +3231,10 @@ function plMsgError(e,ctx){
 function plMostrar(id){
   document.querySelectorAll('.panel').forEach(p=>p.classList.remove('active'));
   const el=plId(id); if(el) el.classList.add('active');
-  const ed=/^p[1-5]$/.test(id);
+  const ed=/^p[1-6]$/.test(id)&&!document.body.classList.contains('viewer');
   plId('stepsNav').style.display=ed?'flex':'none';
   plId('saveBar').style.display=ed?'flex':'none';
-  if(!ed) plId('modoLabel').textContent=plSes?(plSes.rol==='admin'?'Administración de planogramas':`Sucursal ${plSes.sucursal}`):'Ingresá para comenzar';
+  if(!ed&&!document.body.classList.contains('viewer')) plId('modoLabel').textContent=plSes?(plSes.rol==='admin'?'Administración de planogramas':`Sucursal ${plSes.sucursal}`):'Ingresá para comenzar';
 }
 function plMostrarCarga(msg){ plId('pLoadMsg').textContent=msg||'Cargando…'; plId('pLoadRetry').style.display='none'; plMostrar('pLoad'); }
 function plErrorFatal(msg){ plId('pLoadMsg').textContent=msg; plId('pLoadRetry').style.display='inline-block'; plMostrar('pLoad'); }
@@ -2886,21 +3363,20 @@ async function plSinAcceso(){
 }
 
 // ── Resumen y miniatura (funciones puras sobre un estado) ──────────────
-function plCatsDe(st,key){ const v=st.assignMap&&st.assignMap[key]; return !v?[]:(Array.isArray(v)?v:[v]); }
+function plCatsDe(st,key){ return chpCatsRaw(st.assignMap&&st.assignMap[key]); }
 function plResumenDe(st){
   let tot=0,asig=0; const usadas=new Set();
   (st.elements||[]).forEach(el=>{
-    if(el.type==='pared'){
-      (el.mods||[]).forEach((m,i)=>{
-        const w=m.w*(m.chapas||7); tot+=w;
-        const c=plCatsDe(st,`${el.id}_u_${i}`); if(c.length){ asig+=w; c.forEach(x=>usadas.add(x)); }
+    const list=el.type==='pared'?(el.mods||[]):(el.mods_a||[]);
+    const sides=el.type==='pared'?['u']:['a','b'];
+    list.forEach((m,i)=>{
+      const n=m.chapas||(el.type==='pared'?7:5);
+      tot+=m.w*n*sides.length;
+      sides.forEach(s=>{
+        const mt=chpMeters(chpNorm(st.assignMap&&st.assignMap[`${el.id}_${s}_${i}`],n),m.w);
+        Object.keys(mt).forEach(id=>{ asig+=mt[id]; usadas.add(id); });
       });
-    } else {
-      (el.mods_a||[]).forEach((m,i)=>{
-        const w=m.w*m.chapas; tot+=2*w;
-        ['a','b'].forEach(s=>{ const c=plCatsDe(st,`${el.id}_${s}_${i}`); if(c.length){ asig+=w; c.forEach(x=>usadas.add(x)); } });
-      });
-    }
+    });
   });
   return {mTotal:+tot.toFixed(1),mAsig:+asig.toFixed(1),nElem:(st.elements||[]).length,nCats:usadas.size};
 }
@@ -2908,33 +3384,41 @@ function plThumbDe(st){
   const W=+(st.cfg&&st.cfg.largo)||12, H=+(st.cfg&&st.cfg.ancho)||8;
   const r=[];
   const push=(x1,y1,x2,y2,col)=>{
-    if(r.length>=700) return;
-    r.push([+Math.min(x1,x2).toFixed(2),+Math.min(y1,y2).toFixed(2),+Math.max(x1,x2).toFixed(2),+Math.max(y1,y2).toFixed(2),col]);
+    if(r.length>=900) return;
+    // Firestore no admite arrays anidados: cada rectángulo se guarda como texto "x1,y1,x2,y2,color"
+    r.push([+Math.min(x1,x2).toFixed(2),+Math.min(y1,y2).toFixed(2),+Math.max(x1,x2).toFixed(2),+Math.max(y1,y2).toFixed(2),col].join(','));
   };
-  const colorDe=key=>{
-    const ids=plCatsDe(st,key); if(!ids.length) return 'e3e1da';
-    const c=(st.cats||[]).find(x=>x.id===ids[0]);
-    return c&&/^[0-9a-fA-F]{6}$/.test(c.color)?c.color:'9a9895';
+  const colDe=id=>{
+    const c=id?(st.cats||[]).find(x=>x.id===id):null;
+    return c&&/^[0-9a-fA-F]{6}$/.test(c.color)?c.color:'e3e1da';
   };
   (st.elements||[]).forEach(el=>{
     const rot=(((el.rotation||0)%360)+360)%360;
     // local (lx,ly) -> sala, igual que el canvas (rotación alrededor de el.x, el.y)
     const tw=(lx,ly)=>rot===90?[el.x-ly,el.y+lx]:rot===180?[el.x-lx,el.y-ly]:rot===270?[el.x+ly,el.y-lx]:[el.x+lx,el.y+ly];
     const rect=(lx1,ly1,lx2,ly2,col)=>{ const a=tw(lx1,ly1), b=tw(lx2,ly2); push(a[0],a[1],b[0],b[1],col); };
+    // un módulo: una franja por mitad (izquierda / derecha) con la categoría dominante
+    const mod=(x,y1,y2,w,key,n)=>{
+      const h=chpNorm(st.assignMap&&st.assignMap[key],n);
+      const dom=a=>{ const c={}; a.forEach(id=>{ if(id) c[id]=(c[id]||0)+1; }); let b=null,bn=0; Object.keys(c).forEach(id=>{ if(c[id]>bn){ b=id; bn=c[id]; } }); return b; };
+      const L=dom(h.L), R=dom(h.R);
+      if(L===R) rect(x,y1,x+w,y2,colDe(L));
+      else { rect(x,y1,x+w/2,y2,colDe(L)); rect(x+w/2,y1,x+w,y2,colDe(R)); }
+    };
     if(el.type==='pared'){
-      const h=el.depth||0.4; let x=0;
-      (el.mods||[]).forEach((m,i)=>{ rect(x,0,x+m.w,h,colorDe(`${el.id}_u_${i}`)); x+=m.w; });
+      const hh=el.depth||0.4; let x=0;
+      (el.mods||[]).forEach((m,i)=>{ mod(x,0,hh,m.w,`${el.id}_u_${i}`,m.chapas||7); x+=m.w; });
     } else {
-      const pt=el.puntera_w||0.75, h=el.depth||0.6;
+      const pt=el.puntera_w||0.75, hh=el.depth||0.6;
       const modW=(el.mods_a||[]).reduce((a,m)=>a+m.w,0);
-      rect(0,0,pt,h,'fff3cd');
+      rect(0,0,pt,hh,'fff3cd');
       let x=pt;
       (el.mods_a||[]).forEach((m,i)=>{
-        rect(x,0,x+m.w,h/2,colorDe(`${el.id}_a_${i}`));
-        rect(x,h/2,x+m.w,h,colorDe(`${el.id}_b_${i}`));
+        mod(x,0,hh/2,m.w,`${el.id}_a_${i}`,m.chapas||5);
+        mod(x,hh/2,hh,m.w,`${el.id}_b_${i}`,m.chapas||5);
         x+=m.w;
       });
-      rect(pt+modW,0,pt*2+modW,h,'fff3cd');
+      rect(pt+modW,0,pt*2+modW,hh,'fff3cd');
     }
   });
   return {w:W,h:H,r};
@@ -2949,9 +3433,10 @@ function plDibujarThumb(canvas,th){
   const ox=(cw-th.w*esc)/2, oy=(ch-th.h*esc)/2;
   ctx.fillStyle='#fff'; ctx.strokeStyle='#c8c5bf'; ctx.lineWidth=1;
   ctx.fillRect(ox,oy,th.w*esc,th.h*esc); ctx.strokeRect(ox,oy,th.w*esc,th.h*esc);
-  th.r.forEach(q=>{
+  th.r.forEach(q0=>{
+    const q=typeof q0==='string'?q0.split(','):q0;
     if(!Array.isArray(q)||q.length<5) return;
-    const [x1,y1,x2,y2,c]=q;
+    const [x1,y1,x2,y2,c]=[+q[0],+q[1],+q[2],+q[3],q[4]];
     if(![x1,y1,x2,y2].every(Number.isFinite)) return;
     ctx.fillStyle='#'+(/^[0-9a-fA-F]{6}$/.test(String(c))?c:'cfcac2');
     ctx.fillRect(ox+x1*esc,oy+y1*esc,Math.max(1,(x2-x1)*esc),Math.max(1,(y2-y1)*esc));
@@ -3181,7 +3666,7 @@ async function plCrearPlan(o){
 function plCargarEstadoEnEditor(st,opts){
   const paso=(opts&&opts.paso!==undefined)?opts.paso:null;
   const act=document.querySelector('.panel.active');
-  const prev=act&&/^p[1-5]$/.test(act.id)?+act.id.slice(1):null;
+  const prev=act&&/^p[1-6]$/.test(act.id)?+act.id.slice(1):null;
   if(!applyState(st)) throw new Error('El contenido del planograma no es válido');
   const sel=cfg('cfg_suc');
   if(plPlan&&plPlan.meta) sel.value=plPlan.meta.sucursal;
@@ -3570,8 +4055,106 @@ document.addEventListener('visibilitychange',()=>{ if(document.hidden) plGuardar
 window.addEventListener('online',()=>{ if(plPlan) plToast('Conexión recuperada'); });
 setInterval(plActualizarEtiqueta,30000);
 
+
+// ── Links de solo lectura (para ver el resumen y el 3D desde el celular) ──
+// Un link es una "foto" del planograma en el momento de compartir: planograma_compartidos/{token}.
+// Lo puede leer cualquiera que tenga el link (el token es largo y no se puede adivinar);
+// solo la sucursal dueña del planograma (o el administrador) lo crea, lo lista y lo revoca.
+const PL_TOKEN_RE=/^[a-z0-9]{24}$/;
+function plNuevoToken(){
+  const al='abcdefghjkmnpqrstuvwxyz23456789', b=new Uint8Array(24); crypto.getRandomValues(b);
+  return Array.from(b,x=>al[x%al.length]).join('');
+}
+function plUrlLink(token){ return location.origin+location.pathname+'#v='+token; }
+async function plCopiarLink(token){
+  const u=plUrlLink(token);
+  try{ await navigator.clipboard.writeText(u); plToast('Link copiado'); }
+  catch(e){ prompt('Copiá el link:',u); }
+}
+function plWhatsLink(token,nombre){
+  const msg=`Planograma FERNI: ${nombre}\n${plUrlLink(token)}`;
+  window.open('https://wa.me/?text='+encodeURIComponent(msg),'_blank','noopener,noreferrer');
+}
+async function plCrearLink(){
+  const p=plPlan; if(!p) return;
+  try{ await plGuardarAhora(); }catch(e){}
+  const json=plSnapshotJson();
+  if(json.length>900000){ alert('El planograma es demasiado grande para compartirlo.'); return false; }
+  const token=plNuevoToken();
+  try{
+    await plDb.collection('planograma_compartidos').doc(token).set({
+      planId:p.id,sucursal:p.meta.sucursal,nombre:p.meta.nombre,creadoPor:plSes.nombre,creadoEn:plTS(),revocado:false,estadoJson:json});
+    plToast('Link creado');
+    plCompartirModal(); return false;
+  }catch(e){ console.error(e); alert(plMsgError(e)); return false; }
+}
+async function plRevocarLink(token){
+  if(!confirm('¿Revocar este link? Quien lo tenga dejará de poder verlo.')) return;
+  try{ await plDb.collection('planograma_compartidos').doc(token).update({revocado:true}); plToast('Link revocado'); plCompartirModal(); }
+  catch(e){ console.error(e); alert(plMsgError(e)); }
+}
+async function plCompartirModal(){
+  const p=plPlan; if(!p) return;
+  const lista=plEl('div',null,plEl('div',{class:'pl-plan-meta'},'Cargando links…'));
+  const cuerpo=plEl('div',null,
+    plEl('div',{class:'pl-plan-meta',style:'margin-bottom:8px'},'El link muestra una foto del planograma tal como está ahora (resumen y vista 3D), solo para mirar. Si lo cambiás después, creá un link nuevo.'),
+    lista);
+  plModal('Compartir planograma',cuerpo,[
+    {txt:'Crear link nuevo',cls:'btn-primary',cerrar:false,fn:plCrearLink},
+    {txt:'Cerrar'}
+  ]);
+  try{
+    const s=await plDb.collection('planograma_compartidos').where('planId','==',p.id).where('sucursal','==',p.meta.sucursal).get();
+    lista.textContent='';
+    const docs=s.docs.map(d=>({id:d.id,v:d.data({serverTimestamps:'estimate'})})).sort((a,b)=>plMs(b.v.creadoEn)-plMs(a.v.creadoEn));
+    if(!docs.length){ lista.appendChild(plEl('div',{class:'pl-plan-meta'},'Todavía no creaste ningún link para este planograma.')); return; }
+    docs.forEach(({id,v})=>{
+      const act=!v.revocado;
+      lista.appendChild(plEl('div',{class:'pl-ver'},
+        plEl('div',{class:'grow'},
+          plEl('div',{style:'font-weight:600'},plFechaHora(plMs(v.creadoEn))+(act?'':' · revocado')),
+          plEl('div',{class:'pl-plan-meta'},'Creado por '+(v.creadoPor||'—'))),
+        act&&plEl('button',{class:'btn btn-outline btn-sm',onclick:()=>plCopiarLink(id)},'Copiar'),
+        act&&plEl('button',{class:'btn btn-outline btn-sm',onclick:()=>plWhatsLink(id,v.nombre||'')},'WhatsApp'),
+        act&&plEl('button',{class:'btn btn-outline btn-sm',onclick:()=>plRevocarLink(id)},'Revocar')));
+    });
+  }catch(e){ console.error(e); lista.textContent=''; lista.appendChild(plEl('div',{class:'pl-plan-meta'},'No se pudieron cargar los links.')); }
+}
+
+// ── Modo visor: se abre con  #v=<token>  sin pedir ingreso ───────────────
+function plVerTab(t){
+  plId('vTabRes').classList.toggle('active',t==='res');
+  plId('vTab3d').classList.toggle('active',t==='3d');
+  if(t==='res') plMostrar('pVer'); else { plMostrar('p6'); init3D(); v3Resize(); }
+}
+async function plIniciarVisor(token){
+  document.body.classList.add('viewer');
+  plMostrarCarga('Abriendo planograma…');
+  try{
+    const d=await plDb.collection('planograma_compartidos').doc(token).get();
+    if(!d.exists) throw new Error('no existe');
+    const x=d.data();
+    if(x.revocado) throw new Error('revocado');
+    const st=JSON.parse(x.estadoJson);
+    if(!applyState(st)) throw new Error('formato');
+    plId('vTitulo').textContent=x.nombre||'Planograma';
+    plId('vSub').textContent=`${st.sucursal||''}${st.rubro?' · '+st.rubro:''}`;
+    plId('vFrame').srcdoc=buildResumenHtml(getState());
+    plId('modoLabel').textContent='Vista de solo lectura';
+    plId('vBar').style.display='flex';
+    plVerTab('res');
+  }catch(e){
+    console.error(e);
+    plId('pLoadMsg').textContent='Este link no existe o fue revocado. Pedile uno nuevo a quien te lo compartió.';
+    plId('pLoadRetry').style.display='none';
+    plMostrar('pLoad');
+  }
+}
+
 async function plInit(){
   if(!plAuth||!plDb){ plErrorFatal('No se pudo cargar Firebase. Revisá tu conexión y reintentá.'); return; }
+  const mv=location.hash.match(/^#v=([a-z0-9]{24})$/);
+  if(mv){ plIniciarVisor(mv[1]); return; }
   plMostrarCarga('Cargando…');
   let ok=false;
   try{ ok=await plRestaurar(); }catch(e){ console.error(e); }
