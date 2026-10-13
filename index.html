@@ -210,6 +210,46 @@ body.viewer #v3Wrap{height:calc(100vh - 250px)!important;min-height:300px}
 .seg button{border:none;background:var(--surface);padding:4px 9px;font-size:11px;cursor:pointer;color:var(--text2)}
 .seg button+button{border-left:1px solid var(--border)}
 .seg button.active{background:var(--navy);color:#fff}
+
+/* ═════════ VISTA 3D: pantalla completa y mandos tipo juego ═════════ */
+#v3Hud{display:none;position:absolute;top:max(8px,env(safe-area-inset-top));left:max(8px,env(safe-area-inset-left));right:max(8px,env(safe-area-inset-right));gap:6px;align-items:center;flex-wrap:wrap;z-index:4;pointer-events:none}
+#v3Hud>*{pointer-events:auto}
+.v3b{background:rgba(26,39,68,.66);color:#fff;border:1px solid rgba(255,255,255,.4);border-radius:999px;padding:7px 14px;font-size:12px;font-weight:600;cursor:pointer;-webkit-backdrop-filter:blur(4px);backdrop-filter:blur(4px);white-space:nowrap}
+#v3Hud select{background:rgba(26,39,68,.66);color:#fff;border:1px solid rgba(255,255,255,.4);border-radius:999px;padding:6px 10px;font-size:12px;max-width:44vw;width:auto}
+#v3Hud .seg{background:rgba(26,39,68,.66);border-color:rgba(255,255,255,.4);-webkit-backdrop-filter:blur(4px);backdrop-filter:blur(4px)}
+#v3Hud .seg button{background:transparent;color:#fff;padding:7px 11px;font-size:12px;font-weight:600}
+#v3Hud .seg button.active{background:rgba(255,255,255,.3)}
+#v3Wrap.fs{position:fixed!important;left:0;top:0;right:0;bottom:0;width:100%;border-radius:0!important}
+body.v3fs #v3Wrap.fs{height:100vh!important;height:100dvh!important;max-height:none!important;min-height:0!important;z-index:80}
+body.v3fs{overflow:hidden;overscroll-behavior:none}
+#v3Wrap.fs #v3Hud{display:flex}
+#v3Wrap.fs #v3Hint{left:50%!important;bottom:14px!important;transform:translateX(-50%);text-align:center;max-width:calc(100% - 320px)!important;width:max-content;transition:opacity .6s;font-size:12px!important;padding:6px 12px!important;border-radius:999px!important}
+#v3Joy,#v3Run{display:none;position:absolute;z-index:3;border-radius:50%;background:rgba(26,39,68,.34);border:2px solid rgba(255,255,255,.92);box-shadow:0 0 0 1px rgba(26,39,68,.4),0 3px 12px rgba(0,0,0,.28);touch-action:none;-webkit-user-select:none;user-select:none;-webkit-tap-highlight-color:transparent}
+#v3Joy{left:max(18px,env(safe-area-inset-left));bottom:max(22px,env(safe-area-inset-bottom));width:120px;height:120px}
+#v3Knob{position:absolute;left:50%;top:50%;width:52px;height:52px;margin:-26px 0 0 -26px;border-radius:50%;background:rgba(255,255,255,.88);box-shadow:0 2px 8px rgba(0,0,0,.3);pointer-events:none}
+#v3Run{right:max(22px,env(safe-area-inset-right));bottom:max(30px,env(safe-area-inset-bottom));width:68px;height:68px;padding:0;color:#fff}
+#v3Run svg{width:30px;height:30px;pointer-events:none;position:absolute;left:50%;top:50%;margin:-15px 0 0 -15px}
+#v3Run.on{background:rgba(255,255,255,.8);color:#1a2744}
+#v3Wrap.pov #v3Joy,#v3Wrap.pov #v3Run{display:block}
+#v3LegFs{display:none;position:absolute;top:56px;right:max(8px,env(safe-area-inset-right));max-width:70%;max-height:55%;overflow:auto;background:rgba(255,255,255,.95);border-radius:10px;padding:8px 10px;z-index:5;box-shadow:0 4px 16px rgba(0,0,0,.25)}
+#v3LegFs.open{display:block}
+#v3LegFs .leg-item{font-size:12px;margin:3px 0}
+@media(max-height:500px) and (orientation:landscape){
+  body.viewer>header{display:none!important}
+  body.viewer #v3Wrap{height:calc(100vh - 118px)!important;height:calc(100dvh - 118px)!important;min-height:200px}
+  body.viewer #v3Leg{display:none}
+}
+@media (orientation:portrait){ #v3Wrap.fs #v3Hint{bottom:170px!important;max-width:92%!important;border-radius:12px!important} }
+@media(max-width:760px){
+  .v3tb #v3Dest{flex:1 1 100%;max-width:none!important;order:4}
+  .v3tb .btn{flex:1;padding:9px 10px;font-size:13px}
+  .v3tb #btnV3Fs{flex:2}
+  #v3Wrap{height:min(62vh,520px)!important;min-height:300px}
+  body.viewer>header{display:none!important}
+  body.viewer #v3Wrap{height:calc(100vh - 190px)!important;height:calc(100dvh - 190px)!important;min-height:300px}
+    body.viewer #p6>div{padding:0 .5rem!important}
+  body.viewer #p6 .card{padding:.5rem}
+}
 </style>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js" integrity="sha384-CI3ELBVUz9XQO+97x6nwMDPosPR5XvsxW2ua7N1Xeygeh1IxtgqtCkGfQY9WWdHu" crossorigin="anonymous"></script>
 <script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-app-compat.js" integrity="sha384-yuGdyIzzYtOBlBG6JOWn+Ey9kpq7HocusNuxEGyyohr1eEyXpeEyehIIXC/hznw4" crossorigin="anonymous"></script>
@@ -261,7 +301,7 @@ body.viewer #v3Wrap{height:calc(100vh - 250px)!important;min-height:300px}
   <div style="flex:1;min-width:140px"><div id="vTitulo" style="font-size:14px;font-weight:700;color:var(--navy)"></div><div id="vSub" style="font-size:11px;color:var(--text3)"></div></div>
   <div class="seg"><button id="vTabRes" class="active" onclick="plVerTab('res')">Resumen</button><button id="vTab3d" onclick="plVerTab('3d')">Vista 3D</button></div>
 </div>
-<div id="pVer" class="panel"><iframe id="vFrame" sandbox="" title="Resumen del planograma" style="display:block;width:100%;height:calc(100vh - 120px);border:0;background:#f5f4f0"></iframe></div>
+<div id="pVer" class="panel"><iframe id="vFrame" sandbox="" title="Resumen del planograma" style="display:block;width:100%;height:calc(100vh - 120px);height:calc(100dvh - 120px);border:0;background:#f5f4f0"></iframe></div>
 
 <div id="pLoad" class="panel active"><div class="pl-center"><div class="pl-card" style="text-align:center">
   <div class="pl-spin"></div><div id="pLoadMsg" class="pl-sub" style="margin:0">Cargando…</div>
@@ -545,19 +585,25 @@ body.viewer #v3Wrap{height:calc(100vh - 250px)!important;min-height:300px}
 <div id="p6" class="panel">
   <div style="max-width:1100px;margin:0 auto;padding:0 1rem">
     <div class="card" style="padding:.75rem">
-      <div style="display:flex;align-items:center;gap:8px;flex-wrap:wrap;margin-bottom:.5rem">
+      <div class="v3tb" style="display:flex;align-items:center;gap:8px;flex-wrap:wrap;margin-bottom:.5rem">
         <span style="font-size:13px;font-weight:600;margin-right:auto">Vista 3D</span>
         <div class="seg"><button id="btnV3Orbit" class="active" onclick="v3Modo('orbit')">Órbita</button><button id="btnV3Pov" onclick="v3Modo('pov')">Recorrido</button></div>
         <select id="v3Dest" onchange="v3Ir(this.value)" style="width:auto;max-width:240px"></select>
-        <button class="btn btn-outline btn-sm" onclick="v3Reiniciar()">Reiniciar vista</button>
+        <button class="btn btn-primary btn-sm" id="btnV3Fs" onclick="v3Fs(true)" style="order:5">Pantalla completa</button>
+        <button class="btn btn-outline btn-sm" onclick="v3Reiniciar()" style="order:6">Reiniciar vista</button>
       </div>
       <div id="v3Wrap" style="position:relative;height:560px;background:#dfe6ee;border-radius:8px;overflow:hidden">
         <canvas id="v3Canvas" style="display:block;width:100%;height:100%;touch-action:none;cursor:grab"></canvas>
         <div id="v3Hint" style="position:absolute;left:8px;bottom:8px;background:rgba(26,39,68,.72);color:#fff;font-size:11px;padding:4px 9px;border-radius:6px;max-width:80%"></div>
-        <div id="v3Pad" style="display:none;position:absolute;right:10px;bottom:10px;flex-direction:column;gap:6px">
-          <button id="v3Fw" class="btn btn-outline btn-sm" style="min-width:64px;background:#fff">Adelante</button>
-          <button id="v3Bk" class="btn btn-outline btn-sm" style="min-width:64px;background:#fff">Atrás</button>
+        <div id="v3Hud">
+          <button class="v3b" onclick="v3Fs(false)" aria-label="Salir de pantalla completa">Salir</button>
+          <div class="seg"><button id="btnV3OrbitFs" class="active" onclick="v3Modo('orbit')">Órbita</button><button id="btnV3PovFs" onclick="v3Modo('pov')">Recorrido</button></div>
+          <select id="v3DestFs" onchange="v3Ir(this.value)" aria-label="Ir a una góndola"></select>
+          <button class="v3b" onclick="v3Leyenda()">Categorías</button>
         </div>
+        <div id="v3LegFs" class="legend"></div>
+        <div id="v3Joy" aria-label="Joystick para caminar"><div id="v3Knob"></div></div>
+        <button id="v3Run" aria-label="Correr (mantener apretado)"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><path d="M12 19V5M5 12l7-7 7 7"/></svg></button>
       </div>
       <div class="legend" id="v3Leg" style="margin-top:8px"></div>
     </div>
@@ -2509,7 +2555,7 @@ function frInit(){
 const V3_EYE=1.65, V3_PX=220;
 let v3={ren:null,scene:null,cam:null,mode:'orbit',raf:0,keys:{},dest:[],
   orbit:{th:Math.PI/2,ph:1.0,r:14,tx:6,tz:4},
-  pov:{x:1,z:1,yaw:0,pitch:0}, last:0, ptr:null};
+  pov:{x:1,z:1,yaw:0,pitch:0}, last:0, ptr:null, joy:{x:0,y:0}, run:false, fs:false};
 
 function v3Sala(){ return {L:+cfg('cfg_largo').value||12, A:+cfg('cfg_ancho').value||8}; }
 
@@ -2593,9 +2639,11 @@ function v3Build(){
   // Selector de destinos
   const sel=cfg('v3Dest'); sel.innerHTML='<option value="">Ir a una góndola…</option>';
   v3.dest.forEach((d,i)=>{ const o=document.createElement('option'); o.value=i; o.textContent=d.label; sel.appendChild(o); });
+  const selFs=cfg('v3DestFs'); selFs.innerHTML='<option value="">Ir a…</option>'+sel.innerHTML.replace(/^<option value="">[^<]*<\/option>/,'');
   // Leyenda
   const used=allUsedCats();
   cfg('v3Leg').innerHTML=cats.filter(c=>used.has(c.id)).map(c=>`<div class="leg-item"><span class="leg-dot" style="background:#${c.color}"></span><span>${escHtml(c.name)}</span></div>`).join('')||'<span style="font-size:11px;color:var(--text3)">Todavía no hay categorías asignadas a chapas.</span>';
+  cfg('v3LegFs').innerHTML=cfg('v3Leg').innerHTML;
   v3.orbit.tx=L/2; v3.orbit.tz=A/2;
 }
 
@@ -2635,34 +2683,69 @@ function v3Colisiona(x,z){
 function v3Paso(dt){
   if(v3.mode!=='pov') return;
   const k=v3.keys, p=v3.pov;
-  const sp=(k.shift?4:2.2)*dt;
+  const sp=((k.shift||v3.run)?4:2.2)*dt;
   let f=0,s=0;
-  if(k.w||k.arrowup||k.fw) f+=1; if(k.s||k.arrowdown||k.bk) f-=1;
+  if(k.w||k.arrowup) f+=1; if(k.s||k.arrowdown) f-=1;
   if(k.d||k.arrowright) s+=1; if(k.a||k.arrowleft) s-=1;
-  if(!f&&!s) return;
+  const j=v3.joy||{x:0,y:0}; f+=-j.y; s+=j.x;          // joystick analógico: más lejos = más rápido
+  const mg=Math.hypot(f,s); if(mg<0.01) return;
+  if(mg>1){ f/=mg; s/=mg; }
   const fx=-Math.sin(p.yaw), fz=-Math.cos(p.yaw), rx=Math.cos(p.yaw), rz=-Math.sin(p.yaw);
   const nx=p.x+(fx*f+rx*s)*sp, nz=p.z+(fz*f+rz*s)*sp;
   const q=v3Colisiona(nx,nz); p.x=q.x; p.z=q.z;
 }
 function v3Loop(t){
   const act=document.getElementById('p6');
-  if(!act||!act.classList.contains('active')){ v3.raf=0; return; }
+  if(!act||!act.classList.contains('active')){ v3.raf=0; if(v3.fs) v3Fs(false); return; }
   const dt=Math.min(0.1,(t-(v3.last||t))/1000); v3.last=t;
   v3Paso(dt); v3Camara(); v3.ren.render(v3.scene,v3.cam);
   v3.raf=requestAnimationFrame(v3Loop);
 }
+function v3Pista(txt,fade){
+  const h=cfg('v3Hint'); h.textContent=txt; h.style.opacity=1; clearTimeout(v3.hintT);
+  if(v3.fs||fade) v3.hintT=setTimeout(()=>{ h.style.opacity=0; },5000);
+}
 function v3Modo(m){
   v3.mode=m;
-  cfg('btnV3Orbit').classList.toggle('active',m==='orbit');
-  cfg('btnV3Pov').classList.toggle('active',m==='pov');
-  cfg('v3Pad').style.display=m==='pov'?'flex':'none';
-  cfg('v3Hint').textContent=m==='orbit'
-    ? 'Arrastrá para girar · rueda para acercar · clic derecho o Shift + arrastrar para desplazar'
-    : 'Caminá con W A S D o las flechas (Shift corre) · arrastrá para mirar';
+  ['','Fs'].forEach(sf=>{
+    cfg('btnV3Orbit'+sf).classList.toggle('active',m==='orbit');
+    cfg('btnV3Pov'+sf).classList.toggle('active',m==='pov');
+  });
+  cfg('v3Wrap').classList.toggle('pov',m==='pov');
+  if(m!=='pov') v3SoltarMandos();
+  const tactil=window.matchMedia&&matchMedia('(pointer:coarse)').matches;
+  v3Pista(m==='orbit'
+    ? (tactil?'Arrastrá para girar · pellizcá para acercar · dos dedos para desplazar':'Arrastrá para girar · rueda para acercar · clic derecho o Shift + arrastrar para desplazar')
+    : (tactil?'Joystick para caminar · arrastrá la pantalla para mirar · botón de flecha para correr':'Caminá con W A S D o las flechas (Shift corre) · arrastrá para mirar'));
   if(m==='pov'&&!v3.povInit){
     const {L,A}=v3Sala(); const q=v3Colisiona(L/2,A-0.8); v3.pov.x=q.x; v3.pov.z=q.z; v3.pov.yaw=0; v3.pov.pitch=0; v3.povInit=true;
   }
 }
+function v3SoltarMandos(){
+  v3.joy={x:0,y:0}; v3.run=false;
+  const k=document.getElementById('v3Knob'); if(k) k.style.transform='translate(0,0)';
+  const r=document.getElementById('v3Run'); if(r) r.classList.remove('on');
+}
+// Pantalla completa: usa la API nativa si el navegador la tiene (Android, escritorio) y,
+// si no (iPhone), un modo "inmersivo" por CSS que tapa el resto de la página.
+function v3Fs(on){
+  const w=cfg('v3Wrap'); if(on===undefined) on=!v3.fs;
+  if(on===v3.fs) return;
+  v3.fs=on; w.classList.toggle('fs',on); document.body.classList.toggle('v3fs',on);
+  if(on){
+    const rf=w.requestFullscreen||w.webkitRequestFullscreen;
+    if(rf){ try{ const r=rf.call(w); if(r&&r.then) r.then(()=>{ v3.nativeFs=true; try{ if(v3.mode==='pov'&&screen.orientation&&screen.orientation.lock) screen.orientation.lock('landscape').catch(()=>{}); }catch(e){} }).catch(()=>{}); }catch(e){} }
+    window.scrollTo(0,0);
+  } else {
+    v3.nativeFs=false;
+    if(document.fullscreenElement||document.webkitFullscreenElement){ try{ (document.exitFullscreen||document.webkitExitFullscreen).call(document); }catch(e){} }
+    try{ if(screen.orientation&&screen.orientation.unlock) screen.orientation.unlock(); }catch(e){}
+    cfg('v3LegFs').classList.remove('open');
+    cfg('v3Hint').style.opacity=1;
+  }
+  v3Resize(); v3Modo(v3.mode);
+}
+function v3Leyenda(){ cfg('v3LegFs').classList.toggle('open'); }
 function v3Ir(i){
   if(i===''||i==null) return;
   const d=v3.dest[+i]; if(!d) return;
@@ -2674,7 +2757,7 @@ function v3Ir(i){
   const q=v3Colisiona(pos[0],pos[1]);
   v3Modo('pov');
   v3.pov.x=q.x; v3.pov.z=q.z; v3.pov.yaw=Math.atan2(-f[0],-f[1]); v3.pov.pitch=-0.12; v3.povInit=true;
-  cfg('v3Dest').value='';
+  cfg('v3Dest').value=''; cfg('v3DestFs').value='';
 }
 function v3Encuadre(){
   const {L,A}=v3Sala(); const asp=v3.cam?v3.cam.aspect:1.6;
@@ -2691,7 +2774,7 @@ function v3Eventos(){
   v3.ptrs=new Map();
   const pdist=()=>{ const q=[...v3.ptrs.values()]; return Math.hypot(q[0].x-q[1].x,q[0].y-q[1].y); };
   cv.addEventListener('pointerdown',e=>{
-    cv.setPointerCapture(e.pointerId);
+    try{ cv.setPointerCapture(e.pointerId); }catch(_){}
     v3.ptrs.set(e.pointerId,{x:e.clientX,y:e.clientY});
     v3.ptr={x:e.clientX,y:e.clientY,b:e.button,sh:e.shiftKey};
     if(v3.ptrs.size===2) v3.pinch=pdist();
@@ -2701,6 +2784,7 @@ function v3Eventos(){
   cv.addEventListener('pointermove',e=>{
     if(v3.ptrs.has(e.pointerId)) v3.ptrs.set(e.pointerId,{x:e.clientX,y:e.clientY});
     if(v3.ptrs.size>=2){
+      if(v3.mode!=='orbit') return;
       const d=pdist();
       if(v3.pinch&&v3.mode==='orbit') v3.orbit.r=Math.max(2,Math.min(60,v3.orbit.r*v3.pinch/d));
       v3.pinch=d; return;
@@ -2714,7 +2798,8 @@ function v3Eventos(){
         o.tx+=-rx*dx*k+fx*dy*k; o.tz+=-rz*dx*k+fz*dy*k;
       } else { o.th-=dx*0.006; o.ph=Math.max(0.15,Math.min(1.5,o.ph-dy*0.005)); }
     } else {
-      v3.pov.yaw-=dx*0.004; v3.pov.pitch=Math.max(-1.2,Math.min(1.2,v3.pov.pitch-dy*0.004));
+      const sn=e.pointerType==='touch'?0.0055:0.004;
+      v3.pov.yaw-=dx*sn; v3.pov.pitch=Math.max(-1.2,Math.min(1.2,v3.pov.pitch-dy*sn));
     }
   });
   cv.addEventListener('wheel',e=>{
@@ -2723,6 +2808,7 @@ function v3Eventos(){
   },{passive:false});
   const kd=e=>{
     const p6=document.getElementById('p6'); if(!p6||!p6.classList.contains('active')) return;
+    if(e.key==='Escape'&&v3.fs){ v3Fs(false); return; }
     if(/INPUT|SELECT|TEXTAREA/.test((e.target.tagName||''))) return;
     const k=e.key.toLowerCase(); v3.keys[k==='shift'?'shift':k]=true;
     if(['arrowup','arrowdown','arrowleft','arrowright',' '].includes(k)) e.preventDefault();
@@ -2731,16 +2817,36 @@ function v3Eventos(){
   window.addEventListener('keyup',e=>{ const k=e.key.toLowerCase(); v3.keys[k==='shift'?'shift':k]=false; });
   window.addEventListener('blur',()=>{ v3.keys={}; });
   window.addEventListener('resize',()=>{ if(document.getElementById('p6').classList.contains('active')) v3Resize(); });
-  // Botones táctiles
-  [['v3Fw','fw'],['v3Bk','bk']].forEach(([id,k])=>{
-    const b=cfg(id);
-    b.addEventListener('pointerdown',e=>{ e.preventDefault(); v3.keys[k]=true; });
-    ['pointerup','pointerleave','pointercancel'].forEach(ev=>b.addEventListener(ev,()=>{ v3.keys[k]=false; }));
-  });
+  // Pantalla completa: si el navegador sale solo (Esc, gesto "atrás"), sincronizar
+  const fsch=()=>{ if(v3.fs&&v3.nativeFs&&!(document.fullscreenElement||document.webkitFullscreenElement)) v3Fs(false); v3Resize(); };
+  document.addEventListener('fullscreenchange',fsch); document.addEventListener('webkitfullscreenchange',fsch);
+  window.addEventListener('orientationchange',()=>setTimeout(v3Resize,250));
+  if(window.ResizeObserver) new ResizeObserver(()=>v3Resize()).observe(cfg('v3Wrap'));
+  // Joystick virtual (izquierda): analógico, el desplazamiento define la velocidad
+  const joy=cfg('v3Joy'), knob=cfg('v3Knob'); let jid=null;
+  const mv=e=>{
+    const r=joy.getBoundingClientRect(), max=r.width/2-10;
+    let dx=e.clientX-(r.left+r.width/2), dy=e.clientY-(r.top+r.height/2); const d=Math.hypot(dx,dy);
+    if(d>max){ dx*=max/d; dy*=max/d; }
+    knob.style.transform=`translate(${dx}px,${dy}px)`;
+    let jx=dx/max, jy=dy/max; if(Math.hypot(jx,jy)<0.14){ jx=0; jy=0; }
+    v3.joy={x:jx,y:jy};
+  };
+  joy.addEventListener('pointerdown',e=>{ e.preventDefault(); jid=e.pointerId; try{ joy.setPointerCapture(e.pointerId); }catch(_){} mv(e); });
+  joy.addEventListener('pointermove',e=>{ if(e.pointerId===jid) mv(e); });
+  const jup=e=>{ if(e.pointerId!==jid) return; jid=null; v3.joy={x:0,y:0}; knob.style.transform='translate(0,0)'; };
+  joy.addEventListener('pointerup',jup); joy.addEventListener('pointercancel',jup);
+  joy.addEventListener('contextmenu',e=>e.preventDefault());
+  // Botón de correr (derecha): mientras se mantiene apretado
+  const run=cfg('v3Run'); let rid=null;
+  run.addEventListener('pointerdown',e=>{ e.preventDefault(); rid=e.pointerId; try{ run.setPointerCapture(e.pointerId); }catch(_){} v3.run=true; run.classList.add('on'); });
+  const rup=e=>{ if(e.pointerId!==rid) return; rid=null; v3.run=false; run.classList.remove('on'); };
+  run.addEventListener('pointerup',rup); run.addEventListener('pointercancel',rup);
+  run.addEventListener('contextmenu',e=>e.preventDefault());
 }
 function init3D(){
   const hint=cfg('v3Hint');
-  if(typeof THREE==='undefined'){ hint.textContent='No se pudo cargar la librería 3D. Revisá la conexión y recargá la página.'; return; }
+  if(typeof THREE==='undefined'){ hint.style.opacity=1; hint.textContent='No se pudo cargar la librería 3D. Revisá la conexión y recargá la página.'; return; }
   if(!v3.ren){
     v3.ren=new THREE.WebGLRenderer({canvas:cfg('v3Canvas'),antialias:true});
     v3.scene=new THREE.Scene();
@@ -2912,7 +3018,7 @@ function buildResumenHtml(st){
   const svgString=new XMLSerializer().serializeToString(svgEl);
 
   // ── Tabla de análisis ─────────────────────────────────────────
-  let tableRows='', alertsHtml='';
+  let tableRows='', cardRows='', alertsHtml='';
   st.cats.filter(c=>catMeters[c.id]>0).sort((a,b)=>catMeters[b.id]-catMeters[a.id]).forEach(c=>{
     const m=catMeters[c.id];
     const pctEsp=totalM>0?((m/totalM)*100).toFixed(1):'0';
@@ -2936,6 +3042,14 @@ function buildResumenHtml(st){
       <td style="padding:6px 8px;border-bottom:1px solid #e8e6e0;text-align:right">${rpm>0?'$'+rpm.toLocaleString('es-AR')+'/m':'—'}</td>
       <td style="padding:6px 8px;border-bottom:1px solid #e8e6e0;text-align:center"><span style="padding:2px 8px;border-radius:20px;font-size:11px;font-weight:600;${badgeStyle}">${badge}</span></td>
     </tr>`;
+    cardRows+=`<div class="cat">
+      <div class="cat-top"><span class="cat-dot" style="background:#${c.color}"></span><strong>${escHtml(c.name)}</strong><span class="cat-badge" style="${badgeStyle}">${badge}</span></div>
+      <div class="cat-grid">
+        <div><span>Metros</span><b>${m.toFixed(1)} m</b></div>
+        <div><span>% espacio</span><b>${pctEsp}%</b></div>
+        <div><span>% venta</span><b style="color:#2a78d6">${pctV}%</b></div>
+        <div><span>$/metro</span><b>${rpm>0?'$'+rpm.toLocaleString('es-AR'):'—'}</b></div>
+      </div></div>`;
   });
 
   // ── HTML final ────────────────────────────────────────────────
@@ -2963,7 +3077,32 @@ function buildResumenHtml(st){
   th{text-align:left;padding:7px 8px;color:#9a9895;font-weight:500;border-bottom:2px solid #e0ddd8;font-size:12px}
   th:not(:first-child){text-align:right}
   footer{text-align:center;padding:1.5rem;font-size:11px;color:#9a9895;border-top:1px solid #e0ddd8;margin-top:1rem}
-  @media(max-width:600px){.kpis{grid-template-columns:repeat(2,1fr)}}
+  .planwrap{overflow-x:auto;-webkit-overflow-scrolling:touch}
+  .planhint{display:none;font-size:11px;color:#9a9895;margin-top:6px}
+  .cc{display:none}
+  .cat{border:1px solid #e0ddd8;border-radius:10px;padding:.7rem .8rem;margin-bottom:8px;background:#fff}
+  .cat-top{display:flex;align-items:center;gap:8px;margin-bottom:8px;font-size:14px}
+  .cat-top strong{flex:1;min-width:0;overflow-wrap:anywhere}
+  .cat-dot{width:12px;height:12px;border-radius:3px;flex-shrink:0}
+  .cat-badge{padding:2px 9px;border-radius:20px;font-size:11px;font-weight:600;white-space:nowrap}
+  .cat-grid{display:grid;grid-template-columns:repeat(4,1fr);gap:6px}
+  .cat-grid div{text-align:center;background:#f5f4f0;border-radius:8px;padding:6px 2px}
+  .cat-grid span{display:block;font-size:10px;color:#9a9895;margin-bottom:2px}
+  .cat-grid b{font-size:14px;font-weight:600}
+  @media(max-width:900px){.kpis{grid-template-columns:repeat(2,1fr)}}
+  @media(max-width:640px) and (orientation:portrait){.planhint{display:block}}
+  @media(max-width:640px){
+    header{flex-direction:column;align-items:flex-start;gap:4px;padding:.8rem 1rem}
+    header>div:last-child{display:none}
+    header h1{font-size:16px;line-height:1.3}
+    .main{padding:.75rem}
+    .card{padding:.9rem;border-radius:12px}
+    .kpi{padding:.7rem .4rem}.kpi-value{font-size:20px}
+    .tbl{display:none}
+    .cc{display:block}
+    .cat-grid{grid-template-columns:repeat(2,1fr)}
+    footer{padding:1rem;line-height:1.5}
+  }
 </style>
 </head>
 <body>
@@ -2989,7 +3128,8 @@ function buildResumenHtml(st){
 
   <div class="card">
     <div class="card-title">Plano del sector</div>
-    ${svgString}
+    <div class="planwrap">${svgString}</div>
+    <div class="planhint">Girá el celular o pellizcá la pantalla para ver el plano más grande.</div>
     <div style="display:flex;flex-wrap:wrap;gap:8px;margin-top:.75rem">
       ${[...new Set(Object.values(st.assignMap).flatMap(v=>chpCatsRaw(v)))].map(id=>{
         const cat=st.cats.find(c=>c.id===id);
@@ -3000,7 +3140,7 @@ function buildResumenHtml(st){
 
   <div class="card">
     <div class="card-title">Análisis por categoría</div>
-    <div style="overflow-x:auto">
+    <div class="tbl" style="overflow-x:auto">
     <table>
       <thead><tr>
         <th>Categoría</th>
@@ -3013,6 +3153,7 @@ function buildResumenHtml(st){
       <tbody>${tableRows||'<tr><td colspan="6" style="text-align:center;padding:1rem;color:#9a9895">Sin asignaciones.</td></tr>'}</tbody>
     </table>
     </div>
+    <div class="cc">${cardRows||'<div style="text-align:center;padding:1rem;color:#9a9895;font-size:13px">Sin asignaciones.</div>'}</div>
   </div>
 
   ${alertsHtml?`<div class="card"><div class="card-title">Alertas</div>${alertsHtml}</div>`:''}
@@ -4122,10 +4263,18 @@ async function plCompartirModal(){
 }
 
 // ── Modo visor: se abre con  #v=<token>  sin pedir ingreso ───────────────
+function plAjustarVisor(){
+  const f=document.getElementById('vFrame'); if(!f||!document.body.classList.contains('viewer')) return;
+  const top=f.getBoundingClientRect().top+window.scrollY;
+  f.style.height=Math.max(300,window.innerHeight-top)+'px';
+}
+window.addEventListener('resize',()=>{ plAjustarVisor(); });
+window.addEventListener('orientationchange',()=>setTimeout(plAjustarVisor,250));
 function plVerTab(t){
   plId('vTabRes').classList.toggle('active',t==='res');
   plId('vTab3d').classList.toggle('active',t==='3d');
-  if(t==='res') plMostrar('pVer'); else { plMostrar('p6'); init3D(); v3Resize(); }
+  if(v3.fs) v3Fs(false);
+  if(t==='res'){ plMostrar('pVer'); plAjustarVisor(); } else { plMostrar('p6'); init3D(); v3Resize(); }
 }
 async function plIniciarVisor(token){
   document.body.classList.add('viewer');
