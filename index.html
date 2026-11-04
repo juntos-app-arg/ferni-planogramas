@@ -535,12 +535,15 @@ body.viewer .edonly{display:none!important}
       </table>
     </div>
     <div style="display:flex;gap:.5rem;margin-top:.6rem;flex-wrap:wrap;align-items:center">
-      <button class="btn btn-outline btn-sm" onclick="addCat()">+ Agregar categoría</button>
+      <button class="btn btn-outline btn-sm" id="btnAddCat3" onclick="addCat()">+ Agregar categoría</button>
       <label class="btn btn-outline btn-sm" style="cursor:pointer">
         📥 Importar Excel
         <input type="file" id="excelInput" accept=".xlsx,.xls,.csv" style="display:none" onchange="importExcel(event)"/>
       </label>
       <button class="btn btn-outline btn-sm" id="btnRubrosFERNI" style="display:none" onclick="cargarRubrosFERNI()">⚡ Cargar rubros FERNI</button>
+      <label class="btn btn-outline btn-sm" id="btnImpTodos" style="display:none;cursor:pointer" title="Excel con columna Rubro y Categoría (formato NAPSE/Softland)">📥 Importar categorías de todos los rubros
+        <input type="file" id="excelTodosInput" accept=".xlsx,.xls,.csv" style="display:none" onchange="p3ImportTodos(event)"/>
+      </label>
     </div>
   </div>
   <div style="display:flex;justify-content:space-between;margin-top:.5rem">
@@ -1123,9 +1126,9 @@ function _updateCatLabels(modo){
   if(cardTitle) cardTitle.textContent = isGeneral ? 'Rubros de la sucursal' : 'Categorías del rubro';
   const cardSub = document.querySelector('#p3 .card-sub');
   if(cardSub) cardSub.textContent = isGeneral
-    ? 'Ingresá cada rubro con su venta o % de participación.'
+    ? 'Ingresá cada rubro con su venta o % de participación y, dentro de cada uno, las categorías que lo componen.'
     : 'Ingresá las categorías manualmente o importá desde Excel.';
-  const addBtn = document.querySelector('#p3 .btn-outline.btn-sm');
+  const addBtn = document.getElementById('btnAddCat3');
   if(addBtn) addBtn.textContent = isGeneral ? '+ Agregar rubro' : '+ Agregar categoría';
   // Paso 4
   const h3Cat = document.querySelector('#p4 .sidebar h3');
@@ -1139,6 +1142,9 @@ function _updateCatLabels(modo){
   // Botón carga rápida
   const btnRubros = document.getElementById('btnRubrosFERNI');
   if(btnRubros) btnRubros.style.display = isGeneral ? 'inline-flex' : 'none';
+  const btnTodos = document.getElementById('btnImpTodos');
+  if(btnTodos) btnTodos.style.display = isGeneral ? 'inline-flex' : 'none';
+  try{ renderCats(); }catch(e){}
 }
 
 function goStep(n,btn){
@@ -2017,6 +2023,7 @@ function updCat(id,field,val){
   if(!c) return;
   if(['name','color'].includes(field)) c[field]=val;
   else c[field]=+val;
+  if(field==='color') subsDe(id).forEach((sc,k)=>{ sc.color=subColor(val,k); });
   // Si cambia venta, limpiar pctManual; si cambia pctManual, limpiar venta
   if(field==='venta'){ c.pctManual=null; }
   if(field==='pctManual'){ c.venta=0; }
@@ -2066,7 +2073,129 @@ function renderCats(){
         onchange="updCat('${c.id}','h',this.value)"/></td>
       <td><button class="cdel" onclick="remCat('${c.id}')">✕</button></td>`;
     tbody.appendChild(tr);
+    if(modoActual==='general') tbody.appendChild(p3SubFila(c));
   });
+}
+
+// ── Paso 3 (plano general): categorías dentro de cada rubro ─────────────────────
+let p3Abierto={};
+function p3SubFila(c){
+  const tr=document.createElement('tr'); tr.className='p3sub';
+  const td=document.createElement('td'); td.colSpan=9; td.style.cssText='padding:2px 6px 10px 34px;background:var(--s2)';
+  const L=subsDe(c.id), abierto=p3Abierto[c.id]!==undefined?p3Abierto[c.id]:L.length>0;
+  const cab=document.createElement('div'); cab.style.cssText='display:flex;align-items:center;gap:8px;cursor:pointer;font-size:12px;color:var(--text2);padding:3px 0';
+  cab.innerHTML=`<span style="display:inline-block;width:10px">${abierto?'▾':'▸'}</span><span style="font-weight:600">Categorías de ${escHtml(c.name||'este rubro')}</span><span style="color:var(--text3)">(${L.length})</span>`;
+  cab.onclick=()=>{ p3Abierto[c.id]=!abierto; renderCats(); };
+  td.appendChild(cab);
+  if(abierto){
+    const chips=document.createElement('div'); chips.style.cssText='display:flex;flex-wrap:wrap;gap:5px;margin:4px 0 6px';
+    if(!L.length) chips.innerHTML='<span style="font-size:11px;color:var(--text3)">Sin categorías todavía. Escribilas abajo o importá el Excel.</span>';
+    L.forEach(sc=>{
+      const ch=document.createElement('span'); ch.style.cssText='display:inline-flex;align-items:center;gap:5px;background:var(--surface,#fff);border:1px solid var(--border);border-radius:14px;padding:2px 4px 2px 8px;font-size:11px';
+      ch.innerHTML=`<i style="width:9px;height:9px;border-radius:50%;background:#${sc.color};display:inline-block"></i>${escHtml(sc.name)}${sc.venta>0?`<span style="color:var(--text3)">${Math.round(sc.venta).toLocaleString('es-AR')}</span>`:''}`;
+      const x=document.createElement('button'); x.className='cdel'; x.textContent='✕'; x.style.cssText='padding:0 4px;font-size:11px'; x.title='Quitar categoría';
+      x.onclick=()=>p3QuitarSub(sc.id); ch.appendChild(x); chips.appendChild(ch);
+    });
+    td.appendChild(chips);
+    const fila=document.createElement('div'); fila.style.cssText='display:flex;gap:6px;flex-wrap:wrap;align-items:center';
+    const inp=document.createElement('input'); inp.type='text'; inp.placeholder='Agregar categorías (separadas por coma)'; inp.style.cssText='flex:1 1 220px;min-width:180px'; inp.className='p3subIn'; inp.dataset.rubro=c.id;
+    const add=()=>{ const n=p3AgregarSubs(c.id,inp.value); inp.value=''; if(n) renderCats(); };
+    inp.onkeydown=e=>{ if(e.key==='Enter'){ e.preventDefault(); add(); } };
+    const b=document.createElement('button'); b.className='btn btn-outline btn-sm'; b.textContent='+ Agregar'; b.onclick=add;
+    const lb=document.createElement('label'); lb.className='btn btn-outline btn-sm'; lb.style.cursor='pointer'; lb.textContent='📥 Importar Excel';
+    const fi=document.createElement('input'); fi.type='file'; fi.accept='.xlsx,.xls,.csv'; fi.style.display='none'; fi.className='p3subFile'; fi.dataset.rubro=c.id;
+    fi.onchange=ev=>p3ImportSubs(ev,c.id); lb.appendChild(fi);
+    fila.appendChild(inp); fila.appendChild(b); fila.appendChild(lb); td.appendChild(fila);
+  }
+  tr.appendChild(td); return tr;
+}
+function p3AgregarSubs(rubroId,txt){
+  const rub=cats.find(c=>c.id===rubroId); if(!rub) return 0;
+  const nombres=String(txt||'').split(/[\n,;]+/).map(x=>x.trim()).filter(Boolean);
+  let n=0;
+  nombres.forEach(nm=>p3NuevaSub(rub,{name:nm})&&n++);
+  if(n) scheduleAutoSave();
+  return n;
+}
+// Crea una categoría dentro del rubro (o suma datos si ya existe con ese nombre)
+function p3NuevaSub(rub,f){
+  const k=resNorm(f.name); if(!k) return false;
+  const ex=subsDe(rub.id).find(x=>resNorm(x.name)===k);
+  if(ex){ if(f.venta>0) ex.venta=(+ex.venta||0)+f.venta; if(f.units>0) ex.units=(+ex.units||0)+f.units; if(f.stock>0) ex.stock=(+ex.stock||0)+f.stock; return false; }
+  const id='s'+(subIdN++);
+  subcats.push({id,rubro:rub.id,name:String(f.name).trim().slice(0,60),color:subColor(rub.color,subsDe(rub.id).length),venta:f.venta||0,units:f.units||0,stock:f.stock||0,chapas:5,h:1.5,pctManual:null});
+  return true;
+}
+function p3QuitarSub(id){
+  const sc=subcats.find(x=>x.id===id); if(!sc) return;
+  subcats=subcats.filter(x=>x.id!==id);
+  Object.keys(detMap).forEach(k=>{ const h=chpNorm(detMap[k],modN(k)); ['L','R'].forEach(s=>{ h[s]=h[s].map(v=>v===id?null:v); }); if(h.L.some(Boolean)||h.R.some(Boolean)) detMap[k]=h; else delete detMap[k]; });
+  delete resultados.porCat[id];
+  scheduleAutoSave(); renderCats();
+}
+// Lee un Excel/CSV con el mismo formato NAPSE/Softland del Paso 3 → filas {rubro,name,venta,units,stock}
+function p3LeerArchivo(file,cb){
+  if(typeof XLSX==='undefined'){ showExcelMsg('Error: librería Excel no cargó. Verificá tu conexión.','error'); return; }
+  const isCSV=file.name.toLowerCase().endsWith('.csv'), reader=new FileReader();
+  reader.onload=e=>{
+    try{
+      const wb=isCSV?XLSX.read(e.target.result,{type:'string'}):XLSX.read(new Uint8Array(e.target.result),{type:'array'});
+      const data=XLSX.utils.sheet_to_json(wb.Sheets[wb.SheetNames[0]],{defval:'',raw:false});
+      if(!data.length){ showExcelMsg('El archivo está vacío o no tiene datos.','error'); return; }
+      const keys=Object.keys(data[0]), nz=s=>resNorm(s);
+      const findCol=(terms,excl)=>{ const ks=keys.filter(k=>k!==excl);
+        return ks.find(k=>terms.some(t=>nz(k)===nz(t)))||ks.find(k=>terms.some(t=>nz(k).includes(nz(t))))||null; };
+      const colRubro=findCol(['rubro','descripcion de familia','familia','departamento','macro']);
+      const colNombre=findCol(['descripcion detalle','descripcion de subfamilia','subfamilia','categoria','descripcion','nombre','name','articulo','rubro'],colRubro);
+      const colVenta=findCol(['importe vendido','venta','importe','monto','total','ingreso','facturacion']);
+      const colUni=findCol(['cantidad vendidas','unidades','unidad','units','ud','qty','cantidad','vendidas']);
+      const colStock=findCol(['stock tienda','stock gondola','stock','existencia','disponible','inventario']);
+      if(!colNombre){ showExcelMsg('No se encontró columna de nombre. Columnas detectadas: '+keys.join(', '),'error'); return; }
+      const num=v=>{ let r=String(v==null?'':v); if(!r) return 0; if(r.includes(',')) r=r.replace(/\./g,'').replace(',','.'); else r=r.replace(/[^0-9.]/g,''); return parseFloat(r)||0; };
+      const filas=[];
+      data.forEach(row=>{
+        const name=String(row[colNombre]||'').trim(); if(!name||nz(name)==='nombre'||/^total/.test(nz(name))) return;
+        filas.push({rubro:colRubro?String(row[colRubro]||'').trim():'',name,venta:colVenta?num(row[colVenta]):0,units:colUni?num(row[colUni]):0,stock:colStock?num(row[colStock]):0});
+      });
+      cb(filas,!!colRubro);
+    }catch(err){ showExcelMsg('Error al procesar el archivo: '+err.message,'error'); console.error(err); }
+  };
+  if(isCSV) reader.readAsText(file,'UTF-8'); else reader.readAsArrayBuffer(file);
+}
+// Importar en UN rubro (todas las filas del archivo son categorías de ese rubro)
+function p3ImportSubs(ev,rubroId){
+  const file=ev.target.files[0]; if(!file) return;
+  const rub=cats.find(c=>c.id===rubroId); if(!rub) return;
+  p3LeerArchivo(file,(filas,hayRubro)=>{
+    let propias=filas;
+    if(hayRubro){
+      const k=resNorm(rub.name), coin=filas.filter(f=>resNorm(f.rubro)===k);
+      if(coin.length) propias=coin;
+    }
+    let n=0; propias.forEach(f=>{ if(p3NuevaSub(rub,f)) n++; });
+    p3Abierto[rubroId]=true; scheduleAutoSave(); renderCats();
+    showExcelMsg(`✓ ${n} categoría${n===1?'':'s'} nueva${n===1?'':'s'} en ${rub.name}`+(propias.length-n>0?` (${propias.length-n} ya existían: se sumaron sus datos)`:'')+'.','success');
+  });
+  ev.target.value='';
+}
+// Importar para TODOS los rubros: el archivo trae una columna Rubro (o Familia) que se compara con los rubros cargados
+function p3ImportTodos(ev){
+  const file=ev.target.files[0]; if(!file) return;
+  p3LeerArchivo(file,(filas,hayRubro)=>{
+    if(!hayRubro){ showExcelMsg('El archivo no tiene columna Rubro/Familia. Importá desde cada rubro, o agregá esa columna.','error'); return; }
+    let n=0, sin={};
+    filas.forEach(f=>{
+      const k=resNorm(f.rubro); if(!k) return;
+      let r=cats.filter(c=>resNorm(c.name)===k);
+      if(r.length!==1&&k.length>=3) r=cats.filter(c=>{ const q=resNorm(c.name); return q.length>=3&&(q.includes(k)||k.includes(q)); });
+      if(r.length!==1){ sin[f.rubro]=(sin[f.rubro]||0)+1; return; }
+      if(p3NuevaSub(r[0],f)) n++; p3Abierto[r[0].id]=true;
+    });
+    scheduleAutoSave(); renderCats();
+    const ns=Object.keys(sin);
+    showExcelMsg(`✓ ${n} categorías cargadas en sus rubros.`+(ns.length?` Sin rubro coincidente: ${ns.slice(0,4).join(', ')}${ns.length>4?'…':''}.`:''),ns.length?'error':'success');
+  });
+  ev.target.value='';
 }
 
 // Sin categorías predeterminadas — el líder carga las suyas o importa desde Excel
