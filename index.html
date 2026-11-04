@@ -62,6 +62,7 @@ input:focus,select:focus{border-color:var(--blue)}
 
 /* CANVAS AREA */
 .canvas-wrap{display:grid;grid-template-columns:220px 1fr;gap:1rem;align-items:start}
+.canvas-wrap>div{min-width:0}
 .sidebar{background:var(--surface);border:1px solid var(--border);border-radius:var(--r);padding:.9rem;position:sticky;top:1rem}
 .sidebar h3{font-size:11px;font-weight:600;color:var(--text2);text-transform:uppercase;letter-spacing:.05em;margin-bottom:.6rem}
 
@@ -126,6 +127,22 @@ input:focus,select:focus{border-color:var(--blue)}
 .bb{background:#eef3fb;color:var(--blue)}
 
 /* LEGEND */
+.lensbar{display:flex;flex-wrap:wrap;align-items:center;gap:8px;margin:0 auto .75rem;max-width:1100px;padding:.5rem .8rem;background:var(--surface);border:1px solid var(--border);border-radius:var(--r)}
+.lensbar:empty{display:none}
+.lensbar .seg{margin:0}
+.lensbar select{width:auto;max-width:220px}
+.lb-t{font-size:11px;font-weight:600;color:var(--text3)}
+.lb-m{font-size:12px;color:var(--text2)}
+.lb-hint{font-size:11.5px;color:var(--text3)}
+.lb-add{display:flex;gap:6px;flex:1 1 280px}
+.lb-add input{flex:1;min-width:0}
+.lb-chips{display:flex;flex-wrap:wrap;gap:6px;flex-basis:100%}
+.lb-chip{display:inline-flex;align-items:center;gap:5px;font-size:11.5px;background:var(--s2,#f5f4f0);border:1px solid var(--border);border-radius:20px;padding:2px 4px 2px 8px}
+.lb-chip i{width:9px;height:9px;border-radius:2px}
+.lb-chip button{border:none;background:transparent;cursor:pointer;font-size:14px;line-height:1;color:var(--text3);padding:0 4px}
+.leg-group{display:flex;flex-direction:column;gap:2px;margin-right:12px}
+.leg-sub{padding-left:14px}
+@media(max-width:640px){.lensbar{margin:0 .5rem .6rem;max-width:none}.lb-add{flex-basis:100%}.lensbar select{max-width:100%;flex:1}}
 .legend{display:flex;flex-wrap:wrap;gap:6px;margin-top:.5rem}
 .leg-item{display:flex;align-items:center;gap:4px;font-size:11px;color:var(--text2)}
 .leg-dot{width:9px;height:9px;border-radius:2px;flex-shrink:0}
@@ -338,7 +355,7 @@ body.viewer .edonly{display:none!important}
   <form id="plFormCodigo" onsubmit="event.preventDefault();plIngresarCodigo()">
     <div class="pl-err" id="plErrCodigo"></div>
     <div class="pl-field"><label>Tu nombre</label><input id="plInNombre" maxlength="60" autocomplete="name" placeholder="Nombre y apellido"></div>
-    <div class="pl-field"><label>Código de sucursal</label><input id="plInCodigo" maxlength="20" autocomplete="off" placeholder="PLG-F3-XXXXXXXX" style="text-transform:uppercase"></div>
+    <div class="pl-field"><label>Código de acceso (sucursal o administrador)</label><input id="plInCodigo" maxlength="20" autocomplete="off" placeholder="PLG-F3-XXXXXXXX" style="text-transform:uppercase"></div>
     <button class="btn btn-primary" id="plBtnCodigo" type="submit" style="width:100%">Ingresar</button>
   </form>
   <form id="plFormAdmin" style="display:none" onsubmit="event.preventDefault();plIngresarAdmin()">
@@ -365,6 +382,7 @@ body.viewer .edonly{display:none!important}
   <div class="pl-lib-head"><h2>Accesos por sucursal</h2>
     <button class="btn btn-outline btn-sm" onclick="plCerrarAccesos()">Volver</button></div>
   <div class="pl-card" id="plAccTabla"></div>
+  <div class="pl-card" id="plAccAdm" style="margin-top:1rem"></div>
 </div></div>
 
 <!-- ═══════════════════════════════ SELECTOR DE MODO (sin uso directo: el modo se elige al crear el planograma) -->
@@ -533,6 +551,7 @@ body.viewer .edonly{display:none!important}
 
 <!-- ═══════════════════════════════ PASO 4 -->
 <div id="p4" class="panel">
+  <div class="lensbar"></div>
   <div class="canvas-wrap">
     <div>
       <div class="sidebar">
@@ -594,6 +613,7 @@ body.viewer .edonly{display:none!important}
 
 <!-- ═══════════════════════════════ PASO 5 -->
 <div id="p5" class="panel">
+  <div class="lensbar"></div>
   <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:1rem">
     <h2 style="font-size:16px;font-weight:600" id="analisisTitulo">Análisis del planograma</h2>
     <button class="btn btn-outline btn-sm" onclick="goStep(4,document.getElementById('sb4'))">← Volver</button>
@@ -604,10 +624,12 @@ body.viewer .edonly{display:none!important}
 <!-- ═══════════════════════════════ PASO 6 — VISTA 3D -->
 <div id="p6" class="panel">
   <div style="max-width:1100px;margin:0 auto;padding:0 1rem">
+    <div class="lensbar"></div>
     <div class="card" style="padding:.75rem">
       <div class="v3tb" style="display:flex;align-items:center;gap:8px;flex-wrap:wrap;margin-bottom:.5rem">
         <span style="font-size:13px;font-weight:600;margin-right:auto">Vista 3D</span>
         <div class="seg"><button id="btnV3Orbit" class="active" onclick="v3Modo('orbit')">Órbita</button><button id="btnV3Pov" onclick="v3Modo('pov')">Recorrido</button></div>
+        <div class="seg" id="v3VistaSeg" style="display:none"><button id="v3vRub" class="active" onclick="v3Vista('rub')">Por rubro</button><button id="v3vCat" onclick="v3Vista('cat')">Por categoría</button></div>
         <select id="v3Dest" onchange="v3Ir(this.value)" style="width:auto;max-width:240px"></select>
         <button class="btn btn-primary btn-sm" id="btnV3Fs" onclick="v3Fs(true)" style="order:5">Pantalla completa</button>
         <button class="btn btn-outline btn-sm edonly" id="btnV3Pal" onclick="v3Paleta()" style="order:5">Pintar categorías</button>
@@ -619,6 +641,7 @@ body.viewer .edonly{display:none!important}
         <div id="v3Hud">
           <button class="v3b" onclick="v3Fs(false)" aria-label="Salir de pantalla completa">Salir</button>
           <div class="seg"><button id="btnV3OrbitFs" class="active" onclick="v3Modo('orbit')">Órbita</button><button id="btnV3PovFs" onclick="v3Modo('pov')">Recorrido</button></div>
+          <div class="seg" id="v3VistaSegFs" style="display:none"><button id="v3vRubFs" class="active" onclick="v3Vista('rub')">Por rubro</button><button id="v3vCatFs" onclick="v3Vista('cat')">Por categoría</button></div>
           <select id="v3DestFs" onchange="v3Ir(this.value)" aria-label="Ir a una góndola"></select>
           <button class="v3b" onclick="v3Leyenda()">Categorías</button>
         </div>
@@ -668,6 +691,7 @@ body.viewer .edonly{display:none!important}
         <input type="file" id="resFile" accept=".xlsx,.xls,.csv,.txt" style="display:none" onchange="resImportFile(event)">
       </div>
       <div id="resMsg" style="display:none;font-size:12px;margin-bottom:.5rem"></div>
+      <div id="resRubroBox" style="display:none;margin-bottom:.7rem"></div>
       <div id="resPendBox" style="display:none;background:var(--surface2,#f5f4f0);border-radius:8px;padding:.7rem;margin-bottom:.6rem"></div>
       <div id="resBody"></div>
     </div>
@@ -788,16 +812,243 @@ const chpR = (key,n) => chpRects(chpNorm(assignMap[key],n||modN(key)));
 // Pinta chapas de un módulo. half: 'L' | 'R' | 'LR'; idxs: índices de chapa; catId null = vaciar
 function paintChapas(key,half,idxs,catId){
   const n=modN(key), h=chpNorm(assignMap[key],n);
-  idxs.forEach(i=>{ if(i<0||i>=n) return; if(half!=='R') h.L[i]=catId; if(half!=='L') h.R[i]=catId; });
+  idxs.forEach(i=>{ if(i<0||i>=n) return; if(half!=='R'&&!lensBloq(h.L[i])) h.L[i]=catId; if(half!=='L'&&!lensBloq(h.R[i])) h.R[i]=catId; });
   if(h.L.some(Boolean)||h.R.some(Boolean)) assignMap[key]=h; else delete assignMap[key];
   scheduleAutoSave();
 }
 function allUsedCats(){ const s=new Set(); Object.values(assignMap).forEach(v=>chpCatsRaw(v).forEach(id=>s.add(id))); return s; }
+// ══════════════════════════════════════════════════════════════════════
+// DETALLE POR RUBRO (plano general, dos niveles)
+// Nivel 1: cada chapa tiene un rubro (assignMap, como siempre).
+// Nivel 2: dentro de las chapas de un rubro se pinta una categoría (detMap + subcats).
+// El detalle de una chapa vale solo si la categoría pertenece al rubro que hoy tiene esa chapa.
+// "Lente": mientras se edita un rubro, cats/assignMap muestran SUS categorías; lo demás aparece bloqueado.
+// ══════════════════════════════════════════════════════════════════════
+let subcats=[];      // [{id:'s1',rubro:'c3',name,color,venta,units,stock,chapas,h,pctManual}]
+let detMap={};       // igual que assignMap pero con ids de subcats
+let subIdN=1;
+let lens=null;       // {rubro,nombre,color,baseCats,baseAssign} cuando se está editando un rubro
+function hexMix(a,b,t){ // mezcla dos colores hex (sin #): t=0 → a, t=1 → b
+  const p=h=>[0,2,4].map(i=>parseInt(h.substr(i,2),16)||0), A=p(a), B=p(b);
+  return A.map((v,i)=>Math.round(v+(B[i]-v)*t).toString(16).padStart(2,'0')).join('');
+}
+function hexHsl(h){
+  let [r,g,b]=[0,2,4].map(i=>(parseInt(h.substr(i,2),16)||0)/255);
+  const mx=Math.max(r,g,b), mn=Math.min(r,g,b); let H=0,S=0; const L=(mx+mn)/2;
+  if(mx!==mn){ const d=mx-mn; S=L>0.5?d/(2-mx-mn):d/(mx+mn); H=mx===r?((g-b)/d+(g<b?6:0)):mx===g?((b-r)/d+2):((r-g)/d+4); H*=60; }
+  return [H,S,L];
+}
+function hslHex(H,S,L){
+  H=((H%360)+360)%360; const f=n=>{ const k=(n+H/30)%12, a=S*Math.min(L,1-L); const v=L-a*Math.max(-1,Math.min(k-3,9-k,1)); return Math.round(v*255).toString(16).padStart(2,'0'); };
+  return f(0)+f(8)+f(4);
+}
+// Tonos de la misma familia del rubro, bien distinguibles entre sí y distintos del color base
+function subColor(rubroColor,k){
+  const [H,S]=hexHsl(rubroColor);
+  const L=[0.30,0.62,0.78,0.42,0.52,0.86,0.24,0.70,0.36,0.58], dH=[0,14,-14,26,-26,8,-8,38,-38,20];
+  return hslHex(H+dH[k%10],Math.max(0.45,Math.min(0.95,S+(k%3===1?0.05:-0.05))),L[k%10]);
+}
+const subsDe=(R,lista)=>(lista||subcats).filter(s=>s.rubro===R);
+
+// Detalle válido de un módulo (puro, sirve sobre cualquier estado)
+function detDe(st,key,n){
+  const base=chpNorm(st.assignMap&&st.assignMap[key],n), d=chpNorm(st.detMap&&st.detMap[key],n);
+  const rub={}; (st.subcats||[]).forEach(s=>{ rub[s.id]=s.rubro; });
+  ['L','R'].forEach(s=>{ for(let i=0;i<n;i++){ const v=d[s][i]; if(v&&rub[v]!==base[s][i]) d[s][i]=null; } });
+  return d;
+}
+function stModN(st,key){
+  const p=key.split('_'); const el=(st.elements||[]).find(e=>String(e.id)===p[0]); if(!el) return 5;
+  return p[1]==='u'?(+((el.mods||[])[+p[2]]||{}).chapas||7):(+((el.mods_a||[])[+p[2]]||{}).chapas||5);
+}
+function stModW(st,key){
+  const p=key.split('_'); const el=(st.elements||[]).find(e=>String(e.id)===p[0]); if(!el) return 0;
+  return +((p[1]==='u'?(el.mods||[])[+p[2]]:(el.mods_a||[])[+p[2]])||{}).w||0;
+}
+// Vista compuesta: cada chapa muestra su categoría, o el rubro "sin categoría" si todavía no la tiene
+function compH(st,key,n){
+  const b=chpNorm(st.assignMap&&st.assignMap[key],n), d=detDe(st,key,n);
+  const con=new Set((st.subcats||[]).map(s=>s.rubro));
+  ['L','R'].forEach(s=>{ for(let i=0;i<n;i++){ if(d[s][i]) b[s][i]=d[s][i]; else if(b[s][i]&&con.has(b[s][i])) b[s][i]='u:'+b[s][i]; } });
+  return b;
+}
+function stTieneDetalle(st){ return !!((st.subcats||[]).length&&Object.keys(st.detMap||{}).length); }
+// Metros por rubro y por categoría (puro)
+function detResumen(st){
+  const out=[]; const idx={};
+  (st.cats||[]).forEach(c=>{ const o={id:c.id,name:c.name,color:c.color,m:0,items:[],sinCat:0}; idx[c.id]=o; out.push(o); });
+  const sm={}; (st.subcats||[]).forEach(s=>{ sm[s.id]=0; });
+  Object.keys(st.assignMap||{}).forEach(k=>{
+    const n=stModN(st,k), w=stModW(st,k), b=chpNorm(st.assignMap[k],n), d=detDe(st,k,n);
+    ['L','R'].forEach(s=>{ for(let i=0;i<n;i++){ const r=b[s][i]; if(!r||!idx[r]) continue; idx[r].m+=w*0.5; if(d[s][i]) sm[d[s][i]]=(sm[d[s][i]]||0)+w*0.5; else idx[r].sinCat+=w*0.5; } });
+  });
+  (st.subcats||[]).forEach(s=>{ if(idx[s.rubro]) idx[s.rubro].items.push({id:s.id,name:s.name,color:s.color,m:sm[s.id]||0}); });
+  return out.filter(o=>o.m>0);
+}
+// Estado de UN rubro visto como si sus categorías fueran el plano completo (para el análisis)
+function stRubro(st,R){
+  const subs=(st.subcats||[]).filter(s=>s.rubro===R), am={}; let mR=0;
+  Object.keys(st.assignMap||{}).forEach(k=>{
+    const n=stModN(st,k), w=stModW(st,k), b=chpNorm(st.assignMap[k],n), d=detDe(st,k,n);
+    const h={L:[],R:[]}; let any=false;
+    ['L','R'].forEach(s=>{ for(let i=0;i<n;i++){ const isR=b[s][i]===R; if(isR) mR+=w*0.5; const v=isR?d[s][i]:null; h[s].push(v); if(v) any=true; } });
+    if(any) am[k]=h;
+  });
+  return {elements:st.elements,cats:subs,assignMap:am,resultados:st.resultados,mRubro:mR};
+}
+
+// Búsqueda de categoría para dibujar: del editor, de las subcategorías o "bloqueada" por la lente
+function catPor(id){
+  if(!id) return null;
+  let c=cats.find(x=>x.id===id); if(c) return c;
+  c=subcats.find(x=>x.id===id); if(c) return c;
+  const base=lens?lens.baseCats:cats;
+  if(id.startsWith('u:')){ const r=base.find(x=>x.id===id.slice(2)); return r?{name:r.name+' (sin categoría)',color:hexMix(r.color,'ffffff',0.62)}:null; }
+  if(lens){ const r=base.find(x=>x.id===id); if(r) return {name:r.name,color:hexMix(r.color,'bdbbb4',0.68),locked:true}; }
+  return null;
+}
+const lensBloq=v=>!!(lens&&v&&!cats.some(c=>c.id===v));
+
+// Datos reales (carpeta lo guardado) aunque la lente esté activa
+function lensReal(){
+  if(!lens) return {cats,assignMap,subcats,detMap};
+  const R=lens.rubro;
+  const subs=subcats.filter(s=>s.rubro!==R).concat(cats.map(c=>Object.assign({},c,{rubro:R})));
+  const det=JSON.parse(JSON.stringify(detMap));
+  Object.keys(lens.baseAssign).forEach(k=>{
+    const n=modN(k), b=chpNorm(lens.baseAssign[k],n), v=assignMap[k]?chpNorm(assignMap[k],n):null, d=chpNorm(det[k],n);
+    ['L','R'].forEach(s=>{ for(let i=0;i<n;i++) if(b[s][i]===R){ const val=v?v[s][i]:null; d[s][i]=(val&&cats.some(c=>c.id===val))?val:null; } });
+    if(d.L.some(Boolean)||d.R.some(Boolean)) det[k]=d; else delete det[k];
+  });
+  return {cats:lens.baseCats,assignMap:lens.baseAssign,subcats:subs,detMap:det};
+}
+function lensEntrar(R){
+  if(lens) lensSalir();
+  const rub=cats.find(c=>c.id===R); if(!rub) return false;
+  const subs=subsDe(R).map(s=>Object.assign({},s));
+  const vm={};
+  Object.keys(assignMap).forEach(k=>{
+    const n=modN(k), b=chpNorm(assignMap[k],n), d=detDe({elements,assignMap,subcats,detMap},k,n), h={L:[],R:[]}; let any=false;
+    ['L','R'].forEach(s=>{ for(let i=0;i<n;i++){ const bv=b[s][i]; const v=bv===R?(d[s][i]||null):bv; h[s].push(v); if(v) any=true; } });
+    if(any) vm[k]=h;
+  });
+  lens={rubro:R,nombre:rub.name,color:rub.color,baseCats:cats,baseAssign:assignMap};
+  cats=subs; assignMap=vm; activeCat=null;
+  return true;
+}
+function lensSalir(){
+  if(!lens) return;
+  const r=lensReal(); subcats=r.subcats; detMap=r.detMap;
+  cats=lens.baseCats; assignMap=lens.baseAssign; lens=null; activeCat=null;
+}
+function lensMetrosRubro(){
+  if(!lens) return 0; let t=0;
+  Object.keys(lens.baseAssign).forEach(k=>{ const n=modN(k), b=chpNorm(lens.baseAssign[k],n), w=stModW({elements},k);
+    ['L','R'].forEach(s=>{ for(let i=0;i<n;i++) if(b[s][i]===lens.rubro) t+=w*0.5; }); });
+  return t;
+}
+function lensAgregarCats(txt){
+  if(!lens) return 0;
+  const nombres=String(txt||'').split(/[\n,;]+/).map(s=>s.trim()).filter(Boolean);
+  let n=0;
+  nombres.forEach(nm=>{
+    if(cats.some(c=>resNorm(c.name)===resNorm(nm))) return;
+    const id='s'+(subIdN++);
+    cats.push({id,rubro:lens.rubro,name:nm.slice(0,60),color:subColor(lens.color,cats.length),venta:0,units:0,stock:0,chapas:5,h:1.5,pctManual:null});
+    n++;
+  });
+  if(n) scheduleAutoSave();
+  return n;
+}
+function lensQuitarCat(id){
+  if(!lens) return;
+  const c=cats.find(x=>x.id===id); if(!c) return;
+  if(!confirm(`¿Quitar la categoría "${c.name}"? Sus chapas quedan sin categoría dentro del rubro.`)) return;
+  cats=cats.filter(x=>x.id!==id);
+  Object.keys(assignMap).forEach(k=>{ const h=chpNorm(assignMap[k],modN(k)); ['L','R'].forEach(s=>{ h[s]=h[s].map(x=>x===id?null:x); }); if(h.L.some(Boolean)||h.R.some(Boolean)) assignMap[k]=h; else delete assignMap[k]; });
+  delete resultados.porCat[id];
+  if(activeCat===id) activeCat=null;
+  scheduleAutoSave();
+}
+function lensLimpiarRubro(){
+  if(!lens) return;
+  const R=lens.rubro, base=lens.baseAssign;
+  lensSalir();
+  Object.keys(detMap).forEach(k=>{ const n=modN(k), b=chpNorm(base[k],n), d=chpNorm(detMap[k],n);
+    ['L','R'].forEach(s=>{ for(let i=0;i<n;i++) if(b[s][i]===R) d[s][i]=null; });
+    if(d.L.some(Boolean)||d.R.some(Boolean)) detMap[k]=d; else delete detMap[k]; });
+  lensEntrar(R); scheduleAutoSave();
+}
+
+// ── Barra "Nivel: Rubros / Categorías" (Asignar, Análisis y Vista 3D) ──────────
+function lensRubros(){ return lens?lens.baseCats:cats; }
+function lensBarras(){
+  const act=(document.querySelector('.panel.active')||{}).id;
+  let h='';
+  const rubros=modoActual==='general'?lensRubros():[];
+  if(rubros.length&&['p4','p5','p6'].includes(act)){
+    const sel=lens?lens.rubro:'';
+    h=`<span class="lb-t">Nivel</span><div class="seg"><button class="${lens?'':'active'}" onclick="lensIr('')">Rubros</button><button class="${lens?'active':''}" onclick="lensIr('${sel||rubros[0].id}')">Categorías</button></div>`;
+    if(lens){
+      h+=`<select id="lensSel" onchange="lensIr(this.value)" aria-label="Rubro a detallar">${rubros.map(r=>`<option value="${escHtml(r.id)}"${r.id===sel?' selected':''}>${escHtml(r.name)}</option>`).join('')}</select>`;
+      const mR=lensMetrosRubro();
+      h+=`<span class="lb-m"><b>${mR.toFixed(1)} m</b> del rubro = 100 %</span>`;
+      if(act==='p4'||act==='p6'){
+        h+=`<div class="lb-add"><input id="lensNew" type="text" placeholder="Nueva categoría (o varias separadas por coma)" maxlength="300" onkeydown="if(event.key==='Enter')lensAgregarUI()"><button class="btn btn-primary btn-sm" onclick="lensAgregarUI()">Agregar</button><button class="btn btn-outline btn-sm" onclick="lensLimpiarUI()">Vaciar rubro</button></div>`;
+        h+=`<div class="lb-chips">${cats.length?cats.map(c=>`<span class="lb-chip"><i style="background:#${escHtml(c.color)}"></i>${escHtml(c.name)}<button aria-label="Quitar ${escHtml(c.name)}" onclick="lensQuitarUI('${escHtml(c.id)}')">×</button></span>`).join(''):'<span class="lb-hint">Este rubro todavía no tiene categorías: agregalas arriba.</span>'}</div>`;
+      }
+    } else h+='<span class="lb-hint">Para detallar un rubro elegí "Categorías".</span>';
+  }
+  document.querySelectorAll('.lensbar').forEach(e=>{ e.innerHTML=h; });
+  const h3=document.querySelector('#p4 .sidebar h3'); if(h3) h3.textContent=lens?'Categorías de '+lens.nombre:(modoActual==='general'?'Rubros':'Categorías');
+}
+function lensRefrescar(){
+  const act=(document.querySelector('.panel.active')||{}).id;
+  lensBarras();
+  if(act==='p4'){ buildAssignPanel(); }
+  else if(act==='p5'){ buildAnalisis(); }
+  else if(act==='p6'){ v3.vista='rub'; v3Redibujar(); v3VistaUI(); if(cfg('v3Pal').classList.contains('open')) v3PalRender(); }
+}
+function lensIr(R){ if(R) lensEntrar(R); else lensSalir(); lensRefrescar(); }
+function lensAgregarUI(){ const i=cfg('lensNew'); const n=lensAgregarCats(i.value); lensBarras(); const j=cfg('lensNew'); if(j) j.focus(); if(!n&&i.value.trim()) alert('Esa categoría ya existe en este rubro.'); lensRefrescar2(); }
+function lensRefrescar2(){ const act=(document.querySelector('.panel.active')||{}).id; if(act==='p4'){ renderCatListPg(); } else if(act==='p6'){ if(cfg('v3Pal').classList.contains('open')) v3PalRender(); } }
+function lensQuitarUI(id){ lensQuitarCat(id); lensRefrescar(); }
+function lensLimpiarUI(){ if(!confirm('¿Vaciar las categorías pintadas dentro de este rubro? Las categorías creadas se conservan.')) return; lensLimpiarRubro(); lensRefrescar(); }
+
+// ── 3D: vista Rubros / Categorías ───────────────────────────────────────────
+function v3Redibujar(){
+  (v3.faces||[]).forEach(f=>{ v3DibujarTex(f.material.map.image,f.userData.key,f.userData.n,f.userData.rev); f.material.map.needsUpdate=true; });
+  v3ActLeyenda();
+}
+function v3VistaUI(){
+  const tiene=modoActual==='general'&&!lens&&subcats.length>0;
+  ['v3VistaSeg','v3VistaSegFs'].forEach(id=>{ const e=cfg(id); if(e) e.style.display=tiene?'inline-flex':'none'; });
+  if(!tiene) v3.vista='rub';
+  ['v3vRub','v3vRubFs'].forEach(id=>{ const e=cfg(id); if(e) e.classList.toggle('active',v3.vista!=='cat'); });
+  ['v3vCat','v3vCatFs'].forEach(id=>{ const e=cfg(id); if(e) e.classList.toggle('active',v3.vista==='cat'); });
+}
+function v3Vista(v){
+  v3.vista=v==='cat'?'cat':'rub';
+  if(v3.vista==='cat'&&cfg('v3Pal').classList.contains('open')) v3Paleta(false);
+  v3Redibujar(); v3VistaUI();
+}
+function v3LegHtml(){
+  const vacio='<span style="font-size:11px;color:var(--text3)">Todavía no hay categorías asignadas a chapas.</span>';
+  if(!lens&&v3.vista==='cat'&&modoActual==='general'){
+    const res=detResumen({elements,assignMap,subcats,detMap,cats});
+    if(!res.length) return vacio;
+    return res.map(r=>`<div class="leg-group"><div class="leg-item"><span class="leg-dot" style="background:#${r.color}"></span><strong>${escHtml(r.name)}</strong>&nbsp;${r.m.toFixed(1)} m</div>`
+      +r.items.filter(i=>i.m>0).map(i=>`<div class="leg-item leg-sub"><span class="leg-dot" style="background:#${i.color}"></span><span>${escHtml(i.name)} ${i.m.toFixed(1)} m</span></div>`).join('')
+      +(r.sinCat>0.001&&r.items.length?`<div class="leg-item leg-sub"><span class="leg-dot" style="background:#${hexMix(r.color,'ffffff',0.62)}"></span><span>Sin categoría ${r.sinCat.toFixed(1)} m</span></div>`:'')+'</div>').join('');
+  }
+  const used=allUsedCats();
+  return cats.filter(c=>used.has(c.id)).map(c=>`<div class="leg-item"><span class="leg-dot" style="background:#${c.color}"></span><span>${escHtml(c.name)}</span></div>`).join('')||vacio;
+}
 // Dibuja los rectángulos de un módulo en un canvas 2D
 function chpDrawRects(c,rects,x,y,w,h,o){
   o=o||{};
   rects.forEach(r=>{
-    const cat=r.id?cats.find(cc=>cc.id===r.id):null;
+    const cat=r.id?catPor(r.id):null;
     const rx=x+r.x0*w, ry=y+r.y0*h, rw=(r.x1-r.x0)*w, rh=(r.y1-r.y0)*h;
     c.fillStyle=cat?'#'+cat.color:(o.empty||'#e8e7e2'); c.fillRect(rx,ry,rw,rh);
     c.strokeStyle='rgba(0,0,0,0.10)'; c.lineWidth=0.6; c.strokeRect(rx,ry,rw,rh);
@@ -891,6 +1142,7 @@ function _updateCatLabels(modo){
 }
 
 function goStep(n,btn){
+  if(lens&&![4,5,6].includes(n)) lensSalir();
   document.querySelectorAll('.panel').forEach(p=>p.classList.remove('active'));
   document.querySelectorAll('.sbtn').forEach(b=>b.classList.remove('active'));
   document.getElementById('p'+n).classList.add('active');
@@ -903,6 +1155,7 @@ function goStep(n,btn){
   if(n===4){ buildAssignPanel(); }
   if(n===5){ buildAnalisis(); }
   if(n===6){ init3D(); }
+  setTimeout(()=>{ lensBarras(); if(n===6) v3VistaUI(); },0);
   if(n===7){ buildResultados(); }
 }
 
@@ -1099,7 +1352,7 @@ function drawElement(el, selected){
     let curX=0;
     (el.mods||[]).forEach((m,i)=>{
       const mw=Math.round(m.w*S);
-      const modCats=getModCats(`${el.id}_u_${i}`).map(id=>cats.find(cc=>cc.id===id)).filter(Boolean);
+      const modCats=getModCats(`${el.id}_u_${i}`).map(id=>catPor(id)).filter(Boolean);
       const rx=curX+GAP/2, rw=mw-GAP, ry=2, rh=H-4;
       if(modCats.length===0){
         ctx2d.fillStyle='#f0eeea'; ctx2d.strokeStyle='#c8c5bf'; ctx2d.lineWidth=1;
@@ -1147,7 +1400,7 @@ function drawElement(el, selected){
       let fcx=curX;
       el.mods_a.forEach((m,i)=>{
         const mw=m.w*S;
-        const modCats=getModCats(keyFn(i)).map(id=>cats.find(cc=>cc.id===id)).filter(Boolean);
+        const modCats=getModCats(keyFn(i)).map(id=>catPor(id)).filter(Boolean);
         if(modCats.length===0){
           ctx2d.fillStyle='#e8e7e2';
           ctx2d.strokeStyle=selected?'#2a78d6':'#c8c5bf'; ctx2d.lineWidth=0.8;
@@ -1556,13 +1809,14 @@ function deleteSelected(){
   elements=elements.filter(e=>e!==selectedEl);
   // Limpiar asignaciones
   Object.keys(assignMap).forEach(k=>{ if(k.startsWith(selectedEl.id+'_')) delete assignMap[k]; });
+  Object.keys(detMap).forEach(k=>{ if(k.startsWith(selectedEl.id+'_')) delete detMap[k]; });
   selectedEl=null;
   cfg('islaDetail').style.display='none';
   drawFloor();
 }
 function clearCanvas(){
   if(!confirm('¿Limpiar todos los elementos del plano?')) return;
-  elements=[]; selectedEl=null; assignMap={};
+  elements=[]; selectedEl=null; assignMap={}; detMap={};
   cfg('islaDetail').style.display='none';
   drawFloor();
 }
@@ -1678,19 +1932,19 @@ function updParedMod(i,field,val){
 // Al quitar el módulo i de un elemento, las asignaciones de los módulos siguientes
 // deben correrse un lugar (las claves son `${id}_${cara}_${índice}`).
 function shiftAssignAfterRemove(elId, sides, i){
-  sides.forEach(side=>{
+  [assignMap,detMap].forEach(mp=>sides.forEach(side=>{
     const prefix=`${elId}_${side}_`;
     const moves=[];
-    Object.keys(assignMap).forEach(k=>{
+    Object.keys(mp).forEach(k=>{
       if(!k.startsWith(prefix)) return;
       const j=Number(k.slice(prefix.length));
       if(!Number.isInteger(j)) return;
       if(j===i) moves.push([k,null,null]);
-      else if(j>i) moves.push([k,prefix+(j-1),assignMap[k]]);
+      else if(j>i) moves.push([k,prefix+(j-1),mp[k]]);
     });
-    moves.forEach(([k])=>{ delete assignMap[k]; });
-    moves.forEach(([,nk,v])=>{ if(nk) assignMap[nk]=v; });
-  });
+    moves.forEach(([k])=>{ delete mp[k]; });
+    moves.forEach(([,nk,v])=>{ if(nk) mp[nk]=v; });
+  }));
 }
 function addParedMod(){
   if(!selectedEl||selectedEl.type!=='pared') return;
@@ -1749,6 +2003,7 @@ function addCat(name='',venta=0,units=0,stock=0,chapas=5,h=1.50,pctManual=null){
 }
 function remCat(id){
   cats=cats.filter(c=>c.id!==id);
+  subcats=subcats.filter(s=>s.rubro!==id);
   delete resultados.porCat[id];
   Object.keys(assignMap).forEach(k=>{
     const hh=chpNorm(assignMap[k],modN(k));
@@ -1964,7 +2219,7 @@ function drawAssignEl(el, S, MARG){
     (el.mods||[]).forEach((m,i)=>{
       const mw=Math.round(m.w*S);
       const key=`${el.id}_u_${i}`;
-      const modCats=getModCats(key).map(id=>cats.find(cc=>cc.id===id)).filter(Boolean);
+      const modCats=getModCats(key).map(id=>catPor(id)).filter(Boolean);
       const rx=curX+GAP3/2, rw=mw-GAP3, ry=2, rh=H-4;
       if(modCats.length===0){
         ctx3.fillStyle='#f7f6f2'; ctx3.strokeStyle='#c8c5bf'; ctx3.lineWidth=1;
@@ -2016,7 +2271,7 @@ function drawAssignEl(el, S, MARG){
     el.mods_a.forEach((m,i)=>{
       const mw=m.w*S;
       const key=keyFn(i);
-      const modCats=getModCats(key).map(id=>cats.find(cc=>cc.id===id)).filter(Boolean);
+      const modCats=getModCats(key).map(id=>catPor(id)).filter(Boolean);
       if(modCats.length===0){
         ctx3.fillStyle='#e8e7e2'; ctx3.strokeStyle='#c8c5bf'; ctx3.lineWidth=0.8;
         ctx3.fillRect(fcx,faceY,mw,faceH); ctx3.strokeRect(fcx,faceY,mw,faceH);
@@ -2127,8 +2382,9 @@ function buildLegend3(){
 }
 
 function resetAssign(){
-  if(!confirm('¿Limpiar todas las asignaciones?')) return;
-  assignMap={};
+  if(!confirm(lens?'¿Vaciar las categorías pintadas de este rubro?':'¿Limpiar todas las asignaciones?')) return;
+  if(lens){ lensLimpiarRubro(); lensBarras(); renderCatListPg(); drawAssignCanvas(); buildLegend3(); updateAssignMetrics(); return; }
+  assignMap={}; detMap={};
   drawAssignCanvas();
   buildLegend3();
   updateAssignMetrics();
@@ -2143,7 +2399,7 @@ function updateAssignMetrics(){
     list.forEach((m,i)=>sides.forEach(s=>{
       const key=`${el.id}_${s}_${i}`; const v=assignMap[key]; if(!v) return;
       const mt=chpMeters(chpNorm(v,m.chapas||(el.type==='pared'?7:5)),m.w);
-      const t=Object.values(mt).reduce((a,b)=>a+b,0);
+      const t=Object.keys(mt).filter(id=>!lensBloq(id)).reduce((a,id)=>a+mt[id],0);
       if(t>0){ meters+=t; mods++; }
     }));
   });
@@ -2200,7 +2456,7 @@ function fitView3(){
 function cargarRubrosFERNI(){
   // Limpiar y cargar rubros predefinidos de FERNI
   if(cats.length>0 && !confirm('¿Reemplazar las categorías actuales con los rubros FERNI?')) return;
-  cats=[]; catIdN=1; resultados.porCat={};
+  cats=[]; catIdN=1; resultados.porCat={}; subcats=[]; detMap={};
   RUBROS_FERNI.forEach(nombre => addCat(nombre,0,0,0,5,1.50));
   renderCats();
   scheduleAutoSave();
@@ -2213,7 +2469,8 @@ function buildAnalisis(){
     ? 'Análisis general de sucursal — espacio por rubro'
     : 'Análisis del planograma';
   const thCat=document.getElementById('thCatLabel');
-  if(thCat) thCat.textContent = modoActual==='general' ? 'Rubro' : 'Categoría';
+  if(thCat) thCat.textContent = (modoActual==='general'&&!lens) ? 'Rubro' : 'Categoría';
+  if(tEl&&lens) tEl.textContent='Análisis de categorías — '+lens.nombre+' (100 % = metros del rubro)';
   const catMeters={};
   cats.forEach(c=>{ catMeters[c.id]=0; });
   elements.forEach(el=>{
@@ -2234,8 +2491,9 @@ function buildAnalisis(){
     }
   });
 
+  if(lens) totalM=lensMetrosRubro();
   const totalVenta=cats.reduce((a,cc)=>a+(+cc.venta||0),0);
-  const assignedM=Object.values(catMeters).reduce((a,b)=>a+b,0);
+  const assignedM=cats.reduce((a,c)=>a+(catMeters[c.id]||0),0);
   const rentaG=assignedM>0?Math.round(totalVenta/assignedM):0;
 
   const alerts=[];
@@ -2296,7 +2554,7 @@ function buildAnalisis(){
 
   cfg('analisisOut').innerHTML=`
     <div style="display:grid;grid-template-columns:repeat(4,1fr);gap:8px;margin-bottom:1rem">
-      <div class="metric"><div class="metric-label">Metros totales</div><div class="metric-value">${totalM.toFixed(1)} m</div></div>
+      <div class="metric"><div class="metric-label">${lens?'Metros del rubro':'Metros totales'}</div><div class="metric-value">${totalM.toFixed(1)} m</div></div>
       <div class="metric"><div class="metric-label">Metros asignados</div><div class="metric-value" style="color:var(--green)">${assignedM.toFixed(1)} m</div></div>
       <div class="metric"><div class="metric-label">Venta total rubro</div><div class="metric-value" style="color:var(--blue)">${totalVenta>0?'$'+totalVenta.toLocaleString('es-AR'):'—'}</div></div>
       <div class="metric"><div class="metric-label">Rentabilidad global</div><div class="metric-value" style="color:var(--orange)">${rentaG>0?'$'+rentaG.toLocaleString('es-AR')+'/m':'—'}</div></div>
@@ -2362,7 +2620,7 @@ function importExcel(event){
         return;
       }
       const prevLen=cats.length;
-      cats=[]; catIdN=1; resultados.porCat={};
+      cats=[]; catIdN=1; resultados.porCat={}; subcats=[]; detMap={};
       let added=0;
       data.forEach(row=>{
         const name=String(row[colNombre]||'').trim();
@@ -2619,7 +2877,7 @@ function frInit(){
 // PASO 6 — VISTA 3D (órbita + recorrido en primera persona)
 // ════════════════════════════════════════════════════════════════════
 const V3_EYE=1.65, V3_PX=220;
-let v3={ren:null,scene:null,cam:null,mode:'orbit',raf:0,keys:{},dest:[],
+let v3={vista:'rub',ren:null,scene:null,cam:null,mode:'orbit',raf:0,keys:{},dest:[],
   orbit:{th:Math.PI/2,ph:1.0,r:14,tx:6,tz:4},
   pov:{x:1,z:1,yaw:0,pitch:0}, last:0, ptr:null, joy:{x:0,y:0}, run:false, fs:false, faces:[], prev:null, undo:[], ray:null, tap:null};
 
@@ -2628,7 +2886,8 @@ function v3Sala(){ return {L:+cfg('cfg_largo').value||12, A:+cfg('cfg_ancho').va
 function v3DibujarTex(cv,key,n,rev){
   const pw=cv.width, ph=cv.height, c=cv.getContext('2d');
   c.fillStyle='#eceae4'; c.fillRect(0,0,pw,ph);
-  const hh=chpView(chpNorm(assignMap[key],n),rev);
+  const h0=(v3.vista==='cat'&&!lens)?compH({assignMap,subcats,detMap,elements},key,n):chpNorm(assignMap[key],n);
+  const hh=chpView(h0,rev);
   chpDrawRects(c,chpRects(hh),0,0,pw,ph,{empty:'#eceae4',fs:34,max:16});
   c.strokeStyle='rgba(0,0,0,0.22)'; c.lineWidth=2;
   for(let r=1;r<n;r++){ const y=r*ph/n; c.beginPath(); c.moveTo(0,y); c.lineTo(pw,y); c.stroke(); }
@@ -2711,9 +2970,7 @@ function v3Build(){
   v3.dest.forEach((d,i)=>{ const o=document.createElement('option'); o.value=i; o.textContent=d.label; sel.appendChild(o); });
   const selFs=cfg('v3DestFs'); selFs.innerHTML='<option value="">Ir a…</option>'+sel.innerHTML.replace(/^<option value="">[^<]*<\/option>/,'');
   // Leyenda
-  const used=allUsedCats();
-  cfg('v3Leg').innerHTML=cats.filter(c=>used.has(c.id)).map(c=>`<div class="leg-item"><span class="leg-dot" style="background:#${c.color}"></span><span>${escHtml(c.name)}</span></div>`).join('')||'<span style="font-size:11px;color:var(--text3)">Todavía no hay categorías asignadas a chapas.</span>';
-  cfg('v3LegFs').innerHTML=cfg('v3Leg').innerHTML;
+  v3ActLeyenda(); v3VistaUI();
   v3.orbit.tx=L/2; v3.orbit.tz=A/2;
 }
 
@@ -2816,8 +3073,7 @@ function v3Fs(on){
   v3Resize(); v3Modo(v3.mode);
 }
 function v3ActLeyenda(){
-  const used=allUsedCats();
-  const h=cats.filter(c=>used.has(c.id)).map(c=>`<div class="leg-item"><span class="leg-dot" style="background:#${c.color}"></span><span>${escHtml(c.name)}</span></div>`).join('')||'<span style="font-size:11px;color:var(--text3)">Todavía no hay categorías asignadas a chapas.</span>';
+  const h=v3LegHtml();
   cfg('v3Leg').innerHTML=h; cfg('v3LegFs').innerHTML=h;
 }
 const v3Editor=()=>!document.body.classList.contains('viewer');
@@ -3103,7 +3359,7 @@ const resPct=n=>(Math.round(n*10)/10).toFixed(1);
 function resListaNombres(a){ a=a.slice(); if(a.length<=1) return a.join(''); return a.slice(0,-1).join(', ')+' y '+a[a.length-1]; }
 
 function resAnalizar(st,hist,ctx){
-  const R=st.resultados||{}, por=R.porCat||{}, cats=st.cats||[];
+  const R=st.resultados||{}, por=R.porCat||{}, cats=st.cats||[], mRubro=st.mRubro||0;
   ctx=ctx||{}; const etiqueta=ctx.etiqueta||'Esta campaña';
   const M=resMetrosDe(st);
   const tieneDato=c=>{ const x=por[c.id]; return !!x&&x.venta!==undefined&&x.venta!==''&&x.venta!==null&&!isNaN(+x.venta); };
@@ -3166,6 +3422,7 @@ function resAnalizar(st,hist,ctx){
   dm.forEach(r=>hall.push({k:'w',x:`${r.name} vendió ${resPct(r.pctVenta)}% del total cuando se esperaba ${resPct(r.baseShare)}% (${r.dMix>0?'+':''}${resPct(r.dMix)} puntos): ${r.dMix>0?'superó':'quedó por debajo de'} lo previsto al diseñar el plano.`}));
   const poc=rows.filter(r=>r.poco&&(r.dict==='Ampliar'||r.dict==='Reducir'));
   if(poc.length) hall.push({k:'w',x:`${resListaNombres(poc.map(r=>r.name))} tienen menos de 1,3 m asignados: el dato es poco concluyente, conviene confirmarlo con otra campaña antes de mover espacio.`});
+  if(mRubro>0&&mRubro-asigD>0.05) hall.push({k:'w',x:`Del rubro (${mRubro.toFixed(1)} m = 100 %) hay ${(mRubro-asigD).toFixed(1)} m sin categoría asignada o sin resultado cargado: el análisis se calcula sobre los ${asigD.toFixed(1)} m con dato.`});
   const sinDato=cats.filter(c=>!tieneDato(c)&&(M.m[c.id]||0)>0);
   if(sinDato.length) hall.push({k:'w',x:`${sinDato.length} categoría${sinDato.length>1?'s':''} con metros no tienen resultado cargado (${resListaNombres(sinDato.map(c=>c.name))}): quedaron fuera del análisis.`});
 
@@ -3220,7 +3477,7 @@ function resAnalizar(st,hist,ctx){
     });
     h={camps,trend,hall:hh.slice(0,8)};
   }
-  return {ok:true,etiqueta,dias,ventaTot,asigD,rpm,rpmDia,rows,hall,acciones,sinDato:sinDato.map(c=>c.name),hist:h,
+  return {ok:true,etiqueta,mRubro,dias,ventaTot,asigD,rpm,rpmDia,rows,hall,acciones,sinDato:sinDato.map(c=>c.name),hist:h,
     nAmp:rows.filter(r=>r.dict==='Ampliar').length,nRed:rows.filter(r=>r.dict==='Reducir'||r.dict==='Sin venta').length};
 }
 
@@ -3262,7 +3519,7 @@ function resRender(a,modo){
   let h='<div class="rs">';
   h+=`<div class="rs-kpis">
     <div class="rs-kpi"><span>Venta real total</span><b>${resMoney(a.ventaTot)}</b>${a.dias?`<small>${a.dias} días</small>`:''}</div>
-    <div class="rs-kpi"><span>Metros analizados</span><b>${a.asigD.toFixed(1)} m</b></div>
+    <div class="rs-kpi"><span>Metros analizados</span><b>${a.asigD.toFixed(1)} m</b>${a.mRubro?`<small>de ${a.mRubro.toFixed(1)} m del rubro</small>`:''}</div>
     <div class="rs-kpi"><span>Venta por metro</span><b>${resMoney(a.rpm)}</b>${a.dias?`<small>${resMoney(a.rpmDia)} por metro y día</small>`:''}</div>
     <div class="rs-kpi"><span>Qué mover</span><b>${a.nAmp} ampliar · ${a.nRed} reducir</b></div>
   </div>`;
@@ -3316,6 +3573,24 @@ const RES_APP_CSS=`
 }`;
 (function(){ const s=document.createElement('style'); s.textContent=RES_CSS+RES_APP_CSS; document.head.appendChild(s); })();
 
+let resRubro='';
+const resUsaSub=()=>modoActual==='general'&&subcats.length>0;
+const resRubros=()=>cats.filter(c=>subcats.some(s=>s.rubro===c.id));
+function resCats(){ return resUsaSub()?subsDe(resRubro):cats; }
+function resEstado(){ const st=getState(); return resUsaSub()?stRubro(st,resRubro):st; }
+function resElegirRubro(id){ resRubro=id; resPend=[]; buildResultados(); }
+// Historial para un rubro: solo las categorías "Rubro / Categoría" de campañas anteriores
+function histPara(R){
+  if(!resUsaSub()) return resHist;
+  const rub=cats.find(c=>c.id===R); if(!rub) return [];
+  const pre=resNorm(rub.name);
+  const out=[];
+  resHist.forEach(p=>{
+    const cs=p.cats.filter(c=>{ const i=c.n.indexOf(' / '); return i>0&&resNorm(c.n.slice(0,i))===pre; }).map(c=>Object.assign({},c,{n:c.n.slice(c.n.indexOf(' / ')+3).trim()}));
+    if(cs.filter(c=>c.v>0).length>=2) out.push(Object.assign({},p,{cats:cs}));
+  });
+  return out;
+}
 function resVacio(){ return {desde:'',hasta:'',nota:'',porCat:{}}; }
 function resCampo(){
   resultados.desde=cfg('res_desde').value; resultados.hasta=cfg('res_hasta').value; resultados.nota=cfg('res_nota').value.slice(0,200);
@@ -3337,12 +3612,21 @@ function buildResultados(){
   const m=plPlan&&plPlan.meta;
   if(m&&!resultados.desde&&!resultados.hasta&&!Object.keys(resultados.porCat).length){ resultados.desde=m.desde||''; resultados.hasta=m.hasta||''; }
   cfg('res_desde').value=resultados.desde||''; cfg('res_hasta').value=resultados.hasta||''; cfg('res_nota').value=resultados.nota||'';
-  const M=resMetrosDe(getState());
+  const sub=resUsaSub();
+  if(sub){ const rs=resRubros(); if(!rs.some(r=>r.id===resRubro)) resRubro=rs[0]?rs[0].id:''; }
+  const rb=cfg('resRubroBox');
+  if(sub){
+    const rs=resRubros(); const mR=resEstado().mRubro||0;
+    rb.style.display='block';
+    rb.innerHTML=`<div style="display:flex;gap:8px;align-items:center;flex-wrap:wrap"><label style="font-size:12px;font-weight:600">Rubro</label><select id="resRubroSel" onchange="resElegirRubro(this.value)" style="width:auto;max-width:100%">${rs.map(r=>`<option value="${escHtml(r.id)}"${r.id===resRubro?' selected':''}>${escHtml(r.name)}</option>`).join('')}</select><span style="font-size:12px;color:var(--text3)">${mR.toFixed(1)} m del rubro = 100 % del análisis</span></div>`;
+  } else { rb.style.display='none'; rb.textContent=''; }
+  const lista=resCats();
+  const M=resMetrosDe(resEstado());
   const box=cfg('resBody'); box.textContent='';
-  if(!cats.length){ box.innerHTML='<div style="padding:1rem;color:var(--text3);font-size:13px">Primero definí categorías (Paso 3) y asignalas a las góndolas (Paso 4).</div>'; }
+  if(!lista.length){ box.innerHTML='<div style="padding:1rem;color:var(--text3);font-size:13px">Primero definí categorías (Paso 3) y asignalas a las góndolas (Paso 4).</div>'; }
   else {
     box.innerHTML='<div class="rs-in hd"><span>Categoría</span><span style="text-align:right">Metros</span><span style="text-align:right">Venta real ($)</span><span style="text-align:right">Unidades</span></div>';
-    cats.forEach(c=>{
+    lista.forEach(c=>{
       const o=resultados.porCat[c.id]||{};
       const row=document.createElement('div'); row.className='rs-in';
       row.innerHTML=`<span class="nm"><span class="rs-dot" style="background:#${escHtml(c.color)};margin:0"></span>${escHtml(c.name)}</span><span class="mm">${(M.m[c.id]||0).toFixed(1)} m</span>`;
@@ -3362,15 +3646,16 @@ function resRenderOut(){
   resTimer=setTimeout(()=>{
     const out=cfg('resOut'); if(!out) return;
     const pm=plPlan&&plPlan.meta;
-    const a=resAnalizar(getState(),resHist,{etiqueta:(pm&&(pm.campana||pm.nombre))||'Esta campaña'});
+    const a=resAnalizar(resEstado(),histPara(resRubro),{etiqueta:(pm&&(pm.campana||pm.nombre))||'Esta campaña'});
     out.innerHTML=a.ok?resRender(a,'app'):`<div class="rs-n">${escHtml(a.motivo)}</div>`;
   },200);
 }
 // Matching de nombres: igual normalizado, o contiene único
 function resCoincidir(nombre){
   const n=resNorm(nombre); if(!n) return null;
-  let r=cats.filter(c=>resNorm(c.name)===n); if(r.length===1) return r[0];
-  if(n.length>=3){ r=cats.filter(c=>{ const k=resNorm(c.name); return k.length>=3&&(k.includes(n)||n.includes(k)); }); if(r.length===1) return r[0]; }
+  const L=resCats();
+  let r=L.filter(c=>resNorm(c.name)===n); if(r.length===1) return r[0];
+  if(n.length>=3){ r=L.filter(c=>{ const k=resNorm(c.name); return k.length>=3&&(k.includes(n)||n.includes(k)); }); if(r.length===1) return r[0]; }
   return null;
 }
 const RES_T_NOM=/^(categoria|categorias|rubro|rubros|familia|seccion|linea|descripcion|nombre|departamento|grupo)\b/;
@@ -3416,14 +3701,17 @@ function resPendRender(){
     const d=document.createElement('div'); d.className='rs-pend';
     const sp=document.createElement('span'); sp.style.flex='1 1 140px'; sp.textContent=`${f.name} · ${f.venta!==undefined?resMoney(f.venta):'sin venta'}`;
     const s=document.createElement('select'); s.style.width='auto'; s.style.maxWidth='100%';
-    s.innerHTML='<option value="">Elegir…</option>'+cats.map(c=>`<option value="${escHtml(c.id)}">${escHtml(c.name)}</option>`).join('')+'<option value="__new">Crear categoría nueva</option><option value="__skip">Ignorar</option>';
+    s.innerHTML='<option value="">Elegir…</option>'+resCats().map(c=>`<option value="${escHtml(c.id)}">${escHtml(c.name)}</option>`).join('')+'<option value="__new">Crear categoría nueva</option><option value="__skip">Ignorar</option>';
     s.onchange=()=>{ if(s.value) resPendResolver(i,s.value); };
     d.appendChild(sp); d.appendChild(s); box.appendChild(d);
   });
 }
 function resPendResolver(i,sel){
   const f=resPend[i]; if(!f) return;
-  if(sel==='__new'){ addCat(f.name,0,0,0,5,1.50); sel=cats[cats.length-1].id; }
+  if(sel==='__new'){
+    if(resUsaSub()){ const rub=cats.find(c=>c.id===resRubro); const id='s'+(subIdN++); subcats.push({id,rubro:resRubro,name:f.name.slice(0,60),color:subColor(rub?rub.color:'888888',subsDe(resRubro).length),venta:0,units:0,stock:0,chapas:5,h:1.5,pctManual:null}); sel=id; }
+    else { addCat(f.name,0,0,0,5,1.50); sel=cats[cats.length-1].id; }
+  }
   if(sel!=='__skip'){
     const o=resultados.porCat[sel]||(resultados.porCat[sel]={});
     if(f.venta!==undefined) o.venta=(o.venta||0)+f.venta;
@@ -3458,7 +3746,7 @@ function resPegarModal(){
 function resPlantilla(){
   if(typeof XLSX==='undefined'){ resMsg('La librería Excel no cargó.','error'); return; }
   const aoa=[['Categoría','Venta','Unidades']];
-  (cats.length?cats.map(c=>c.name):['Ejemplo']).forEach(n=>aoa.push([n,'','']));
+  (resCats().length?resCats().map(c=>c.name):['Ejemplo']).forEach(n=>aoa.push([n,'','']));
   const ult=aoa.length;
   aoa.push(['Total',{t:'n',v:0,f:`SUM(B2:B${ult})`},{t:'n',v:0,f:`SUM(C2:C${ult})`}]);
   const ws=XLSX.utils.aoa_to_sheet(aoa); ws['!cols']=[{wch:32},{wch:16},{wch:12}];
@@ -3467,8 +3755,9 @@ function resPlantilla(){
 }
 function resLimpiar(){
   if(!Object.keys(resultados.porCat).length&&!resPend.length) return;
-  if(!confirm('¿Borrar todos los resultados cargados de este planograma?')) return;
-  resultados.porCat={}; resPend=[]; scheduleAutoSave(); buildResultados();
+  if(!confirm(resUsaSub()?'¿Borrar los resultados cargados de este rubro?':'¿Borrar todos los resultados cargados de este planograma?')) return;
+  if(resUsaSub()) resCats().forEach(c=>{ delete resultados.porCat[c.id]; }); else resultados.porCat={};
+  resPend=[]; scheduleAutoSave(); buildResultados();
 }
 // Campañas anteriores de la misma sucursal con resultados cargados (para comparar)
 async function resCargarHist(){
@@ -3493,6 +3782,7 @@ async function resCargarHist(){
 }
 
 function getState(){
+  const rl=lensReal();
   return {
     v:2, ts:Date.now(),
     modo:modoActual||'rubro',
@@ -3504,9 +3794,11 @@ function getState(){
       chp:cfg('cfg_chp').value, alt:cfg('cfg_alt').value,
     },
     elements:JSON.parse(JSON.stringify(elements)),
-    cats:JSON.parse(JSON.stringify(cats)),
-    assignMap:JSON.parse(JSON.stringify(assignMap)),
-    catIdN, elIdN,
+    cats:JSON.parse(JSON.stringify(rl.cats)),
+    assignMap:JSON.parse(JSON.stringify(rl.assignMap)),
+    subcats:JSON.parse(JSON.stringify(rl.subcats)),
+    detMap:JSON.parse(JSON.stringify(rl.detMap)),
+    catIdN, elIdN, subIdN,
     resultados:JSON.parse(JSON.stringify(resultados)),
   };
 }
@@ -3528,9 +3820,13 @@ function applyState(st){
     cfg('cfg_chp').value=st.cfg.chp||5;
     cfg('cfg_alt').value=st.cfg.alt||1.50;
   }
+  lens=null; if(typeof v3!=='undefined') v3.vista='rub';
   elements=st.elements||[];
   cats=st.cats||[];
   assignMap=chpMigrar({elements:st.elements||[],assignMap:JSON.parse(JSON.stringify(st.assignMap||{}))}).assignMap;
+  subcats=JSON.parse(JSON.stringify(st.subcats||[]));
+  detMap=chpMigrar({elements:st.elements||[],assignMap:JSON.parse(JSON.stringify(st.detMap||{}))}).assignMap;
+  subIdN=st.subIdN||1;
   catIdN=st.catIdN||1;
   elIdN=st.elIdN||1;
   resultados=Object.assign(resVacio(),JSON.parse(JSON.stringify(st.resultados||{})));
@@ -3686,8 +3982,31 @@ function buildResumenHtml(st){
   });
 
   // ── HTML final ────────────────────────────────────────────────
+  let detDoc='';
+  try{
+    const dr=detResumen(st).filter(r=>r.items.some(i=>i.m>0));
+    if(dr.length) detDoc=`<div class="card"><div class="card-title">Detalle de categorías por rubro</div>`+dr.map(r=>{
+      const fila=(nm,col,m,tot,suave)=>`<tr><td style="padding:5px 6px;border-bottom:1px solid #ece9e3"><span style="display:inline-block;width:10px;height:10px;border-radius:3px;margin-right:6px;background:#${col}"></span>${escHtml(nm)}</td><td style="padding:5px 6px;border-bottom:1px solid #ece9e3;text-align:right;white-space:nowrap">${m.toFixed(1)} m</td><td style="padding:5px 6px;border-bottom:1px solid #ece9e3;text-align:right;white-space:nowrap;${suave?'color:#9a9895':'font-weight:600'}">${tot>0?(m/tot*100).toFixed(1):'0.0'}%</td></tr>`;
+      return `<div style="margin-bottom:1rem"><div style="font-weight:700;color:#1a2744;margin-bottom:4px"><span style="display:inline-block;width:11px;height:11px;border-radius:3px;margin-right:6px;background:#${r.color}"></span>${escHtml(r.name)} <span style="font-weight:400;color:#7a7874;font-size:12px">· ${r.m.toFixed(1)} m = 100 % del rubro</span></div><table style="width:100%;border-collapse:collapse;font-size:13px"><thead><tr><th style="text-align:left;padding:5px 6px;color:#7a7874;font-size:11.5px;border-bottom:2px solid #e0ddd8">Categoría</th><th style="text-align:right;padding:5px 6px;color:#7a7874;font-size:11.5px;border-bottom:2px solid #e0ddd8">Metros</th><th style="text-align:right;padding:5px 6px;color:#7a7874;font-size:11.5px;border-bottom:2px solid #e0ddd8">% del rubro</th></tr></thead><tbody>`
+        +r.items.filter(i=>i.m>0).sort((a,b)=>b.m-a.m).map(i=>fila(i.name,i.color,i.m,r.m,false)).join('')
+        +(r.sinCat>0.001?fila('Sin categoría','d9d7d0',r.sinCat,r.m,true):'')+`</tbody></table></div>`;
+    }).join('')+`</div>`;
+  }catch(e){}
   let resDoc='';
-  try{ const ra=resAnalizar(st,null); if(ra.ok) resDoc=`<div class="card"><div class="card-title">Resultados reales y análisis</div><style>${RES_CSS}</style>${(st.resultados&&(st.resultados.desde||st.resultados.nota))?`<div style="font-size:12px;color:#7a7874;margin-bottom:.7rem">${escHtml((st.resultados.desde||'?')+' al '+(st.resultados.hasta||'?'))}${st.resultados.nota?' · '+escHtml(st.resultados.nota):''}</div>`:''}${resRender(ra,'doc')}</div>`; }catch(e){}
+  try{
+    const hdr=(st.resultados&&(st.resultados.desde||st.resultados.nota))?`<div style="font-size:12px;color:#7a7874;margin-bottom:.7rem">${escHtml((st.resultados.desde||'?')+' al '+(st.resultados.hasta||'?'))}${st.resultados.nota?' · '+escHtml(st.resultados.nota):''}</div>`:'';
+    if(st.modo==='general'&&(st.subcats||[]).length){
+      const secs=[];
+      (st.cats||[]).forEach(rb=>{
+        if(!(st.subcats||[]).some(s=>s.rubro===rb.id)) return;
+        const ra=resAnalizar(stRubro(st,rb.id),null); if(!ra.ok) return;
+        secs.push(`<div style="font-weight:700;color:#1a2744;margin:1rem 0 .3rem"><span style="display:inline-block;width:11px;height:11px;border-radius:3px;margin-right:6px;background:#${escHtml(rb.color)}"></span>${escHtml(rb.name)}</div>${resRender(ra,'doc')}`);
+      });
+      if(secs.length) resDoc=`<div class="card"><div class="card-title">Resultados reales y análisis por rubro</div><style>${RES_CSS}</style>${hdr}${secs.join('')}</div>`;
+    } else {
+      const ra=resAnalizar(st,null); if(ra.ok) resDoc=`<div class="card"><div class="card-title">Resultados reales y análisis</div><style>${RES_CSS}</style>${hdr}${resRender(ra,'doc')}</div>`;
+    }
+  }catch(e){}
   const html=`<!DOCTYPE html>
 <html lang="es">
 <head>
@@ -3792,6 +4111,8 @@ function buildResumenHtml(st){
   </div>
 
   ${alertsHtml?`<div class="card"><div class="card-title">Alertas</div>${alertsHtml}</div>`:''}
+
+  ${detDoc}
 
   ${resDoc}
 
@@ -4055,7 +4376,7 @@ async function plRestaurar(){
   const u=await plAuthInicial;
   const s=plLeerSesion();
   if(!u||!s||s.uid!==u.uid){ if(s) localStorage.removeItem(PL_SES_KEY); return false; }
-  if(s.rol==='admin'){
+  if(s.rol==='admin'&&!s.porCodigo){
     const perfil=await plPerfilAdmin(u);
     if(!perfil){ localStorage.removeItem(PL_SES_KEY); return false; }
   } else {
@@ -4081,7 +4402,7 @@ async function plIngresarCodigo(){
   const codigo=plId('plInCodigo').value.trim().toUpperCase();
   const nombre=plId('plInNombre').value.trim().replace(/\s+/g,' ').slice(0,60);
   plErrLogin('plErrCodigo','');
-  if(!/^PLG-F(10|[1-9])-[A-Z2-9]{8}$/.test(codigo)){ plErrLogin('plErrCodigo','El código no tiene el formato correcto (ejemplo: PLG-F3-ABCD2345).'); return; }
+  if(!/^PLG-(F(10|[1-9])|ADM)-[A-Z2-9]{8}$/.test(codigo)){ plErrLogin('plErrCodigo','El código no tiene el formato correcto (ejemplo: PLG-F3-ABCD2345).'); return; }
   if(!nombre){ plErrLogin('plErrCodigo','Escribí tu nombre.'); return; }
   const btn=plId('plBtnCodigo'); btn.disabled=true; btn.textContent='Verificando…';
   try{
@@ -4091,7 +4412,9 @@ async function plIngresarCodigo(){
     const suc=codigo.split('-')[1];
     // La regla de Firestore valida acá mismo que el código exista, esté vigente y sea de esta sucursal
     await plDb.collection('planograma_accesos').doc(u.uid).set({uid:u.uid,sucursal:suc,codigo,nombre,creadoEn:plTS()});
-    plSes={nombre,sucursal:suc,rol:'lider',uid:u.uid,codigo,expiraEn:Date.now()+PL_TTL_LIDER};
+    plSes=suc==='ADM'
+      ?{nombre,sucursal:null,rol:'admin',porCodigo:true,uid:u.uid,codigo,expiraEn:Date.now()+PL_TTL_LIDER}
+      :{nombre,sucursal:suc,rol:'lider',uid:u.uid,codigo,expiraEn:Date.now()+PL_TTL_LIDER};
     plGuardarSesion();
     plEntrarBiblioteca();
   }catch(e){ console.error(e); plErrLogin('plErrCodigo',plMsgError(e,'codigo')); }
@@ -4159,12 +4482,24 @@ function plResumenDe(st){
   const out={mTotal:+tot.toFixed(1),mAsig:+asig.toFixed(1),nElem:(st.elements||[]).length,nCats:usadas.size};
   try{
     const R=st.resultados||{}, por=R.porCat||{};
-    const con=(st.cats||[]).filter(c=>por[c.id]&&por[c.id].venta!==undefined&&!isNaN(+por[c.id].venta));
-    if(con.length){
-      const M=resMetrosDe(st);
+    const tieneD=c=>por[c.id]&&por[c.id].venta!==undefined&&!isNaN(+por[c.id].venta);
+    const filas=[]; let asig=0;
+    const sub=(st.modo==='general')&&(st.subcats||[]).length>0;
+    const clean=s=>String(s).replace(/\|/g,'/').slice(0,60);
+    if(sub){
+      (st.cats||[]).forEach(rb=>{
+        const ss=(st.subcats||[]).filter(s=>s.rubro===rb.id&&tieneD(s)); if(!ss.length) return;
+        const M=resMetrosDe(stRubro(st,rb.id)); asig+=M.asig;
+        ss.forEach(c=>filas.push({n:clean(rb.name)+' / '+clean(c.name),m:+(M.m[c.id]||0).toFixed(2),v:Math.round(+por[c.id].venta||0),u:Math.round(+por[c.id].unidades||0)}));
+      });
+    } else {
+      const M=resMetrosDe(st); asig=M.asig;
+      (st.cats||[]).filter(tieneD).forEach(c=>filas.push({n:clean(c.name),m:+(M.m[c.id]||0).toFixed(2),v:Math.round(+por[c.id].venta||0),u:Math.round(+por[c.id].unidades||0)}));
+    }
+    if(filas.length){
       out.resultados={desde:R.desde||'',hasta:R.hasta||'',dias:resDias(R.desde,R.hasta),
-        venta:Math.round(con.reduce((a,c)=>a+(+por[c.id].venta||0),0)),mAsig:+M.asig.toFixed(1),
-        cats:con.slice(0,80).map(c=>[String(c.name).replace(/\|/g,'/').slice(0,60),+(M.m[c.id]||0).toFixed(2),Math.round(+por[c.id].venta||0),Math.round(+por[c.id].unidades||0)].join('|'))};
+        venta:filas.reduce((a,f)=>a+f.v,0),mAsig:+asig.toFixed(1),
+        cats:filas.slice(0,80).map(f=>[f.n,f.m,f.v,f.u].join('|'))};
     }
   }catch(e){}
   return out;
@@ -4252,7 +4587,7 @@ function plEntrarBiblioteca(){
     sel.value=plFiltroSuc;
   }
   sel.style.display=admin?'inline-block':'none';
-  plId('plBtnAccesos').style.display=admin?'inline-block':'none';
+  plId('plBtnAccesos').style.display=(admin&&!plSes.porCodigo)?'inline-block':'none';
   plId('plLibTitulo').textContent=admin?'Planogramas':`Planogramas · ${plSes.sucursal}`;
   plId('plAvisos').textContent='';
   plMostrar('pLib');
@@ -4730,6 +5065,7 @@ function plCodigosVigentes(suc){
 }
 function plRenderAccesos(){
   const cont=plId('plAccTabla'); if(!cont) return; cont.textContent='';
+  plRenderAccAdm();
   const filas=PL_SUCS.map(s=>{
     const vig=plCodigosVigentes(s); const c=vig[0];
     const ingresos=plAccesos.filter(a=>a.sucursal===s).sort((a,b)=>plMs(b.creadoEn)-plMs(a.creadoEn));
@@ -4751,6 +5087,60 @@ function plRenderAccesos(){
   cont.appendChild(plEl('table',{class:'pl-table'},
     plEl('thead',null,plEl('tr',null,['Sucursal','Código vigente','Vence','Ingresos','Acciones'].map(h=>plEl('th',null,h)))),
     plEl('tbody',null,filas)));
+}
+// ── Códigos de administrador (Compras, controladores): acceso total sin gestionar códigos ──
+function plCodigosAdm(){
+  return plCodigos.filter(c=>c.sucursal==='ADM'&&!c.revocado&&plMs(c.expiraEn)>Date.now()).sort((a,b)=>plMs(b.creadaEn)-plMs(a.creadaEn));
+}
+function plRenderAccAdm(){
+  const cont=plId('plAccAdm'); if(!cont) return; cont.textContent='';
+  const lista=plCodigosAdm();
+  const filas=lista.map(c=>{
+    const ing=plAccesos.filter(a=>a.codigo===c.id).sort((a,b)=>plMs(b.creadoEn)-plMs(a.creadoEn));
+    const acc=plEl('div',{style:'display:flex;gap:4px;flex-wrap:wrap'},
+      plEl('button',{class:'btn btn-outline btn-sm',onclick:()=>plCopiarCodigo(c.id)},'Copiar'),
+      plEl('button',{class:'btn btn-outline btn-sm',onclick:()=>plCompartirCodigoAdm(c)},'WhatsApp'),
+      plEl('button',{class:'btn btn-sm',style:'background:#fdf2f2;border-color:#e24b4a;color:#c0392b',onclick:()=>plRevocarCodigoId(c.id,c.etiqueta)},'Revocar'));
+    return plEl('tr',null,
+      plEl('td',null,plEl('strong',null,c.etiqueta||'Administrador')),
+      plEl('td',null,plEl('span',{class:'pl-code'},c.id)),
+      plEl('td',null,new Date(plMs(c.expiraEn)).toLocaleDateString('es-AR')),
+      plEl('td',{class:'pl-plan-meta'},ing.length?ing.slice(0,3).map(a=>`${a.nombre} (${plHace(plMs(a.creadoEn))})`).join(', '):'Nadie ingresó todavía'),
+      plEl('td',null,acc));
+  });
+  cont.appendChild(plEl('div',{style:'display:flex;align-items:center;gap:8px;flex-wrap:wrap;margin-bottom:.5rem'},
+    plEl('strong',{style:'margin-right:auto'},'Administradores por código'),
+    plEl('button',{class:'btn btn-primary btn-sm',onclick:plNuevoCodigoAdm},'Nuevo código de administrador')));
+  cont.appendChild(plEl('div',{class:'pl-plan-meta',style:'margin-bottom:.6rem'},'Ven y editan los planogramas de todas las sucursales y pueden eliminarlos. No pueden generar ni revocar códigos. Cada persona usa su propio código: al revocarlo pierde el acceso en el momento.'));
+  cont.appendChild(lista.length
+    ?plEl('table',{class:'pl-table'},plEl('thead',null,plEl('tr',null,['Persona o área','Código vigente','Vence','Ingresos','Acciones'].map(h=>plEl('th',null,h)))),plEl('tbody',null,filas))
+    :plEl('div',{class:'pl-plan-meta'},'Todavía no hay códigos de administrador vigentes.'));
+}
+function plNuevoCodigoAdm(){
+  const inp=plEl('input',{type:'text',maxlength:'40',placeholder:'Ej.: Compras, José Federman',style:'width:100%'});
+  plModal('Nuevo código de administrador',plEl('div',null,plEl('p',{style:'font-size:12px;color:var(--text3);margin-bottom:6px'},'Poné el nombre de la persona o del área que lo va a usar. Cada uno debería tener su propio código.'),inp),[
+    {txt:'Cancelar'},
+    {txt:'Generar',cls:'btn-primary',fn:async()=>{
+      const et=inp.value.trim().replace(/\s+/g,' ').slice(0,40);
+      if(!et){ inp.focus(); return false; }
+      const codigo=`PLG-ADM-${plToken(8)}`;
+      try{
+        await plDb.collection('planograma_codigos').doc(codigo).set({codigo,sucursal:'ADM',etiqueta:et,creadaPor:plSes.nombre,creadaEn:plTS(),
+          expiraEn:firebase.firestore.Timestamp.fromDate(new Date(Date.now()+PL_DIAS_CODIGO*86400000)),revocado:false});
+        plToast('Código generado para '+et);
+      }catch(e){ console.error(e); alert(plMsgError(e)); return false; }
+    }}]);
+  setTimeout(()=>inp.focus(),50);
+}
+async function plRevocarCodigoId(id,et){
+  if(!confirm(`¿Revocar el código de ${et||'este administrador'}? Va a perder el acceso en el momento.`)) return;
+  try{ await plDb.collection('planograma_codigos').doc(id).update({revocado:true}); plToast('Código revocado'); }
+  catch(e){ console.error(e); alert(plMsgError(e)); }
+}
+function plCompartirCodigoAdm(c){
+  const url=location.origin+location.pathname;
+  const msg=`Hola${c.etiqueta?' '+c.etiqueta:''}! Te paso tu acceso de administrador a los Planogramas FERNI.\n\nEntrá a: ${url}\nCódigo: *${c.id}*\n\nIngresá el código y tu nombre. Es personal: no lo compartas. Vence el ${new Date(plMs(c.expiraEn)).toLocaleDateString('es-AR')}.`;
+  window.open('https://wa.me/?text='+encodeURIComponent(msg),'_blank','noopener,noreferrer');
 }
 async function plGenerarCodigo(suc){
   const prev=plCodigosVigentes(suc);
