@@ -294,6 +294,7 @@ body.viewer .edonly{display:none!important}
 <script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
 </head>
 <body>
+<div id="verTag" style="position:fixed;right:8px;bottom:5px;font:10px system-ui,sans-serif;color:#9a9895;z-index:3;pointer-events:none">v 06/11 · c</div>
 <header>
   <div style="display:flex;align-items:center">
     <span class="hbadge">FERNI</span>
@@ -997,7 +998,7 @@ function lensBarras(){
       const mR=lensMetrosRubro();
       h+=`<span class="lb-m"><b>${mR.toFixed(1)} m</b> del rubro = 100 %</span>`;
       if(act==='p4'||act==='p6'){
-        h+=`<div class="lb-add"><input id="lensNew" type="text" placeholder="Nueva categoría (o varias separadas por coma)" maxlength="300" onkeydown="if(event.key==='Enter')lensAgregarUI()"><button class="btn btn-primary btn-sm" onclick="lensAgregarUI()">Agregar</button><button class="btn btn-outline btn-sm" onclick="lensLimpiarUI()">Vaciar rubro</button></div>`;
+        h+=`<div class="lb-add"><input id="lensNew" type="text" placeholder="Nueva categoría (o varias separadas por coma)" maxlength="300" onkeydown="if(event.key==='Enter')lensAgregarUI()"><button class="btn btn-primary btn-sm" onclick="lensAgregarUI()">Agregar</button><button class="btn btn-outline btn-sm" onclick="lensLimpiarUI()">Vaciar rubro</button><label class="btn btn-outline btn-sm" style="cursor:pointer;white-space:nowrap" title="Cargar venta, unidades y stock de las categorías de este rubro desde el Excel">Importar Excel<input type="file" accept=".xlsx,.xls,.csv" style="display:none" onchange="lensImportarUI(event)"></label></div>`;
         h+=`<div class="lb-chips">${cats.length?cats.map(c=>`<span class="lb-chip"><i style="background:#${escHtml(c.color)}"></i>${escHtml(c.name)}<button aria-label="Quitar ${escHtml(c.name)}" onclick="lensQuitarUI('${escHtml(c.id)}')">×</button></span>`).join(''):'<span class="lb-hint">Este rubro todavía no tiene categorías: agregalas arriba.</span>'}</div>`;
       }
     } else h+='<span class="lb-hint">Para detallar un rubro elegí "Categorías".</span>';
@@ -1014,6 +1015,30 @@ function lensRefrescar(){
 }
 function lensIr(R){ if(R) lensEntrar(R); else lensSalir(); lensRefrescar(); }
 function lensAgregarUI(){ const i=cfg('lensNew'); const n=lensAgregarCats(i.value); lensBarras(); const j=cfg('lensNew'); if(j) j.focus(); if(!n&&i.value.trim()) alert('Esa categoría ya existe en este rubro.'); lensRefrescar2(); }
+// Importa el Excel (formato NAPSE/Softland) directamente sobre las categorías del rubro que se está viendo.
+// Actualiza las que ya existen (reemplaza sus datos), crea las que faltan y conserva las asignaciones a chapas.
+function lensImportarUI(ev){
+  const file=ev.target.files[0]; const inp=ev.target; if(!file||!lens) return;
+  const R=lens.rubro, nom=lens.nombre;
+  p3LeerArchivo(file,(filas,hayRubro,info)=>{
+    if(!lens||lens.rubro!==R) return;
+    const vistos=new Set(); let nuevas=0, act=0;
+    filas.forEach(f=>{
+      const k=resNorm(f.name); if(!k) return;
+      let c=cats.find(x=>resNorm(x.name)===k);
+      if(!c){ c={id:'s'+(subIdN++),rubro:R,name:String(f.name).trim().slice(0,60),color:subColor(lens.color,cats.length),venta:0,units:0,stock:0,chapas:5,h:1.5,pctManual:null}; cats.push(c); nuevas++; vistos.add(c.id); }
+      else if(!vistos.has(c.id)){ vistos.add(c.id); c.venta=0; c.units=0; c.stock=0; act++; }
+      c.venta=(+c.venta||0)+(f.venta||0); c.units=(+c.units||0)+(f.units||0); c.stock=(+c.stock||0)+(f.stock||0);
+    });
+    scheduleAutoSave(); lensRefrescar();
+    const rs=p3ResumenImport(filas,info);
+    const msg=`${rs.ok?'Importado':'Atención'} en ${nom}: ${nuevas} categoría${nuevas===1?'':'s'} nueva${nuevas===1?'':'s'}, ${act} actualizada${act===1?'':'s'}. ${rs.txt}`;
+    if(typeof plToast==='function') plToast(msg); else alert(msg);
+    if(!rs.ok) alert(msg);
+    try{ if(window.plGuardarAhora) plGuardarAhora(); }catch(e){}
+  });
+  inp.value='';
+}
 function lensRefrescar2(){ const act=(document.querySelector('.panel.active')||{}).id; if(act==='p4'){ renderCatListPg(); } else if(act==='p6'){ if(cfg('v3Pal').classList.contains('open')) v3PalRender(); } }
 function lensQuitarUI(id){ lensQuitarCat(id); lensRefrescar(); }
 function lensLimpiarUI(){ if(!confirm('¿Vaciar las categorías pintadas dentro de este rubro? Las categorías creadas se conservan.')) return; lensLimpiarRubro(); lensRefrescar(); }
@@ -2029,18 +2054,33 @@ function updCat(id,field,val){
   if(field==='pctManual'){ c.venta=0; }
 }
 
+// Datos efectivos de un rubro/categoría: en el plano general, la venta, unidades y stock del rubro
+// son la suma de sus categorías (lo que trae el Excel importado); si no tiene categorías con datos,
+// se usan los valores propios cargados a mano.
+function catEf(c,lista){
+  const own={venta:+c.venta||0,units:+c.units||0,stock:+c.stock||0};
+  const subs=(lista||subcats||[]).filter(s=>s.rubro===c.id);
+  if(!subs.length) return {venta:own.venta,units:own.units,stock:own.stock,dV:false,dU:false,dS:false,deSubs:false};
+  const v=subs.reduce((a,s)=>a+(+s.venta||0),0), u=subs.reduce((a,s)=>a+(+s.units||0),0), st=subs.reduce((a,s)=>a+(+s.stock||0),0);
+  // por campo: si las categorías no traen ese dato (ej.: venta en 0), se conserva el valor propio del rubro
+  return {venta:v>0?v:own.venta, units:u>0?u:own.units, stock:st>0?st:own.stock, dV:v>0, dU:u>0, dS:st>0, deSubs:v>0||u>0||st>0};
+}
 function getCatPct(c){
   // Retorna el % de participación: manual si existe, calculado si hay venta
   if(c.pctManual!==null && c.pctManual!==undefined && c.pctManual>0) return +c.pctManual;
-  const totalV=cats.reduce((a,cc)=>a+(+cc.venta||0),0);
-  if(totalV>0 && +c.venta>0) return (+c.venta/totalV)*100;
+  const totalV=cats.reduce((a,cc)=>a+catEf(cc).venta,0);
+  const v=catEf(c).venta;
+  if(totalV>0 && v>0) return (v/totalV)*100;
   return 0;
 }
 function renderCats(){
   const tbody=cfg('catBody'); tbody.innerHTML='';
   cats.forEach(c=>{
     const tr=document.createElement('tr');
-    const hasVenta=(+c.venta||0)>0;
+    const ef=catEf(c);
+    const gen=modoActual==='general';   // en el plano general, los valores salen de las categorías del rubro
+    const dV=gen&&ef.dV, dU=gen&&ef.dU, dS=gen&&ef.dS;
+    const hasVenta=ef.venta>0;
     const hasPct=!hasVenta && c.pctManual!==null && c.pctManual!==undefined;
     const pctCalc=hasVenta?getCatPct(c).toFixed(1):'';
     tr.innerHTML=`
@@ -2048,9 +2088,9 @@ function renderCats(){
         onchange="updCat('${c.id}','color',this.value.replace('#',''));renderCats();renderCatListPg()"/></td>
       <td><input type="text" value="${c.name}" placeholder="Nombre" style="min-width:120px"
         onchange="updCat('${c.id}','name',this.value)"/></td>
-      <td><input type="number" value="${hasVenta?c.venta:''}" min="0" placeholder="Opcional"
+      <td><input type="number" value="${hasVenta?Math.round(ef.venta):''}" min="0" placeholder="Opcional"
         style="min-width:85px;${hasPct?'opacity:.35;':''}"
-        ${hasPct?'disabled':''}
+        ${hasPct?'disabled':''} ${dV?'disabled title="Suma de las categorías del rubro"':''}
         onchange="updCat('${c.id}','venta',this.value);renderCats();renderCatListPg()"/></td>
       <td style="text-align:center;min-width:80px">
         ${hasVenta
@@ -2063,9 +2103,9 @@ function renderCats(){
              </div>`
         }
       </td>
-      <td><input type="number" value="${c.units||''}" min="0" placeholder="—"
+      <td><input type="number" value="${(dU?ef.units:c.units)||''}" min="0" placeholder="—" ${dU?'disabled title="Suma de las categorías del rubro"':''}
         onchange="updCat('${c.id}','units',this.value)"/></td>
-      <td><input type="number" value="${c.stock||''}" min="0" placeholder="—"
+      <td><input type="number" value="${(dS?ef.stock:c.stock)||''}" min="0" placeholder="—" ${dS?'disabled title="Suma de las categorías del rubro"':''}
         onchange="updCat('${c.id}','stock',this.value)"/></td>
       <td><input type="number" value="${c.chapas||5}" min="1" max="12"
         onchange="updCat('${c.id}','chapas',this.value)"/></td>
@@ -2117,13 +2157,20 @@ function p3AgregarSubs(rubroId,txt){
   if(n) scheduleAutoSave();
   return n;
 }
-// Crea una categoría dentro del rubro (o suma datos si ya existe con ese nombre)
-function p3NuevaSub(rub,f){
+// Crea una categoría dentro del rubro (o suma datos si ya existe con ese nombre).
+// 'vistos' (solo en importaciones de Excel): la primera vez que una importación toca una categoría ya existente
+// REEMPLAZA sus datos (así reimportar el archivo no duplica unidades ni stock); las filas repetidas dentro del
+// mismo archivo sí se suman.
+function p3NuevaSub(rub,f,vistos){
   const k=resNorm(f.name); if(!k) return false;
   const ex=subsDe(rub.id).find(x=>resNorm(x.name)===k);
-  if(ex){ if(f.venta>0) ex.venta=(+ex.venta||0)+f.venta; if(f.units>0) ex.units=(+ex.units||0)+f.units; if(f.stock>0) ex.stock=(+ex.stock||0)+f.stock; return false; }
+  if(ex){
+    if(vistos&&!vistos.has(ex.id)){ vistos.add(ex.id); ex.venta=f.venta||0; ex.units=f.units||0; ex.stock=f.stock||0; return false; }
+    if(f.venta>0) ex.venta=(+ex.venta||0)+f.venta; if(f.units>0) ex.units=(+ex.units||0)+f.units; if(f.stock>0) ex.stock=(+ex.stock||0)+f.stock; return false;
+  }
   const id='s'+(subIdN++);
   subcats.push({id,rubro:rub.id,name:String(f.name).trim().slice(0,60),color:subColor(rub.color,subsDe(rub.id).length),venta:f.venta||0,units:f.units||0,stock:f.stock||0,chapas:5,h:1.5,pctManual:null});
+  if(vistos) vistos.add(id);
   return true;
 }
 function p3QuitarSub(id){
@@ -2143,11 +2190,16 @@ function p3LeerArchivo(file,cb){
       const data=XLSX.utils.sheet_to_json(wb.Sheets[wb.SheetNames[0]],{defval:'',raw:false});
       if(!data.length){ showExcelMsg('El archivo está vacío o no tiene datos.','error'); return; }
       const keys=Object.keys(data[0]), nz=s=>resNorm(s);
-      const findCol=(terms,excl)=>{ const ks=keys.filter(k=>k!==excl);
-        return ks.find(k=>terms.some(t=>nz(k)===nz(t)))||ks.find(k=>terms.some(t=>nz(k).includes(nz(t))))||null; };
+      // Respeta la prioridad de los términos (el primero de la lista gana) e ignora columnas vacías
+      // (ej.: "Total" vacía a la izquierda de "Importe vendido" no debe ganar).
+      const conDatos=k=>data.some(r=>String(r[k]==null?'':r[k]).trim()!=='');
+      const findCol=(terms,excl)=>{ const ks=keys.filter(k=>k!==excl&&conDatos(k));
+        for(const t of terms){ const k=ks.find(k=>nz(k)===nz(t)); if(k) return k; }
+        for(const t of terms){ const k=ks.find(k=>nz(k).includes(nz(t))); if(k) return k; }
+        return null; };
       const colRubro=findCol(['rubro','descripcion de familia','familia','departamento','macro']);
       const colNombre=findCol(['descripcion detalle','descripcion de subfamilia','subfamilia','categoria','descripcion','nombre','name','articulo','rubro'],colRubro);
-      const colVenta=findCol(['importe vendido','venta','importe','monto','total','ingreso','facturacion']);
+      const colVenta=findCol(['importe vendido','venta','importe','monto','ingreso','facturacion','total']);
       const colUni=findCol(['cantidad vendidas','unidades','unidad','units','ud','qty','cantidad','vendidas']);
       const colStock=findCol(['stock tienda','stock gondola','stock','existencia','disponible','inventario']);
       if(!colNombre){ showExcelMsg('No se encontró columna de nombre. Columnas detectadas: '+keys.join(', '),'error'); return; }
@@ -2157,7 +2209,7 @@ function p3LeerArchivo(file,cb){
         const name=String(row[colNombre]||'').trim(); if(!name||nz(name)==='nombre'||/^total/.test(nz(name))) return;
         filas.push({rubro:colRubro?String(row[colRubro]||'').trim():'',name,venta:colVenta?num(row[colVenta]):0,units:colUni?num(row[colUni]):0,stock:colStock?num(row[colStock]):0});
       });
-      cb(filas,!!colRubro);
+      cb(filas,!!colRubro,{colNombre,colVenta,colUni,colStock,colRubro});
     }catch(err){ showExcelMsg('Error al procesar el archivo: '+err.message,'error'); console.error(err); }
   };
   if(isCSV) reader.readAsText(file,'UTF-8'); else reader.readAsArrayBuffer(file);
@@ -2166,34 +2218,38 @@ function p3LeerArchivo(file,cb){
 function p3ImportSubs(ev,rubroId){
   const file=ev.target.files[0]; if(!file) return;
   const rub=cats.find(c=>c.id===rubroId); if(!rub) return;
-  p3LeerArchivo(file,(filas,hayRubro)=>{
+  p3LeerArchivo(file,(filas,hayRubro,info)=>{
     let propias=filas;
     if(hayRubro){
       const k=resNorm(rub.name), coin=filas.filter(f=>resNorm(f.rubro)===k);
       if(coin.length) propias=coin;
     }
-    let n=0; propias.forEach(f=>{ if(p3NuevaSub(rub,f)) n++; });
-    p3Abierto[rubroId]=true; scheduleAutoSave(); renderCats();
-    showExcelMsg(`✓ ${n} categoría${n===1?'':'s'} nueva${n===1?'':'s'} en ${rub.name}`+(propias.length-n>0?` (${propias.length-n} ya existían: se sumaron sus datos)`:'')+'.','success');
+    let n=0; const vistos=new Set(); propias.forEach(f=>{ if(p3NuevaSub(rub,f,vistos)) n++; });
+    p3Abierto[rubroId]=true; scheduleAutoSave(); renderCats(); try{ renderCatListPg(); }catch(e){}
+    const rs=p3ResumenImport(propias,info);
+    showExcelMsg(`${rs.ok?'✓':'Atención:'} ${rub.name}: ${n} categoría${n===1?'':'s'} nueva${n===1?'':'s'}, ${propias.length-n} actualizada${propias.length-n===1?'':'s'}. ${rs.txt}`,rs.ok?'success':'error');
+    try{ if(window.plGuardarAhora) plGuardarAhora(); }catch(e){}
   });
   ev.target.value='';
 }
 // Importar para TODOS los rubros: el archivo trae una columna Rubro (o Familia) que se compara con los rubros cargados
 function p3ImportTodos(ev){
   const file=ev.target.files[0]; if(!file) return;
-  p3LeerArchivo(file,(filas,hayRubro)=>{
+  p3LeerArchivo(file,(filas,hayRubro,info)=>{
     if(!hayRubro){ showExcelMsg('El archivo no tiene columna Rubro/Familia. Importá desde cada rubro, o agregá esa columna.','error'); return; }
-    let n=0, sin={};
+    let n=0, sin={}; const vistos=new Set();
     filas.forEach(f=>{
       const k=resNorm(f.rubro); if(!k) return;
       let r=cats.filter(c=>resNorm(c.name)===k);
       if(r.length!==1&&k.length>=3) r=cats.filter(c=>{ const q=resNorm(c.name); return q.length>=3&&(q.includes(k)||k.includes(q)); });
       if(r.length!==1){ sin[f.rubro]=(sin[f.rubro]||0)+1; return; }
-      if(p3NuevaSub(r[0],f)) n++; p3Abierto[r[0].id]=true;
+      if(p3NuevaSub(r[0],f,vistos)) n++; p3Abierto[r[0].id]=true;
     });
     scheduleAutoSave(); renderCats();
     const ns=Object.keys(sin);
-    showExcelMsg(`✓ ${n} categorías cargadas en sus rubros.`+(ns.length?` Sin rubro coincidente: ${ns.slice(0,4).join(', ')}${ns.length>4?'…':''}.`:''),ns.length?'error':'success');
+    const rs=p3ResumenImport(filas.filter(f=>resNorm(f.rubro)),info);
+    showExcelMsg(`✓ ${n} categorías nuevas cargadas en sus rubros. ${rs.txt}`+(ns.length?` Sin rubro coincidente: ${ns.slice(0,4).join(', ')}${ns.length>4?'…':''}.`:''),ns.length||!rs.ok?'error':'success');
+    try{ if(window.plGuardarAhora) plGuardarAhora(); }catch(e){}
   });
   ev.target.value='';
 }
@@ -2235,7 +2291,7 @@ function buildAssignPanel(){
 
 function renderCatListPg(){
   const el=cfg('catListPg'); el.innerHTML='';
-  const cv=cats.filter(c=>c.venta>0), sv=cats.filter(c=>c.venta===0);
+  const cv=cats.filter(c=>catEf(c).venta>0), sv=cats.filter(c=>!(catEf(c).venta>0));
   const addSec=(lbl,list)=>{
     if(!list.length) return;
     const s=document.createElement('div'); s.className='sec-lbl'; s.textContent=lbl; el.appendChild(s);
@@ -2621,7 +2677,7 @@ function buildAnalisis(){
   });
 
   if(lens) totalM=lensMetrosRubro();
-  const totalVenta=cats.reduce((a,cc)=>a+(+cc.venta||0),0);
+  const totalVenta=cats.reduce((a,cc)=>a+catEf(cc).venta,0);
   const assignedM=cats.reduce((a,c)=>a+(catMeters[c.id]||0),0);
   const rentaG=assignedM>0?Math.round(totalVenta/assignedM):0;
 
@@ -2632,10 +2688,11 @@ function buildAnalisis(){
     const m=catMeters[c.id];
     const pctEsp=totalM>0?((m/totalM)*100).toFixed(1):'0';
     const pctVenta=getCatPct(c).toFixed(1);
-    const rpm=(m>0&&(+c.venta||0)>0)?Math.round((+c.venta||0)/m):0;
+    const ef=catEf(c);
+    const rpm=(m>0&&ef.venta>0)?Math.round(ef.venta/m):0;
     const diff=parseFloat(pctEsp)-parseFloat(pctVenta);
     let badge='';
-    if((+c.venta||0)===0&&!getCatPct(c)){
+    if(ef.venta===0&&!getCatPct(c)){
       badge='<span class="badge br">Sin venta</span>';
       alerts.push(`<div class="alert-block ar"><strong>${c.name}:</strong> ${m.toFixed(1)} m asignados sin venta registrada.</div>`);
     } else if(Math.abs(diff)<3){
@@ -2649,11 +2706,11 @@ function buildAnalisis(){
     } else {
       badge='<span class="badge by">Revisar</span>';
     }
-    if(c.stock>0&&(+c.units||0)===0){
-      alerts.push(`<div class="alert-block ar"><strong>${c.name}:</strong> ${c.stock} ud en stock sin ventas registradas — stock muerto.</div>`);
-    } else if(c.stock>0&&(+c.units||0)>0){
-      const rotPct=((+c.units||0)/c.stock*100).toFixed(0);
-      if(rotPct<15) alerts.push(`<div class="alert-block ay"><strong>${c.name}:</strong> rotación baja — vendió ${(+c.units||0).toLocaleString('es-AR')} ud de ${c.stock.toLocaleString('es-AR')} en stock (${rotPct}%).</div>`);
+    if(ef.stock>0&&ef.units===0){
+      alerts.push(`<div class="alert-block ar"><strong>${c.name}:</strong> ${ef.stock.toLocaleString('es-AR')} ud en stock sin ventas registradas — stock muerto.</div>`);
+    } else if(ef.stock>0&&ef.units>0){
+      const rotPct=(ef.units/ef.stock*100).toFixed(0);
+      if(rotPct<15) alerts.push(`<div class="alert-block ay"><strong>${c.name}:</strong> rotación baja — vendió ${ef.units.toLocaleString('es-AR')} ud de ${ef.stock.toLocaleString('es-AR')} en stock (${rotPct}%).</div>`);
     }
     const dot=`<span style="display:inline-block;width:9px;height:9px;border-radius:2px;background:#${c.color};margin-right:4px;vertical-align:middle"></span>`;
     rows+=`<tr>
@@ -2662,22 +2719,22 @@ function buildAnalisis(){
       <td style="text-align:right;font-weight:600">${pctEsp}%</td>
       <td style="text-align:right;font-weight:600;color:var(--blue)">${pctVenta}%</td>
       <td style="text-align:right">$${rpm>0?rpm.toLocaleString('es-AR')+'/m':'—'}</td>
-      <td style="text-align:right">${(+c.units||0)>0?(+c.units).toLocaleString('es-AR'):'—'}</td>
-      <td style="text-align:right">${(+c.stock||0)>0?(+c.stock).toLocaleString('es-AR'):'—'}</td>
+      <td style="text-align:right">${ef.units>0?ef.units.toLocaleString('es-AR'):'—'}</td>
+      <td style="text-align:right">${ef.stock>0?ef.stock.toLocaleString('es-AR'):'—'}</td>
       <td style="text-align:right;font-weight:600;color:${
-        (+c.stock||0)>0&&(+c.units||0)>0
-          ? ((+c.units||0)/(+c.stock||0))>=0.5?'var(--green)':((+c.units||0)/(+c.stock||0))>=0.15?'var(--orange)':'var(--red)'
+        ef.stock>0&&ef.units>0
+          ? (ef.units/ef.stock)>=0.5?'var(--green)':(ef.units/ef.stock)>=0.15?'var(--orange)':'var(--red)'
           : 'var(--text3)'
       }">
-        ${(+c.stock||0)>0&&(+c.units||0)>0
-          ? (((+c.units||0)/(+c.stock||0))*100).toFixed(0)+'%'
+        ${ef.stock>0&&ef.units>0
+          ? ((ef.units/ef.stock)*100).toFixed(0)+'%'
           : '—'}
       </td>
       <td>${badge}</td>
     </tr>`;
   });
 
-  cats.filter(c=>(+c.venta||0)>0&&!catMeters[c.id]).forEach(c=>{
+  cats.filter(c=>catEf(c).venta>0&&!catMeters[c.id]).forEach(c=>{
     alerts.push(`<div class="alert-block ay"><strong>${c.name}:</strong> tiene venta pero no está asignada a ningún módulo del planograma.</div>`);
   });
 
@@ -2729,19 +2786,22 @@ function importExcel(event){
       const data=XLSX.utils.sheet_to_json(ws,{defval:'',raw:false});
       if(!data.length){ showExcelMsg('El archivo está vacío o no tiene datos.','error'); return; }
       const keys=Object.keys(data[0]);
-      // findCol: primero busca match exacto, después match parcial
-      const normalize=s=>s.toLowerCase().normalize('NFD').replace(/[\u0300-\u036f]/g,'').trim();
+      // findCol: respeta la prioridad de los términos (el primero de la lista gana), ignora columnas vacías
+      // y normaliza espacios no separables (los exports de Softland/NAPSE los traen en los encabezados).
+      const normalize=s=>String(s==null?'':s).toLowerCase().normalize('NFD').replace(/[̀-ͯ]/g,'').replace(/[^a-z0-9]+/g,' ').trim();
+      const conDatos=k=>data.some(r=>String(r[k]==null?'':r[k]).trim()!=='');
+      const keysOk=keys.filter(conDatos);
       const findCol=terms=>{
-        // Intento 1: match exacto
-        const exact=keys.find(k=>terms.some(t=>normalize(k)===normalize(t)));
-        if(exact) return exact;
+        // Intento 1: match exacto, en orden de prioridad de los términos
+        for(const t of terms){ const k=keysOk.find(k=>normalize(k)===normalize(t)); if(k) return k; }
         // Intento 2: match parcial (el término está contenido en el nombre de columna)
-        return keys.find(k=>terms.some(t=>normalize(k).includes(normalize(t))))||null;
+        for(const t of terms){ const k=keysOk.find(k=>normalize(k).includes(normalize(t))); if(k) return k; }
+        return null;
       };
       // Formato NAPSE: Descripción Detalle / Importe vendido / Cantidad vendidas / Stock tienda
       // Priorizar match exacto de "descripcion detalle" antes que "detalle" suelto
       const colNombre=findCol(['descripcion detalle','descripción detalle','descripcion de subfamilia','descripcion de familia','descripcion','descripción','nombre','categoria','rubro','name','articulo','artículo']);
-      const colVenta=findCol(['importe vendido','venta','importe','monto','total','ingreso','facturacion','facturación']);
+      const colVenta=findCol(['importe vendido','venta','importe','monto','ingreso','facturacion','facturación','total']);
       const colUnidades=findCol(['cantidad vendidas','unidades','unidad','units','ud','qty','cantidad','vendidas']);
       const colStock=findCol(['stock tienda','stock gondola','stock góndola','stock','existencia','disponible','inventario']);
       if(!colNombre){
@@ -2779,13 +2839,21 @@ function importExcel(event){
   else reader.readAsArrayBuffer(file);
 }
 
-function showExcelMsg(msg,type='success'){
+let _excelMsgT=null;
+function showExcelMsg(msg,type='success',ms){
   const el=cfg('excelMsg');
   el.textContent=msg; el.style.display='block';
   el.style.background=type==='success'?'#eafaf1':'#fdf2f2';
   el.style.color=type==='success'?'#186a3b':'#922b21';
   el.style.border=`1px solid ${type==='success'?'#a9dfbf':'#f5b7b1'}`;
-  setTimeout(()=>el.style.display='none',5000);
+  clearTimeout(_excelMsgT);
+  _excelMsgT=setTimeout(()=>el.style.display='none',ms||(type==='success'?12000:20000));
+}
+const _fmtM=n=>'$'+Math.round(n).toLocaleString('es-AR'), _fmtN=n=>Math.round(n).toLocaleString('es-AR');
+function p3ResumenImport(filas,info){
+  const tv=filas.reduce((a,f)=>a+(f.venta||0),0), tu=filas.reduce((a,f)=>a+(f.units||0),0), ts=filas.reduce((a,f)=>a+(f.stock||0),0);
+  const cols='Columnas leídas: '+(info&&info.colNombre||'—')+' / '+(info&&info.colVenta||'SIN COLUMNA DE VENTA')+' / '+(info&&info.colUni||'—')+' / '+(info&&info.colStock||'—');
+  return {tv,tu,ts,ok:tv>0,txt:`${filas.length} filas · venta ${_fmtM(tv)} · ${_fmtN(tu)} un · stock ${_fmtN(ts)}.`+(tv>0?'':' No se encontró venta en el archivo. '+cols)};
 }
 
 function downloadTemplate(e){
@@ -3499,8 +3567,8 @@ function resAnalizar(st,hist,ctx){
   const asigD=D.reduce((a,c)=>a+(M.m[c.id]||0),0);
   const dias=resDias(R.desde,R.hasta);
   // Mix esperado (la venta o % que se cargó al diseñar), reescalado a las categorías con resultado
-  const totV=cats.reduce((a,c)=>a+(+c.venta||0),0);
-  const basePct=c=>(+c.pctManual>0)?+c.pctManual:((totV>0&&+c.venta>0)?+c.venta/totV*100:0);
+  const totV=cats.reduce((a,c)=>a+catEf(c).venta,0);
+  const basePct=c=>(+c.pctManual>0)?+c.pctManual:((totV>0&&catEf(c).venta>0)?catEf(c).venta/totV*100:0);
   const baseSum=D.reduce((a,c)=>a+basePct(c),0);
 
   const nivelDe=id=>{ const v=M.niv[id]; if(!v||!v.w) return null; const x=v.s/v.w; return x<0.34?'altas':(x>0.66?'bajas':'medias'); };
@@ -3985,13 +4053,14 @@ function buildResumenHtml(st){
     if(el.type==='pared'){ (el.mods||[]).forEach(m=>{ totalM+=m.w*(m.chapas||7); }); }
     else { (el.mods_a||[]).forEach(m=>{ totalM+=m.w*m.chapas*2; }); }
   });
-  const totalVenta=st.cats.reduce((a,c)=>a+(+c.venta||0),0);
+  const efX=c=>catEf(c,st.subcats||[]);
+  const totalVenta=st.cats.reduce((a,c)=>a+efX(c).venta,0);
   const assignedM=Object.values(catMeters).reduce((a,b)=>a+b,0);
   const rentaG=assignedM>0?Math.round(totalVenta/assignedM):0;
 
   const getCatPctExport=(c)=>{
     if(c.pctManual!==null&&c.pctManual!==undefined&&+c.pctManual>0) return +c.pctManual;
-    if(totalVenta>0&&+c.venta>0) return (+c.venta/totalVenta)*100;
+    if(totalVenta>0&&efX(c).venta>0) return (efX(c).venta/totalVenta)*100;
     return 0;
   };
 
@@ -4081,15 +4150,15 @@ function buildResumenHtml(st){
     const m=catMeters[c.id];
     const pctEsp=totalM>0?((m/totalM)*100).toFixed(1):'0';
     const pctV=getCatPctExport(c).toFixed(1);
-    const rpm=m>0&&+c.venta>0?Math.round(+c.venta/m):0;
+    const rpm=m>0&&efX(c).venta>0?Math.round(efX(c).venta/m):0;
     const diff=parseFloat(pctEsp)-parseFloat(pctV);
     let badge='', badgeStyle='';
-    if(+c.venta===0&&!getCatPctExport(c)){ badge='Sin datos'; badgeStyle='background:#fdf2f2;color:#c0392b'; }
+    if(efX(c).venta===0&&!getCatPctExport(c)){ badge='Sin datos'; badgeStyle='background:#fdf2f2;color:#c0392b'; }
     else if(Math.abs(diff)<3){ badge='Equilibrado'; badgeStyle='background:#eafaf1;color:#186a3b'; }
     else if(diff>5){ badge='Sobredimensionado'; badgeStyle='background:#fdf6e3;color:#9a6e07'; alertsHtml+=`<div style="border-left:3px solid #d68910;background:#fdf6e3;color:#9a6e07;padding:6px 10px;margin-bottom:6px;border-radius:0 6px 6px 0;font-size:13px"><strong>${c.name}:</strong> ocupa ${pctEsp}% del espacio pero genera solo ${pctV}% de la venta.</div>`; }
     else if(diff<-5){ badge='Subrepresentado'; badgeStyle='background:#eef3fb;color:#1a5fb4'; alertsHtml+=`<div style="border-left:3px solid #2a78d6;background:#eef3fb;color:#1a5fb4;padding:6px 10px;margin-bottom:6px;border-radius:0 6px 6px 0;font-size:13px"><strong>${c.name}:</strong> genera ${pctV}% de la venta pero ocupa solo ${pctEsp}% del espacio.</div>`; }
     else { badge='Revisar'; badgeStyle='background:#fdf6e3;color:#9a6e07'; }
-    if(c.stock>0&&+c.units===0) alertsHtml+=`<div style="border-left:3px solid #c0392b;background:#fdf2f2;color:#922b21;padding:6px 10px;margin-bottom:6px;border-radius:0 6px 6px 0;font-size:13px"><strong>${c.name}:</strong> ${c.stock} ud de stock sin ventas registradas — stock muerto.</div>`;
+    if(efX(c).stock>0&&efX(c).units===0) alertsHtml+=`<div style="border-left:3px solid #c0392b;background:#fdf2f2;color:#922b21;padding:6px 10px;margin-bottom:6px;border-radius:0 6px 6px 0;font-size:13px"><strong>${c.name}:</strong> ${efX(c).stock} ud de stock sin ventas registradas — stock muerto.</div>`;
     tableRows+=`<tr>
       <td style="padding:6px 8px;border-bottom:1px solid #e8e6e0">
         <span style="display:inline-block;width:10px;height:10px;border-radius:2px;background:#${c.color};margin-right:5px;vertical-align:middle"></span>${c.name}
